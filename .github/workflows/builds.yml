@@ -97,7 +97,7 @@ jobs:
         with:
           type: 'zip'
           # filename: 'gdext.${{ matrix.platform }}.${{ matrix.arch }}.zip'
-          filename: 'gdext.zip'
+          filename: 'gdext.${{ matrix.platform }}.zip'
           path: '${{ github.workspace }}/godot/core/lib/'
         if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
@@ -106,7 +106,7 @@ jobs:
         with:
           allowUpdates: true
           # artifacts: "gdext.${{ matrix.platform }}.${{ matrix.arch }}.zip"
-          artifacts: "gdext.zip"
+          artifacts: "gdext.${{ matrix.platform }}.zip"
           omitNameDuringUpdate: true
           omitBodyDuringUpdate: true
           token: ${{ secrets.GITHUB_TOKEN }}
