@@ -18,29 +18,15 @@ struct ChunkActiveRect {
     int row_count;
 };
 
-enum CellMovement {
-    MovementSolid,
-    MovementPowder,
-    MovementLiquid,
-    MovementGas,
-};
-
-enum CellCollision {
-    CollisionSolid,
-    CollisionPlatform,
-    CollisionLiquid,
-    CollisionNone,
-};
-
 struct CellMaterial {
     StringName display_name;
     // color: ();
-    CellMovement movement;
+    Grid::CellMovement movement;
     float density;
 
     float durability;
 
-    CellCollision collision;
+    Grid::CellCollision collision;
     float friction;
     float bounciness;
 
@@ -99,8 +85,19 @@ private:
     static bool chunk_is_row_inactive(chunk_t chunk, int row);
     static ChunkActiveRect chunk_active_rect(chunk_t chunk);
 public:
-    Grid();
-    ~Grid();
+    enum CellMovement {
+        MOVEMENT_SOLID,
+        MOVEMENT_POWDER,
+        MOVEMENT_LIQUID,
+        MOVEMENT_GAS,
+    };
+
+    enum CellCollision {
+        COLLISION_SOLID,
+        COLLISION_PLATFORM,
+        COLLISION_LIQUID,
+        COLLISION_NONE,
+    };
 
     static void delete_grid();
     static void new_empty(int width, int height);

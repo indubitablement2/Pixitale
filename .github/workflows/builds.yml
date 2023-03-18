@@ -12,6 +12,8 @@ concurrency:
 jobs:
   build:
     runs-on: ${{matrix.os}}
+    permissions:
+      contents: write
     name: ${{matrix.name}}
     strategy:
       fail-fast: false
@@ -94,16 +96,18 @@ jobs:
         uses: thedoctor0/zip-release@0.7.1
         with:
           type: 'zip'
-          filename: 'summator.${{ matrix.platform }}.${{ matrix.arch }}.zip'
+          # filename: 'gdext.${{ matrix.platform }}.${{ matrix.arch }}.zip'
+          filename: 'gdext.zip'
           path: '${{ github.workspace }}/godot/core/lib/'
-        # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
       - name: Create and upload asset
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
-          artifacts: "summator.${{ matrix.platform }}.${{ matrix.arch }}.zip"
+          # artifacts: "gdext.${{ matrix.platform }}.${{ matrix.arch }}.zip"
+          artifacts: "gdext.zip"
           omitNameDuringUpdate: true
           omitBodyDuringUpdate: true
           token: ${{ secrets.GITHUB_TOKEN }}
-        # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
