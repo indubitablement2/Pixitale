@@ -1,9 +1,6 @@
 #include <bit>
 #include "grid.h"
 
-Grid::Grid() {}
-Grid::~Grid() {}
-
 void Grid::delete_grid() {
     if (_cells != nullptr) {
         delete[] _cells;

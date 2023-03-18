@@ -21,12 +21,12 @@ struct ChunkActiveRect {
 struct CellMaterial {
     StringName display_name;
     // color: ();
-    Grid::CellMovement movement;
+    int movement;
     float density;
 
     float durability;
 
-    Grid::CellCollision collision;
+    int collision;
     float friction;
     float bounciness;
 
