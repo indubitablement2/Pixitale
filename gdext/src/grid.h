@@ -49,7 +49,7 @@ class Grid : public Node2D {
     GDCLASS(Grid, Node2D);
 
 protected:
-    static void _bind_methods(){};
+    static void _bind_methods();
 
 private:
 	inline static cell_t* _cells = nullptr;
@@ -86,21 +86,24 @@ private:
     static ChunkActiveRect chunk_active_rect(chunk_t chunk);
 public:
     enum CellMovement {
-        MOVEMENT_SOLID,
-        MOVEMENT_POWDER,
-        MOVEMENT_LIQUID,
-        MOVEMENT_GAS,
+        CELL_MOVEMENT_SOLID,
+        CELL_MOVEMENT_POWDER,
+        CELL_MOVEMENT_LIQUID,
+        CELL_MOVEMENT_GAS,
     };
 
     enum CellCollision {
-        COLLISION_SOLID,
-        COLLISION_PLATFORM,
-        COLLISION_LIQUID,
-        COLLISION_NONE,
+        CELL_COLLISION_SOLID,
+        CELL_COLLISION_PLATFORM,
+        CELL_COLLISION_LIQUID,
+        CELL_COLLISION_NONE,
     };
 
     static void delete_grid();
     static void new_empty(int width, int height);
 };
+
+VARIANT_ENUM_CAST(Grid::CellMovement);
+VARIANT_ENUM_CAST(Grid::CellCollision);
 
 #endif

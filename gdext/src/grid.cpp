@@ -1,6 +1,25 @@
 #include <bit>
 #include "grid.h"
 
+void Grid::_bind_methods() {
+    ClassDB::bind_static_method("Grid", D_METHOD("delete_grid"), &Grid::delete_grid);
+    ClassDB::bind_static_method("Grid", D_METHOD("new_empty", "width", "height"), &Grid::new_empty);
+
+    // ADD_GROUP("Test group", "group_");
+	// ADD_SUBGROUP("Test subgroup", "group_subgroup_");
+
+    // Add the enums.
+    BIND_ENUM_CONSTANT(CELL_COLLISION_SOLID);
+    BIND_ENUM_CONSTANT(CELL_COLLISION_PLATFORM);
+    BIND_ENUM_CONSTANT(CELL_COLLISION_LIQUID);
+    BIND_ENUM_CONSTANT(CELL_COLLISION_NONE);
+
+    BIND_ENUM_CONSTANT(CELL_MOVEMENT_SOLID);
+    BIND_ENUM_CONSTANT(CELL_MOVEMENT_POWDER);
+    BIND_ENUM_CONSTANT(CELL_MOVEMENT_LIQUID);
+    BIND_ENUM_CONSTANT(CELL_MOVEMENT_GAS);
+}
+
 void Grid::delete_grid() {
     if (_cells != nullptr) {
         delete[] _cells;
