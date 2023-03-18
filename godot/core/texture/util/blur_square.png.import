@@ -3,15 +3,15 @@
 importer="texture"
 type="CompressedTexture2D"
 uid="uid://d3emwc0evxekb"
-path="res://.godot/imported/blur_square.png-542f1f3bf2c648e17a6c0ae2c3fd8b8b.ctex"
+path="res://.godot/imported/blur_square.png-d7bb6d506a8487a45a3060f30f67776c.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://core/texture/blur_square.png"
-dest_files=["res://.godot/imported/blur_square.png-542f1f3bf2c648e17a6c0ae2c3fd8b8b.ctex"]
+source_file="res://core/texture/util/blur_square.png"
+dest_files=["res://.godot/imported/blur_square.png-d7bb6d506a8487a45a3060f30f67776c.ctex"]
 
 [params]
 

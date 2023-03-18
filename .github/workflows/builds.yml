@@ -1,6 +1,6 @@
 name: Builds
 
-on: [push, pull_request]
+on: workflow_dispatch
 
 concurrency: 
   group: ci-${{github.actor}}-${{github.head_ref || github.run_number}}-${{github.ref}}-macos
@@ -8,7 +8,7 @@ concurrency:
 
 jobs:
   build:
-    runs-on:  ${{matrix.os}}
+    runs-on: ${{matrix.os}}
     name: ${{matrix.name}}
     strategy:
       fail-fast: false
@@ -67,17 +67,18 @@ jobs:
         shell: sh
         run: |
           scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
-        working-directory: godot-cpp
+        working-directory: gdext/godot-cpp
 
       - name: Compile Extension
         shell: sh
         run: |
           scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
+        working-directory: gdext
 
-      - name: Delete compilation files
-        if: ${{ matrix.platform == 'windows' }}
-        run: |
-          Remove-Item godot/core/lib/* -Include *.exp,*.lib,*.pdb -Force
+      # - name: Delete compilation files
+      #   if: ${{ matrix.platform == 'windows' }}
+      #   run: |
+      #     Remove-Item godot/core/lib/* -Include *.exp,*.lib,*.pdb -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
@@ -92,7 +93,7 @@ jobs:
           type: 'zip'
           filename: 'summator.${{ matrix.platform }}.${{ matrix.arch }}.zip'
           path: '${{ github.workspace }}/godot/core/lib/'
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
 
       - name: Create and upload asset
         uses: ncipollo/release-action@v1
@@ -102,4 +103,4 @@ jobs:
           omitNameDuringUpdate: true
           omitBodyDuringUpdate: true
           token: ${{ secrets.GITHUB_TOKEN }}
-        if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
+        # if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags')
