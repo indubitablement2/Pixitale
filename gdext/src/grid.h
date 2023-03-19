@@ -62,14 +62,19 @@ private:
 
     inline static cell_t _update_bit = 0;
 
+    enum CellShifts {
+        CELL_SHIFT_UPDATED = 12,
+        CELL_SHIFT_ACTIVE = 14,
+        CELL_SHIFT_COLOR = 24,
+    };
+
     enum CellMasks {
-		MATERIAL_MASK = 0xFFF,
-        UPDATED_SHIFT = 12,
-        UPDATED_MASK = 1 << CellMasks::UPDATED_SHIFT, // use 2 bits. 0 for inactive/new cell
-        ACTIVE_SHIFT = 13,
-        ACTIVE_MASK = 1 << CellMasks::ACTIVE_SHIFT,
-        COLOR_SHIFT = 24,
-        COLOR_MASK = 0xFF << CellMasks::COLOR_SHIFT,
+		CELL_MASK_MATERIAL = 0xFFF,
+        // Alternate between 1, 2 and 3. 
+        // 0 used for inactive/new cell. eg. always update.
+        CELL_MASK_UPDATED = 0b11 << CellShifts::CELL_SHIFT_UPDATED,
+        CELL_MASK_ACTIVE = 1 << CellShifts::CELL_SHIFT_ACTIVE,
+        CELL_MASK_COLOR = 0xFF << CellShifts::CELL_SHIFT_COLOR,
 	};
 
     static cell_t cell_material_idx(cell_t cell);

@@ -134,30 +134,30 @@ void Grid::set_texture_data(Ref<ImageTexture> texture, Rect2i rect) {
 }
 
 cell_t Grid::cell_material_idx(cell_t cell) {
-    return cell & CellMasks::MATERIAL_MASK;
+    return cell & CellMasks::CELL_MASK_MATERIAL;
 }
 
 void Grid::cell_set_material_idx(cell_t& cell, cell_t material_idx) {
-    cell = (cell & ~CellMasks::MATERIAL_MASK) | material_idx;
+    cell = (cell & ~CellMasks::CELL_MASK_MATERIAL) | material_idx;
 }
 
 bool Grid::cell_is_updated(cell_t cell) {
-    return (cell & CellMasks::UPDATED_MASK) == _update_bit;
+    return (cell & CellMasks::CELL_MASK_UPDATED) == _update_bit;
 }
 
 void Grid::cell_set_updated(cell_t& cell) {
-    cell = (cell & ~CellMasks::UPDATED_MASK) | _update_bit;
+    cell = (cell & ~CellMasks::CELL_MASK_UPDATED) | _update_bit;
 }
 
 bool Grid::cell_is_active(cell_t cell) {
-    return (cell & CellMasks::ACTIVE_MASK) != 0;
+    return (cell & CellMasks::CELL_MASK_ACTIVE) != 0;
 }
 
 void Grid::cell_set_active(cell_t& cell, bool active) {
     if (active) {
-        cell |= CellMasks::ACTIVE_MASK;
+        cell |= CellMasks::CELL_MASK_ACTIVE;
     } else {
-        cell &= ~CellMasks::ACTIVE_MASK;
+        cell &= ~CellMasks::CELL_MASK_ACTIVE;
     }
 }
 
