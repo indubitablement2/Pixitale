@@ -3,12 +3,12 @@
 
 #include <bit>
 #include <godot_cpp/classes/node2d.hpp>
+#include <godot_cpp/classes/image_texture.hpp>
 
 using namespace godot;
 
 typedef uint32_t cell_t;
 typedef uint64_t chunk_t;
-
 
 struct ChunkActiveRect {
     int column_skip;
@@ -65,7 +65,7 @@ private:
     enum CellMasks {
 		MATERIAL_MASK = 0xFFF,
         UPDATED_SHIFT = 12,
-        UPDATED_MASK = 1 << CellMasks::UPDATED_SHIFT,
+        UPDATED_MASK = 1 << CellMasks::UPDATED_SHIFT, // use 2 bits. 0 for inactive/new cell
         ACTIVE_SHIFT = 13,
         ACTIVE_MASK = 1 << CellMasks::ACTIVE_SHIFT,
         COLOR_SHIFT = 24,
@@ -85,6 +85,8 @@ private:
     static bool chunk_is_row_inactive(chunk_t chunk, int row);
     static ChunkActiveRect chunk_active_rect(chunk_t chunk);
 public:
+    inline const static float CELL_SIZE = 4.0f;
+
     enum CellMovement {
         CELL_MOVEMENT_SOLID,
         CELL_MOVEMENT_POWDER,
@@ -101,6 +103,9 @@ public:
 
     static void delete_grid();
     static void new_empty(int width, int height);
+    static Vector2i get_size();
+    static void draw_rect(Rect2i rect, CanvasItem *on, Vector2i at);
+    static void set_texture_data(Ref<ImageTexture> texture, Rect2i rect);
 };
 
 VARIANT_ENUM_CAST(Grid::CellMovement);
