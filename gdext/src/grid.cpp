@@ -14,7 +14,7 @@ void Grid::_bind_methods() {
     // ADD_GROUP("Test group", "group_");
 	// ADD_SUBGROUP("Test subgroup", "group_subgroup_");
 
-    BIND_CONSTANT(CELL_SIZE);
+    BIND_CONSTANT(GRID_SCALE);
 
     BIND_ENUM_CONSTANT(CELL_COLLISION_SOLID);
     BIND_ENUM_CONSTANT(CELL_COLLISION_PLATFORM);
@@ -100,6 +100,7 @@ void Grid::set_texture_data(Ref<ImageTexture> texture, Rect2i rect) {
     } else if (texture_width < image_width || texture_height < image_height) {
         recreate_texture = true;
     }
+    // TODO: Make clear that only image_width, image_height left and top are valid.
 
     // TODO: Reuse this buffer.
     PackedByteArray data = PackedByteArray();
@@ -110,7 +111,7 @@ void Grid::set_texture_data(Ref<ImageTexture> texture, Rect2i rect) {
     uint8_t *data_ptr = data.ptrw();
     
     // Copy each rows.
-    for (int y = top; y < bottom; y++) {
+    for (int i = 0; i < image_height; i++) {
         memcpy(data_ptr, cells_ptr, image_width * sizeof(cell_t));
         cells_ptr += _width * sizeof(cell_t);
         data_ptr += image_width * sizeof(cell_t);

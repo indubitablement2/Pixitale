@@ -85,7 +85,7 @@ private:
     static bool chunk_is_row_inactive(chunk_t chunk, int row);
     static ChunkActiveRect chunk_active_rect(chunk_t chunk);
 public:
-    inline const static float CELL_SIZE = 4.0f;
+    inline const static float GRID_SCALE = 4.0f;
 
     enum CellMovement {
         CELL_MOVEMENT_SOLID,
