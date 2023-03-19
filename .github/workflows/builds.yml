@@ -68,11 +68,11 @@ jobs:
         if: ${{ matrix.platform == 'windows' }}
         uses: egor-tensin/setup-mingw@v2
 
-      # - name: Compile godot-cpp
-      #   shell: sh
-      #   run: |
-      #     scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
-      #   working-directory: gdext/godot-cpp
+      - name: Compile godot-cpp
+        shell: sh
+        run: |
+          scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
+        working-directory: gdext/godot-cpp
 
       - name: Compile Extension
         shell: sh
@@ -80,10 +80,10 @@ jobs:
           scons target='${{ matrix.target }}' platform='${{ matrix.platform }}' arch='${{ matrix.arch }}'
         working-directory: gdext
 
-      # - name: Delete compilation files
-      #   if: ${{ matrix.platform == 'windows' }}
-      #   run: |
-      #     Remove-Item godot/core/lib/* -Include *.exp,*.lib,*.pdb -Force
+      - name: Delete compilation files
+        if: ${{ matrix.platform == 'windows' }}
+        run: |
+          Remove-Item godot/core/lib/* -Include *.exp,*.lib,*.pdb -Force
 
       - name: Upload artifact
         uses: actions/upload-artifact@v3
