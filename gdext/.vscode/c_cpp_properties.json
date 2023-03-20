@@ -6,7 +6,7 @@
                 "${workspaceFolder}/**",
                 "${workspaceFolder}/godot-cpp/gdextension",
                 "${workspaceFolder}/godot-cpp/include",
-                "${workspaceFolder}/godot-cpp/gen/include"
+                "${workspaceFolder}/godot-cpp/gen/include",
             ],
             "defines": [],
             "compilerPath": "/usr/bin/clang",

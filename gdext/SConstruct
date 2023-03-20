@@ -1,12 +1,20 @@
 env = SConscript('godot-cpp/SConstruct')
+
 env.Append(CPPPATH='src/')
-env.Append(CXXFLAGS=['-std=c++20'])
 
-libpath = '../godot/core/lib/gdext' + env['SHLIBSUFFIX']
+# ? Really need 20?
+if env.get("is_msvc", False):
+    env.Append(CXXFLAGS=["/std:c++20"])
+else:
+    env.Append(CXXFLAGS=["-std=c++20"])
+
+outputpath = '../godot/core/lib/gdext' + env['SHLIBSUFFIX']
 src = Glob('src/*.cpp')
+sharedlib = env.SharedLibrary(outputpath, src)
+Default(sharedlib)
 
-if env['platform'] == 'windows':
-    pass
-elif env['platform'] == 'linux':
-    sharedlib = env.SharedLibrary(libpath, src)
-    Default(sharedlib)
+# if env['platform'] == 'windows':
+#     sharedlib = env.SharedLibrary(outputpath, src)
+# elif env['platform'] == 'linux':
+#     sharedlib = env.SharedLibrary(outputpath, src)
+#     Default(sharedlib)

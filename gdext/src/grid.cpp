@@ -9,7 +9,11 @@ void Grid::_bind_methods() {
     ClassDB::bind_static_method("Grid", D_METHOD("new_empty", "width", "height"), &Grid::new_empty);
     ClassDB::bind_static_method("Grid", D_METHOD("get_size"), &Grid::get_size);
     ClassDB::bind_static_method("Grid", D_METHOD("draw_rect", "rect", "on", "at"), &Grid::draw_rect);
-    ClassDB::bind_static_method("Grid", D_METHOD("set_texture_data", "texture", "rect"), &Grid::set_texture_data);
+    ClassDB::bind_static_method(
+        "Grid",
+        D_METHOD("set_texture_data", "texture", "rect"), &Grid::set_texture_data
+    );
+    ClassDB::bind_static_method("Grid", D_METHOD("step_manual"), &Grid::step_manual);
 
     // ADD_GROUP("Test group", "group_");
 	// ADD_SUBGROUP("Test subgroup", "group_subgroup_");
@@ -100,7 +104,7 @@ void Grid::set_texture_data(Ref<ImageTexture> texture, Rect2i rect) {
     } else if (texture_width < image_width || texture_height < image_height) {
         recreate_texture = true;
     }
-    // TODO: Make clear that only image_width, image_height left and top are valid.
+    // TODO: Make clear that only image_width, image_height, left and top are valid.
 
     // TODO: Reuse this buffer.
     PackedByteArray data = PackedByteArray();
@@ -133,6 +137,21 @@ void Grid::set_texture_data(Ref<ImageTexture> texture, Rect2i rect) {
     }
 }
 
+void Grid::step_manual() {
+    if (_cells == nullptr) {
+        UtilityFunctions::push_warning("Grid is not initialized");
+        return;
+    }
+
+    _update_bit = (((_update_bit >> CellShifts::CELL_SHIFT_UPDATED) % 3) + 1)
+        << CellShifts::CELL_SHIFT_UPDATED;
+    _tick++;
+
+    for (int column_idx = 1; column_idx < _chunk_width - 1; column_idx++) {
+        step_column(column_idx);
+    }
+}
+
 cell_t Grid::cell_material_idx(cell_t cell) {
     return cell & CellMasks::CELL_MASK_MATERIAL;
 }
@@ -153,18 +172,48 @@ bool Grid::cell_is_active(cell_t cell) {
     return (cell & CellMasks::CELL_MASK_ACTIVE) != 0;
 }
 
+// When inactive, set updated bit to 0 (never skip).
 void Grid::cell_set_active(cell_t& cell, bool active) {
     if (active) {
         cell |= CellMasks::CELL_MASK_ACTIVE;
     } else {
         cell &= ~CellMasks::CELL_MASK_ACTIVE;
+        cell = cell & ~CellMasks::CELL_MASK_UPDATED;
     }
 }
 
+// Set cells in a 3x3 area to active (both on cell and chunk).
+void Grid::set_area_active(int x, int y, cell_t *center_ptr) {
+    chunk_set_active(x - 1, y - 1);
+    chunk_set_active(x, y - 1);
+    chunk_set_active(x + 1, y - 1);
+
+    chunk_set_active(x - 1, y);
+    chunk_set_active(x + 1, y);
+
+    chunk_set_active(x - 1, y + 1);
+    chunk_set_active(x, y + 1);
+    chunk_set_active(x + 1, y + 1);
+
+    *(center_ptr - 1) |= CellMasks::CELL_MASK_ACTIVE;
+    *center_ptr |= CellMasks::CELL_MASK_ACTIVE;
+    *(center_ptr + 1) |= CellMasks::CELL_MASK_ACTIVE;
+    
+    *(center_ptr + _width - 1) |= CellMasks::CELL_MASK_ACTIVE;
+    *(center_ptr + _width) |= CellMasks::CELL_MASK_ACTIVE;
+    *(center_ptr + _width + 1) |= CellMasks::CELL_MASK_ACTIVE;
+
+    *(center_ptr - _width - 1) |= CellMasks::CELL_MASK_ACTIVE;
+    *(center_ptr - _width) |= CellMasks::CELL_MASK_ACTIVE;
+    *(center_ptr - _width + 1) |= CellMasks::CELL_MASK_ACTIVE;
+}
+
+// Set a single point on chunk to active.
+// Does not set cell to active.
 void Grid::chunk_set_active(int x, int y) {
     int idx = (y >> 5) + (x >> 5) * _chunk_width;
     chunk_t bitmask = (1 << ((x & 31) + 32)) | (1 << (y & 31));
-    chunk_t* chunk = _chunks + idx;
+    chunk_t *chunk = _chunks + idx;
     *chunk |= bitmask;
 }
 
@@ -192,4 +241,247 @@ ChunkActiveRect Grid::chunk_active_rect(chunk_t chunk) {
     rect.row_count = 32 - std::countl_zero(rows) - rect.row_skip;
 
     return rect;
+}
+
+void Grid::step_column(int column_idx) {
+    uint64_t rng = (uint64_t)column_idx * _tick;
+
+    chunk_t *chunks_end = _chunks + column_idx * _chunk_height;
+    chunk_t *chunks = chunks_end + _chunk_height - 2;
+    int num_chunks = _chunk_height - 1;
+    
+    int origin_x = column_idx * 32;
+    int origin_y = _height - 32;
+
+    chunk_t next_chunk = *(chunks - 1);
+    *chunks = 0;
+
+    // Iterate over each row from the bottom to the top.
+    while (chunks != chunks_end) {
+        chunk_t chunk = next_chunk;
+        chunks -= 1;
+        next_chunk = *chunks;
+        *chunks = 0;
+        origin_y -= 32;
+
+        if (chunk == 0) {
+            continue;
+        }
+
+        ChunkActiveRect rect = chunk_active_rect(chunk);
+        int x_start = origin_x + rect.column_skip;
+        int x_end = x_start + rect.column_count;
+        int y_end = origin_y + rect.row_skip - 1;
+        int y_start = y_end + rect.row_count;
+        
+        // Iterate over each cell in the chunk.
+        for (int y = y_start; y > y_end; y--) {
+            if (chunk_is_row_inactive(chunk, y & 5)) {
+                continue;
+            }
+
+            for (int x = x_start; x < x_end; x++) {
+                step_cell(x, y, rng);
+            }
+        }
+    }
+}
+
+void Grid::step_cell(int x, int y, uint64_t &rng) {
+    cell_t *cell_ptr = _cells + x + y * _width;
+    cell_t cell = *cell_ptr;
+    bool active = cell_is_active(cell);
+
+    if (!active) {
+        // ? Make sure it is at updated bit == 0.
+        return;
+    }
+
+    if (cell_is_updated(cell)) {
+        return;
+    }
+
+    active = false;
+    bool changed = false;
+
+    // Reactions
+    // x x x
+    // . o x
+    // . . .
+    cell_t cell_mat_idx = cell_material_idx(cell);
+    CellMaterial *cell_mat_ptr = _materials + cell_mat_idx;
+
+    cell_t out1 = UINT32_MAX;
+    cell_t out2 = UINT32_MAX;
+    cell_t *tl_ptr = cell_ptr - _width - 1;
+    cell_t tl = *tl_ptr;
+    cell_t tl_mat_idx = cell_material_idx(tl);
+    CellMaterial *tl_mat_ptr = _materials + cell_material_idx(tl);
+    int tl_result = step_reaction(cell_mat_idx, cell_mat_ptr, tl_mat_idx, tl_mat_ptr, rng, out1, out2);
+    if (tl_result == 2) {
+        active = true;
+        
+        if (out2 != UINT32_MAX) {
+            cell_set_material_idx(tl, out2);
+            *tl_ptr = tl;
+            set_area_active(x - 1, y - 1, tl_ptr);
+        }
+
+        if (out1 != UINT32_MAX) {
+            cell_mat_idx = out1;
+            cell_mat_ptr = _materials + cell_mat_idx;
+            changed = true;
+        }
+    } else if (tl_result == 1) {
+        active = true;
+    }
+    
+    out1 = UINT32_MAX;
+    out2 = UINT32_MAX;
+    cell_t *t_ptr = cell_ptr - _width;
+    cell_t t = *t_ptr;
+    cell_t t_mat_idx = cell_material_idx(t);
+    CellMaterial *t_mat_ptr = _materials + cell_material_idx(t);
+    int t_result = step_reaction(cell_mat_idx, cell_mat_ptr, t_mat_idx, t_mat_ptr, rng, out1, out2);
+    if (t_result == 2) {
+        active = true;
+        
+        if (out2 != UINT32_MAX) {
+            cell_set_material_idx(t, out2);
+            *t_ptr = t;
+            set_area_active(x, y - 1, t_ptr);
+        }
+
+        if (out1 != UINT32_MAX) {
+            cell_mat_idx = out1;
+            cell_mat_ptr = _materials + cell_mat_idx;
+            changed = true;
+        }
+    } else if (t_result == 1) {
+        active = true;
+    }
+
+    out1 = UINT32_MAX;
+    out2 = UINT32_MAX;
+    cell_t *tr_ptr = cell_ptr - _width + 1;
+    cell_t tr = *tr_ptr;
+    cell_t tr_mat_idx = cell_material_idx(tr);
+    CellMaterial *tr_mat_ptr = _materials + cell_material_idx(tr);
+    int tr_result = step_reaction(cell_mat_idx, cell_mat_ptr, tr_mat_idx, tr_mat_ptr, rng, out1, out2);
+    if (tr_result == 2) {
+        active = true;
+        
+        if (out2 != UINT32_MAX) {
+            cell_set_material_idx(tr, out2);
+            *tr_ptr = tr;
+            set_area_active(x + 1, y - 1, tr_ptr);
+        }
+
+        if (out1 != UINT32_MAX) {
+            cell_mat_idx = out1;
+            cell_mat_ptr = _materials + cell_mat_idx;
+            changed = true;
+        }
+    } else if (tr_result == 1) {
+        active = true;
+    }
+
+    out1 = UINT32_MAX;
+    out2 = UINT32_MAX;
+    cell_t *r_ptr = cell_ptr + 1;
+    cell_t r = *r_ptr;
+    cell_t r_mat_idx = cell_material_idx(r);
+    CellMaterial *r_mat_ptr = _materials + cell_material_idx(r);
+    int r_result = step_reaction(cell_mat_idx, cell_mat_ptr, r_mat_idx, r_mat_ptr, rng, out1, out2);
+    if (r_result == 2) {
+        active = true;
+        
+        if (out2 != UINT32_MAX) {
+            cell_set_material_idx(r, out2);
+            *r_ptr = r;
+            set_area_active(x + 1, y, r_ptr);
+        }
+
+        if (out1 != UINT32_MAX) {
+            cell_mat_idx = out1;
+            cell_mat_ptr = _materials + cell_mat_idx;
+            changed = true;
+        }
+    } else if (r_result == 1) {
+        active = true;
+    }
+
+    // TODO: Movement
+
+    if (changed) {
+        cell_set_updated(cell);
+        cell_set_material_idx(cell, cell_mat_idx);
+        *cell_ptr = cell;
+        set_area_active(x, y, cell_ptr);
+    } else if (active) {
+        cell_set_updated(cell);
+        cell_set_active(cell, true);
+        *cell_ptr = cell;
+        chunk_set_active(x, y);
+    } else {
+        cell_set_active(cell, false);
+        *cell_ptr = cell;
+    }
+}
+
+// 0: Can not react
+// 1: Could react, but did not
+// 2: Reacted
+int Grid::step_reaction(
+    cell_t mat1_idx,
+    CellMaterial *mat1,
+    cell_t mat2_idx,
+    CellMaterial *mat2,
+    uint64_t &rng,
+    cell_t &out1,
+    cell_t &out2
+) {
+    bool swap;
+    CellMaterial *mat;
+    cell_t reaction_range_idx;
+    if (mat1_idx > mat2_idx) {
+        swap = true;
+        mat = mat2;
+        reaction_range_idx = mat1_idx - mat2_idx;
+    } else {
+        swap = false;
+        mat = mat1;
+        reaction_range_idx = mat2_idx - mat1_idx;
+    }
+
+    if (reaction_range_idx >= mat->reaction_ranges_len) {
+        return 0;
+    }
+
+    uint64_t reaction_range = *(mat->reaction_ranges + reaction_range_idx);
+    uint64_t reaction_start = reaction_range & 0xffffffff;
+    uint64_t reaction_end = reaction_range >> 32;
+
+    if (reaction_start >= reaction_end) {
+        return 0;
+    }
+
+    for (uint64_t i = reaction_start; i < reaction_end; i++) {
+        CellReaction reaction = *(mat->reactions + i);
+        
+        rng = rng * 6364136223846792969 + 1442695040888963401;
+        if (reaction.probability >= rng) {
+            if (swap) {
+                out1 = reaction.mat_idx_out2;
+                out2 = reaction.mat_idx_out1;
+            } else {
+                out1 = reaction.mat_idx_out1;
+                out2 = reaction.mat_idx_out2;
+            }
+
+            return 2;
+        }
+    }
+
+    return 1;
 }

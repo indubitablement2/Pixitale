@@ -6,13 +6,14 @@ extends Control
 func _ready() -> void:
 	add_child(sp)
 	sp.centered = false
-	sp.scale = Vector2(Grid.CELL_SIZE, Grid.CELL_SIZE)
+	sp.scale = Vector2(Grid.GRID_SCALE, Grid.GRID_SCALE)
 	sp.set_texture(tex)
 	
 	Grid.new_empty(512, 512)
 	print(Grid.get_size())
 
 func _process(_delta: float) -> void:
+	Grid.step_manual()
 	Grid.set_texture_data(tex, Rect2i(0.0, 0.0, 512, 512))
 	
 
