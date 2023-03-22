@@ -11,9 +11,29 @@ void Grid::_bind_methods() {
     ClassDB::bind_static_method("Grid", D_METHOD("draw_rect", "rect", "on", "at"), &Grid::draw_rect);
     ClassDB::bind_static_method(
         "Grid",
-        D_METHOD("set_texture_data", "texture", "rect"), &Grid::set_texture_data
+        D_METHOD("set_texture_data", "texture", "rect"),
+        &Grid::set_texture_data
     );
     ClassDB::bind_static_method("Grid", D_METHOD("step_manual"), &Grid::step_manual);
+
+    ClassDB::bind_static_method("Grid", D_METHOD("delete_materials"), &Grid::delete_materials);
+    ClassDB::bind_static_method("Grid", D_METHOD("init_materials", "num_materials"), &Grid::init_materials);
+    ClassDB::bind_static_method(
+        "Grid",
+        D_METHOD(
+            "add_material",
+            "cell_movement",
+            "density",
+            "durability",
+            "cell_collision",
+            "friction",
+            "reactions"
+        ),
+        &Grid::add_material
+    );
+
+    ClassDB::bind_static_method("Grid", D_METHOD("free_memory"), &Grid::free_memory);
+    ClassDB::bind_static_method("Grid", D_METHOD("print_materials"), &Grid::print_materials);
 
     // ADD_GROUP("Test group", "group_");
 	// ADD_SUBGROUP("Test subgroup", "group_subgroup_");
@@ -34,6 +54,10 @@ void Grid::_bind_methods() {
 void Grid::delete_grid() {
     if (_cells != nullptr) {
         delete[] _cells;
+        _cells = nullptr;
+
+        delete[] _chunks;
+        _chunks = nullptr;
     }
 }
 
@@ -55,7 +79,7 @@ void Grid::new_empty(int width, int height) {
     for (int y = 0; y < _height; y++) {
         for (int x = 0; x < _width; x++) {
             _cells[x + y * _width] = i;
-            i = ~i;
+            i = (i + 1) % 2;
         }
     }
 }
@@ -311,8 +335,8 @@ void Grid::step_cell(int x, int y, uint64_t &rng) {
     cell_t cell_mat_idx = cell_material_idx(cell);
     CellMaterial *cell_mat_ptr = _materials + cell_mat_idx;
 
-    cell_t out1 = UINT32_MAX;
-    cell_t out2 = UINT32_MAX;
+    cell_t out1;
+    cell_t out2;
     cell_t *tl_ptr = cell_ptr - _width - 1;
     cell_t tl = *tl_ptr;
     cell_t tl_mat_idx = cell_material_idx(tl);
@@ -321,13 +345,13 @@ void Grid::step_cell(int x, int y, uint64_t &rng) {
     if (tl_result == 2) {
         active = true;
         
-        if (out2 != UINT32_MAX) {
+        if (out2 != tl_mat_idx) {
             cell_set_material_idx(tl, out2);
             *tl_ptr = tl;
             set_area_active(x - 1, y - 1, tl_ptr);
         }
 
-        if (out1 != UINT32_MAX) {
+        if (out1 != cell_mat_idx) {
             cell_mat_idx = out1;
             cell_mat_ptr = _materials + cell_mat_idx;
             changed = true;
@@ -336,8 +360,6 @@ void Grid::step_cell(int x, int y, uint64_t &rng) {
         active = true;
     }
     
-    out1 = UINT32_MAX;
-    out2 = UINT32_MAX;
     cell_t *t_ptr = cell_ptr - _width;
     cell_t t = *t_ptr;
     cell_t t_mat_idx = cell_material_idx(t);
@@ -346,13 +368,13 @@ void Grid::step_cell(int x, int y, uint64_t &rng) {
     if (t_result == 2) {
         active = true;
         
-        if (out2 != UINT32_MAX) {
+        if (out2 != t_mat_idx) {
             cell_set_material_idx(t, out2);
             *t_ptr = t;
             set_area_active(x, y - 1, t_ptr);
         }
 
-        if (out1 != UINT32_MAX) {
+        if (out1 != cell_mat_idx) {
             cell_mat_idx = out1;
             cell_mat_ptr = _materials + cell_mat_idx;
             changed = true;
@@ -361,8 +383,6 @@ void Grid::step_cell(int x, int y, uint64_t &rng) {
         active = true;
     }
 
-    out1 = UINT32_MAX;
-    out2 = UINT32_MAX;
     cell_t *tr_ptr = cell_ptr - _width + 1;
     cell_t tr = *tr_ptr;
     cell_t tr_mat_idx = cell_material_idx(tr);
@@ -371,13 +391,13 @@ void Grid::step_cell(int x, int y, uint64_t &rng) {
     if (tr_result == 2) {
         active = true;
         
-        if (out2 != UINT32_MAX) {
+        if (out2 != tr_mat_idx) {
             cell_set_material_idx(tr, out2);
             *tr_ptr = tr;
             set_area_active(x + 1, y - 1, tr_ptr);
         }
 
-        if (out1 != UINT32_MAX) {
+        if (out1 != cell_mat_idx) {
             cell_mat_idx = out1;
             cell_mat_ptr = _materials + cell_mat_idx;
             changed = true;
@@ -386,8 +406,6 @@ void Grid::step_cell(int x, int y, uint64_t &rng) {
         active = true;
     }
 
-    out1 = UINT32_MAX;
-    out2 = UINT32_MAX;
     cell_t *r_ptr = cell_ptr + 1;
     cell_t r = *r_ptr;
     cell_t r_mat_idx = cell_material_idx(r);
@@ -396,13 +414,13 @@ void Grid::step_cell(int x, int y, uint64_t &rng) {
     if (r_result == 2) {
         active = true;
         
-        if (out2 != UINT32_MAX) {
+        if (out2 != r_mat_idx) {
             cell_set_material_idx(r, out2);
             *r_ptr = r;
             set_area_active(x + 1, y, r_ptr);
         }
 
-        if (out1 != UINT32_MAX) {
+        if (out1 != cell_mat_idx) {
             cell_mat_idx = out1;
             cell_mat_ptr = _materials + cell_mat_idx;
             changed = true;
@@ -484,4 +502,140 @@ int Grid::step_reaction(
     }
 
     return 1;
+}
+
+void Grid::delete_materials() {
+    if (_materials != nullptr) {
+        for (int i = 0; i < _materials_len; i++) {
+            CellMaterial *mat = _materials + i;
+            if (mat->reaction_ranges_len > 0) {
+                delete[] mat->reaction_ranges;
+                delete[] mat->reactions;
+            }
+        }
+
+        delete[] _materials;
+        _materials = nullptr;
+        _materials_len = 0;
+    }
+}
+
+void Grid::init_materials(int num_materials) {
+    delete_materials();
+
+    if (num_materials == 0) {
+        UtilityFunctions::push_error("Number of materials must be greater than 0");
+    } else {
+        _materials = new CellMaterial[num_materials];
+        _materials_len = num_materials;
+    }
+}
+
+void Grid::add_material(
+    int cell_movement,
+    int density,
+    int durability,
+    int cell_collision,
+    float friction,
+    // probability, out1, out2
+    Array reactions,
+    int idx
+) {
+    if (_materials == nullptr) {
+        UtilityFunctions::push_error("Materials not initialized");
+        return;
+    }
+
+    CellMaterial mat;
+    mat.cell_movement = cell_movement;
+    mat.density = density;
+    mat.durability = durability;
+    mat.cell_collision = cell_collision;
+    mat.friction = friction;
+
+    int num_reaction = 0;
+    for (int i = 0; i < reactions.size(); i++) {
+        Array r = reactions[i];
+        if (!r.is_empty()) {
+            mat.reaction_ranges_len = i + 1;
+            num_reaction += r.size();
+        }
+    }
+    if (mat.reaction_ranges_len == 0) {
+        mat.reaction_ranges = nullptr;
+        mat.reactions = nullptr;
+    } else {
+        mat.reaction_ranges = new uint64_t[mat.reaction_ranges_len];
+        mat.reactions = new CellReaction[num_reaction];
+
+        uint64_t next_reaction_idx = 0;
+        for (int i = 0; i < reactions.size(); i++) {
+            uint64_t reactions_start = next_reaction_idx;
+
+            Array reactions_with = reactions[i];
+            for (int j = 0; j < reactions_with.size(); j++) {
+                Array reaction_data = reactions_with[j];
+                CellReaction reaction = {
+                    reaction_data[0],
+                    reaction_data[1],
+                    reaction_data[2]
+                };
+                mat.reactions[next_reaction_idx] = reaction;
+
+                next_reaction_idx++;
+            }
+
+            uint64_t reactions_end = next_reaction_idx;
+
+            if (reactions_start == reactions_end) {
+                mat.reaction_ranges[i] = 0;
+            } else {
+                mat.reaction_ranges[i] = reactions_start | (reactions_end << 32);
+            }
+        }
+
+        if (next_reaction_idx != num_reaction) {
+            UtilityFunctions::push_error("Invalid reaction ranges, c++ logic error");
+        }
+    }
+
+    _materials[idx] = mat;
+}
+
+void Grid::free_memory() {
+    delete_materials();
+    delete_grid();
+}
+
+void Grid::print_materials() {
+    UtilityFunctions::print("num materials: ", _materials_len);
+
+    for (int i = 0; i < _materials_len; i++) {
+        CellMaterial mat = _materials[i];
+        UtilityFunctions::print("-----------", i, "-----------");
+        UtilityFunctions::print("cell_movement ", mat.cell_movement);
+        UtilityFunctions::print("density ", mat.density);
+        UtilityFunctions::print("durability ", mat.durability);
+        UtilityFunctions::print("cell_collision ", mat.cell_collision);
+        UtilityFunctions::print("friction ", mat.friction);
+
+        UtilityFunctions::print("reaction_ranges_len ", mat.reaction_ranges_len);
+        for (int j = 0; j < mat.reaction_ranges_len; j++) {
+            UtilityFunctions::print("   reaction_range ", j);
+            uint64_t reaction_range = *(mat.reaction_ranges + j);
+            uint64_t reaction_start = reaction_range & 0xffffffff;
+            uint64_t reaction_end = reaction_range >> 32;
+            UtilityFunctions::print("   reaction_start ", reaction_start);
+            UtilityFunctions::print("   reaction_end ", reaction_end);
+            for (int k = reaction_start; k < reaction_end; k++) {
+                CellReaction reaction = *(mat.reactions + k);
+                UtilityFunctions::print("       reaction ", k);
+                UtilityFunctions::print("       in1 ", i);
+                UtilityFunctions::print("       in2 ", i + j);
+                UtilityFunctions::print("       probability ", reaction.probability);
+                UtilityFunctions::print("       out1 ", reaction.mat_idx_out1);
+                UtilityFunctions::print("       out2 ", reaction.mat_idx_out2);
+            }
+        }
+    }
 }

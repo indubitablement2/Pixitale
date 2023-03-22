@@ -8,6 +8,9 @@ func _ready() -> void:
 	sp.centered = false
 	sp.scale = Vector2(Grid.GRID_SCALE, Grid.GRID_SCALE)
 	sp.set_texture(tex)
+	var mat := ShaderMaterial.new()
+	mat.set_shader(preload("res://core/shader/cell.gdshader"))
+	sp.set_material(mat)
 	
 	Grid.new_empty(512, 512)
 	print(Grid.get_size())

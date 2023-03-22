@@ -2,6 +2,7 @@
 #define GRID_H
 
 #include <bit>
+#include <map>
 #include <godot_cpp/classes/node2d.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 
@@ -21,6 +22,7 @@ struct ChunkActiveRect {
 struct CellReaction {
     // chance/2^32 - 1.
     uint32_t probability;
+    // TODO: if eq do not change instead.
     // Out of bound (UINT32_MAX) when reaction does not change material.
     cell_t mat_idx_out1;
     // Out of bound (UINT32_MAX) when reaction does not change material.
@@ -30,25 +32,24 @@ struct CellReaction {
 struct CellMaterial {
     StringName display_name;
     // color: ();
-    int movement;
-    float density;
+    int cell_movement;
+    int density;
 
     float durability;
 
-    int collision;
+    int cell_collision;
     float friction;
-    float bounciness;
-
-    // on_destroyed: ();
 
     int reaction_ranges_len;
     // Has all reactions with material that have idx >= this material's idx.
     uint64_t *reaction_ranges;
     CellReaction *reactions;
+
+    // on_destroyed: ();
 };
 
-class Grid : public Node2D {
-    GDCLASS(Grid, Node2D);
+class Grid : public Object {
+    GDCLASS(Grid, Object);
 
 protected:
     static void _bind_methods();
@@ -66,6 +67,7 @@ private:
     inline static uint64_t _tick = 0;
 
     inline static CellMaterial *_materials = nullptr;
+    inline static int _materials_len = 0;
 
     enum CellShifts {
         CELL_SHIFT_UPDATED = 12,
@@ -107,6 +109,7 @@ private:
         cell_t &out1,
         cell_t &out2
     );
+
 public:
     inline const static float GRID_SCALE = 4.0f;
 
@@ -130,7 +133,79 @@ public:
     static void draw_rect(Rect2i rect, CanvasItem *on, Vector2i at);
     static void set_texture_data(Ref<ImageTexture> texture, Rect2i rect);
     static void step_manual();
+
+    static void delete_materials();
+    static void init_materials(int num_materials);
+    static void add_material(
+        // StringName display_name;
+        // color: ();
+        int cell_movement,
+        int density,
+
+        int durability,
+
+        int cell_collision,
+        float friction,
+
+        // probability, out1, out2
+        Array reactions,
+
+        // int reaction_ranges_len;
+        // // Has all reactions with material that have idx >= this material's idx.
+        // uint64_t *reaction_ranges;
+        // CellReaction *reactions;
+
+        // on_destroyed: ();
+        
+        int idx
+    );
+
+    static void free_memory();
+
+    static void print_materials();
 };
+
+// struct CellReactionBuilder {
+//     StringName id1;
+//     StringName id2;
+//     uint32_t probability;
+//     StringName id_out1;
+//     StringName id_out2;
+// };
+
+// class MaterialsBuilder : public RefCounted {
+//     GDCLASS(MaterialsBuilder, RefCounted);
+
+// protected:
+//     static void _bind_methods();
+
+// private:
+//     std::map<StringName, CellMaterial> _materials = {};
+//     std::map<StringName, std::vector<CellReactionBuilder>> _reactions = {};
+//     std::map<StringName, std::vector<StringName>> _tags = {};
+
+// public:
+//     void add_material(
+//         StringName id,
+//         StringName display_name,
+//         int cell_movement,
+//         int density,
+
+//         int durability,
+
+//         int cell_collision,
+//         float friction,
+//         float bounciness
+//     );
+//     void add_reaction(
+//         StringName id1,
+//         StringName id2,
+//         double probability,
+//         StringName id_out1,
+//         StringName id_out2
+//     );
+//     void build();
+// };
 
 VARIANT_ENUM_CAST(Grid::CellMovement);
 VARIANT_ENUM_CAST(Grid::CellCollision);
