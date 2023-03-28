@@ -10,3 +10,61 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 script = ExtResource("1_c4ry3")
+
+[node name="CellName" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -81.0
+offset_top = -26.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "asdasdasa"
+
+[node name="Tick" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -80.0
+offset_top = -53.0
+offset_right = 1.0
+offset_bottom = -27.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "asdasdasa"
+
+[node name="ChunkActive" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -80.0
+offset_top = -82.0
+offset_right = 1.0
+offset_bottom = -56.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "asdasdasa"
+
+[node name="GridPosition" type="Label" parent="."]
+layout_mode = 1
+anchors_preset = 3
+anchor_left = 1.0
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = -79.0
+offset_top = -109.0
+offset_right = 2.0
+offset_bottom = -83.0
+grow_horizontal = 0
+grow_vertical = 0
+text = "asdasdasa"

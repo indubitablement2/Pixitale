@@ -1,5 +1,9 @@
 env = SConscript('godot-cpp/SConstruct')
 
+env.Tool("compilation_db")
+# env.Alias("compiledb", env.CompilationDatabase())
+cdb = env.CompilationDatabase()
+
 env.Append(CPPPATH='src/')
 
 # ? Really need 20?
@@ -11,7 +15,9 @@ else:
 outputpath = '../godot/core/lib/gdext' + env['SHLIBSUFFIX']
 src = Glob('src/*.cpp')
 sharedlib = env.SharedLibrary(outputpath, src)
-Default(sharedlib)
+
+Default([sharedlib, cdb])
+# Default(sharedlib)
 
 # if env['platform'] == 'windows':
 #     sharedlib = env.SharedLibrary(outputpath, src)

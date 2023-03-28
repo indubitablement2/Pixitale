@@ -1,23 +1,63 @@
-#include <bit>
+#include <cstdint>
+#include <cstring>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 
+// #define NDEBUG 
+#include "assert.h"
+#include "godot_cpp/variant/vector2i.hpp"
 #include "grid.h"
+#include "cell.h"
+#include "chunk.h"
 
 void Grid::_bind_methods() {
-    ClassDB::bind_static_method("Grid", D_METHOD("delete_grid"), &Grid::delete_grid);
-    ClassDB::bind_static_method("Grid", D_METHOD("new_empty", "width", "height"), &Grid::new_empty);
-    ClassDB::bind_static_method("Grid", D_METHOD("get_size"), &Grid::get_size);
-    ClassDB::bind_static_method("Grid", D_METHOD("draw_rect", "rect", "on", "at"), &Grid::draw_rect);
+    ClassDB::bind_static_method(
+        "Grid", 
+        D_METHOD("delete_grid"),
+        &Grid::delete_grid
+    );
+    ClassDB::bind_static_method(
+        "Grid", 
+        D_METHOD("new_empty", "width", "height"),
+        &Grid::new_empty
+    );
+    ClassDB::bind_static_method(
+        "Grid", 
+        D_METHOD("get_size"),
+        &Grid::get_size
+    );
+    ClassDB::bind_static_method(
+        "Grid", 
+        D_METHOD("get_size_chunk"),
+        &Grid::get_size_chunk
+    );
     ClassDB::bind_static_method(
         "Grid",
-        D_METHOD("set_texture_data", "texture", "rect"),
-        &Grid::set_texture_data
+        D_METHOD("update_texture_data", "texture", "position"),
+        &Grid::update_texture_data
     );
-    ClassDB::bind_static_method("Grid", D_METHOD("step_manual"), &Grid::step_manual);
+    ClassDB::bind_static_method(
+        "Grid",
+        D_METHOD("step_manual"),
+        &Grid::step_manual
+    );
 
-    ClassDB::bind_static_method("Grid", D_METHOD("delete_materials"), &Grid::delete_materials);
-    ClassDB::bind_static_method("Grid", D_METHOD("init_materials", "num_materials"), &Grid::init_materials);
+    ClassDB::bind_static_method(
+        "Grid",
+        D_METHOD("get_tick"),
+        &Grid::get_tick
+    );
+    ClassDB::bind_static_method(
+        "Grid",
+        D_METHOD("get_cell_material_idx", "position"),
+        &Grid::get_cell_material_idx
+    );
+
+    ClassDB::bind_static_method(
+        "Grid",
+        D_METHOD("init_materials", "num_materials"),
+        &Grid::init_materials
+    );
     ClassDB::bind_static_method(
         "Grid",
         D_METHOD(
@@ -32,8 +72,21 @@ void Grid::_bind_methods() {
         &Grid::add_material
     );
 
-    ClassDB::bind_static_method("Grid", D_METHOD("free_memory"), &Grid::free_memory);
-    ClassDB::bind_static_method("Grid", D_METHOD("print_materials"), &Grid::print_materials);
+    ClassDB::bind_static_method(
+        "Grid",
+        D_METHOD("is_chunk_active", "position"),
+        &Grid::is_chunk_active
+    );
+    ClassDB::bind_static_method(
+        "Grid",
+        D_METHOD("free_memory"),
+        &Grid::free_memory
+    );
+    ClassDB::bind_static_method(
+        "Grid",
+        D_METHOD("print_materials"),
+        &Grid::print_materials
+    );
 
     // ADD_GROUP("Test group", "group_");
 	// ADD_SUBGROUP("Test subgroup", "group_subgroup_");
@@ -52,428 +105,230 @@ void Grid::_bind_methods() {
 }
 
 void Grid::delete_grid() {
-    if (_cells != nullptr) {
-        delete[] _cells;
-        _cells = nullptr;
+    if (cells != nullptr) {
+        delete [] cells;
+        cells = nullptr;
+        width = 0;
+        height = 0;
 
-        delete[] _chunks;
-        _chunks = nullptr;
+        delete [] chunks;
+        chunks = nullptr;
+        chunks_width = 0;
+        chunks_height = 0;
     }
 }
 
-void Grid::new_empty(int width, int height) {
+void Grid::new_empty(int wish_width, int wish_height) {
     delete_grid();
 
-    _chunk_width = std::max(width / 32, 3);
-    // Make sure it is a multiple of 8,
-    // so that cache lines are not shared between threads.
-    _chunk_height = (std::max(height / 32, 3) + 7) & ~7;
-    _chunks = new chunk_t[_chunk_width * _chunk_height];
+    chunks_width = std::max(wish_width / 32, 3);
+    chunks_height = std::max(wish_height / 32, 3);
+    chunks = new Chunk[chunks_width * chunks_height];
 
-    _width = _chunk_width * 32;
-    _height = _chunk_height * 32;
-    _cells = new cell_t[_width * _height];
+    width = chunks_width * 32;
+    height = chunks_height * 32;
+    cells = new uint32_t[width * height];
 
     // iterate over all cells
-    cell_t i = 0;
-    for (int y = 0; y < _height; y++) {
-        for (int x = 0; x < _width; x++) {
-            _cells[x + y * _width] = i;
-            i = (i + 1) % 2;
-        }
+    for (int i = 0; i < height * width; i++) {
+        auto cell_ptr = cells + i;
+        uint32_t cell = i % 2;
+        CellApi::cell_set_active(cell, true);
+        *cell_ptr = cell;
     }
 }
 
 Vector2i Grid::get_size() {
-    return Vector2i(_width, _height);
+    return Vector2i(width, height);
 }
 
-void Grid::draw_rect(Rect2i rect, CanvasItem *on, Vector2i at) {
-    if (_cells == nullptr) {
+Vector2i Grid::get_size_chunk() {
+    return Vector2i(chunks_width, chunks_height);
+}
+
+void Grid::update_texture_data(Ref<ImageTexture> texture, Vector2i position) {
+    if (cells == nullptr) {
         UtilityFunctions::push_warning("Grid is not initialized");
         return;
     }
 
-    rect = rect.intersection(Rect2i(0, 0, _width, _height));
+    int texture_width = texture->get_width();
+    int texture_height = texture->get_height();
 
-    on->draw_rect(Rect2i(rect.position + at, rect.size), Color(1.0f, 1.0f, 1.0f));
-}
-
-void Grid::set_texture_data(Ref<ImageTexture> texture, Rect2i rect) {
-    if (_cells == nullptr) {
-        UtilityFunctions::push_warning("Grid is not initialized");
+    if (texture_width == 0 || texture_height == 0) {
+        UtilityFunctions::push_warning("Texture has zero size");
         return;
     }
 
-    rect = rect.intersection(Rect2i(0, 0, _width, _height));
-    int left = int(rect.position.x);
-    int top = int(rect.position.y);
-    int right = std::min(int(rect.position.x + rect.size.x), _width);
-    int bottom = std::min(int(rect.position.y + rect.size.y), _height);
+    int skip_texture_left = std::max(0, -position.x);
+    int skip_texture_top = std::max(0, -position.y);
+    int texture_write_width = std::min(texture_width, width - skip_texture_left);
+    int texture_write_height = std::min(texture_height, height - skip_texture_top);
 
-    int32_t texture_width = texture->get_width();
-    int32_t texture_height = texture->get_height();
-    int32_t image_width = right - left;
-    int32_t image_height = bottom - top;
+    int skip_cell_left = std::max(0, position.x) * sizeof(uint32_t);
+    int skip_cell_top = std::max(0, position.y);
 
-    bool recreate_texture = false;
-    if (texture_width > image_width || texture_height > image_height) {
-        if (texture_width - image_width > 256 || texture_height - image_height > 256) {
-            recreate_texture = true;
-        } else {
-            // There will be padding.
-            image_width = texture_width;
-            image_height = texture_height;
-        }
-    } else if (texture_width < image_width || texture_height < image_height) {
-        recreate_texture = true;
-    }
-    // TODO: Make clear that only image_width, image_height, left and top are valid.
+    texture_width *= sizeof(uint32_t);
+    skip_texture_left *= sizeof(uint32_t);
+    texture_write_width *= sizeof(uint32_t);
 
     // TODO: Reuse this buffer.
     PackedByteArray data = PackedByteArray();
-    data.resize(image_width * image_height * sizeof(cell_t));
-    
-    uint8_t *cells_ptr = reinterpret_cast<uint8_t*>(_cells);
-    cells_ptr += left * sizeof(cell_t) + top * _width * sizeof(cell_t);
-    uint8_t *data_ptr = data.ptrw();
-    
+    data.resize(texture_width * texture_height);
+    auto data_ptr = data.ptrw() + skip_texture_left + skip_texture_top * texture_width;
+
+    auto cell_ptr = reinterpret_cast<uint8_t*>(cells + skip_cell_left + skip_cell_top * width * sizeof(uint32_t));
+
     // Copy each rows.
-    for (int i = 0; i < image_height; i++) {
-        memcpy(data_ptr, cells_ptr, image_width * sizeof(cell_t));
-        cells_ptr += _width * sizeof(cell_t);
-        data_ptr += image_width * sizeof(cell_t);
+    for (int y = 0; y < texture_write_height; y++) {
+        memcpy(
+            data_ptr,
+            cell_ptr,
+            texture_write_width
+        );
+        data_ptr += texture_width;
+        cell_ptr += width * sizeof(uint32_t);
     }
 
     Ref<Image> image = Image::create_from_data(
-        image_width,
-        image_height,
+        texture_width / sizeof(uint32_t),
+        texture_height,
         false,
         Image::FORMAT_RGBA8,
         data
     );
 
-    if (recreate_texture) {
-        UtilityFunctions::print("Recreating draw texture");
-        texture->set_image(image);
-    } else {
-        texture->update(image);
-    }
+    texture->update(image);
 }
 
 void Grid::step_manual() {
-    if (_cells == nullptr) {
+    if (cells == nullptr) {
         UtilityFunctions::push_warning("Grid is not initialized");
         return;
     }
+    
+    CellApi::step_updated_bit();
+    tick++;
 
-    _update_bit = (((_update_bit >> CellShifts::CELL_SHIFT_UPDATED) % 3) + 1)
-        << CellShifts::CELL_SHIFT_UPDATED;
-    _tick++;
+    count = 0;
 
-    for (int column_idx = 1; column_idx < _chunk_width - 1; column_idx++) {
+    for (int column_idx = 1; column_idx < chunks_width - 1; column_idx++) {
         step_column(column_idx);
     }
-}
 
-cell_t Grid::cell_material_idx(cell_t cell) {
-    return cell & CellMasks::CELL_MASK_MATERIAL;
-}
-
-void Grid::cell_set_material_idx(cell_t& cell, cell_t material_idx) {
-    cell = (cell & ~CellMasks::CELL_MASK_MATERIAL) | material_idx;
-}
-
-bool Grid::cell_is_updated(cell_t cell) {
-    return (cell & CellMasks::CELL_MASK_UPDATED) == _update_bit;
-}
-
-void Grid::cell_set_updated(cell_t& cell) {
-    cell = (cell & ~CellMasks::CELL_MASK_UPDATED) | _update_bit;
-}
-
-bool Grid::cell_is_active(cell_t cell) {
-    return (cell & CellMasks::CELL_MASK_ACTIVE) != 0;
-}
-
-// When inactive, set updated bit to 0 (never skip).
-void Grid::cell_set_active(cell_t& cell, bool active) {
-    if (active) {
-        cell |= CellMasks::CELL_MASK_ACTIVE;
-    } else {
-        cell &= ~CellMasks::CELL_MASK_ACTIVE;
-        cell = cell & ~CellMasks::CELL_MASK_UPDATED;
-    }
-}
-
-// Set cells in a 3x3 area to active (both on cell and chunk).
-void Grid::set_area_active(int x, int y, cell_t *center_ptr) {
-    chunk_set_active(x - 1, y - 1);
-    chunk_set_active(x, y - 1);
-    chunk_set_active(x + 1, y - 1);
-
-    chunk_set_active(x - 1, y);
-    chunk_set_active(x + 1, y);
-
-    chunk_set_active(x - 1, y + 1);
-    chunk_set_active(x, y + 1);
-    chunk_set_active(x + 1, y + 1);
-
-    *(center_ptr - 1) |= CellMasks::CELL_MASK_ACTIVE;
-    *center_ptr |= CellMasks::CELL_MASK_ACTIVE;
-    *(center_ptr + 1) |= CellMasks::CELL_MASK_ACTIVE;
-    
-    *(center_ptr + _width - 1) |= CellMasks::CELL_MASK_ACTIVE;
-    *(center_ptr + _width) |= CellMasks::CELL_MASK_ACTIVE;
-    *(center_ptr + _width + 1) |= CellMasks::CELL_MASK_ACTIVE;
-
-    *(center_ptr - _width - 1) |= CellMasks::CELL_MASK_ACTIVE;
-    *(center_ptr - _width) |= CellMasks::CELL_MASK_ACTIVE;
-    *(center_ptr - _width + 1) |= CellMasks::CELL_MASK_ACTIVE;
-}
-
-// Set a single point on chunk to active.
-// Does not set cell to active.
-void Grid::chunk_set_active(int x, int y) {
-    int idx = (y >> 5) + (x >> 5) * _chunk_width;
-    chunk_t bitmask = (1 << ((x & 31) + 32)) | (1 << (y & 31));
-    chunk_t *chunk = _chunks + idx;
-    *chunk |= bitmask;
-}
-
-bool Grid::chunk_is_row_inactive(chunk_t chunk, int row) {
-    return (chunk & (1 << row)) == 0;
-}
-
-ChunkActiveRect Grid::chunk_active_rect(chunk_t chunk) {
-    ChunkActiveRect rect;
-    rect.column_skip = 0;
-    rect.column_count = 0;
-    rect.row_skip = 0;
-    rect.row_count = 0;
-
-    if (chunk == 0) {
-        return rect;
-    }
-
-    uint cols = uint(chunk >> 32);
-    uint rows = uint(chunk);
-
-    rect.column_skip = std::countr_zero(cols);
-    rect.column_count = 32 - std::countl_zero(cols) - rect.column_skip;
-    rect.row_skip = std::countr_zero(rows);
-    rect.row_count = 32 - std::countl_zero(rows) - rect.row_skip;
-
-    return rect;
+    UtilityFunctions::print("count: ", count);
 }
 
 void Grid::step_column(int column_idx) {
-    uint64_t rng = (uint64_t)column_idx * _tick;
+    uint32_t rng = (uint32_t)((int64_t)column_idx * tick * 6364136223846792969);
 
-    chunk_t *chunks_end = _chunks + column_idx * _chunk_height;
-    chunk_t *chunks = chunks_end + _chunk_height - 2;
-    int num_chunks = _chunk_height - 1;
+    Chunk *chunk_end = chunks + column_idx;
+    Chunk *next_chunk = chunk_end + (chunks_height - 2) * chunks_width;
+
+    auto next_chunk_rows = next_chunk->rows;
+    auto next_chunk_rect = next_chunk->active_rect();
+    next_chunk->set_inactive();
     
-    int origin_x = column_idx * 32;
-    int origin_y = _height - 32;
+    auto cell_start = cells + ((height - 32) * width + column_idx * 32);
 
-    chunk_t next_chunk = *(chunks - 1);
-    *chunks = 0;
+    // Iterate over each chunk from the bottom.
+    while (next_chunk > chunk_end) {
+        auto rows = next_chunk_rows;
+        auto rect = next_chunk_rect;
+        auto chunk = next_chunk;
 
-    // Iterate over each row from the bottom to the top.
-    while (chunks != chunks_end) {
-        chunk_t chunk = next_chunk;
-        chunks -= 1;
-        next_chunk = *chunks;
-        *chunks = 0;
-        origin_y -= 32;
+        next_chunk -= chunks_width;
+        next_chunk_rows = next_chunk->rows;
+        next_chunk_rect = next_chunk->active_rect();
+        next_chunk->set_inactive();
 
-        if (chunk == 0) {
+        cell_start -= 32 * width;
+
+        step_chunk(chunk, cell_start, rows, rect, rng);
+    }
+}
+
+void Grid::step_chunk(
+    Chunk *chunk,
+    uint32_t *cell_start,
+    uint32_t rows,
+    ChunkActiveRect rect,
+    uint32_t &rng
+) {
+    if (rows == 0) {
+        return;
+    }
+
+    UtilityFunctions::print("x_start ", rect.x_start, " x_end ", rect.x_end, " y_start ", rect.y_start, " y_end ", rect.y_end);
+
+    // Iterate over each cell in the chunk.
+    for (int local_y = rect.y_end - 1; local_y >= rect.y_start; local_y--) {
+        if ((rows & (1 << local_y)) == 0) {
             continue;
         }
 
-        ChunkActiveRect rect = chunk_active_rect(chunk);
-        int x_start = origin_x + rect.column_skip;
-        int x_end = x_start + rect.column_count;
-        int y_end = origin_y + rect.row_skip - 1;
-        int y_start = y_end + rect.row_count;
-        
-        // Iterate over each cell in the chunk.
-        for (int y = y_start; y > y_end; y--) {
-            if (chunk_is_row_inactive(chunk, y & 5)) {
-                continue;
-            }
-
-            for (int x = x_start; x < x_end; x++) {
-                step_cell(x, y, rng);
-            }
+        for (int local_x = rect.x_start; local_x < rect.x_end; local_x++) {
+            auto cell_ptr = cell_start + local_x + local_y * width;
+            auto cell = CellApi(chunk, cell_ptr, local_x, local_y);
+            step_cell(cell, rng);
         }
     }
 }
 
-void Grid::step_cell(int x, int y, uint64_t &rng) {
-    cell_t *cell_ptr = _cells + x + y * _width;
-    cell_t cell = *cell_ptr;
-    bool active = cell_is_active(cell);
-
-    if (!active) {
-        // ? Make sure it is at updated bit == 0.
+void Grid::step_cell(CellApi &cell, uint32_t &rng) {
+    if (!cell.is_active() || cell.is_updated()) {
         return;
     }
 
-    if (cell_is_updated(cell)) {
-        return;
-    }
-
-    active = false;
+    bool active = false;
     bool changed = false;
 
     // Reactions
     // x x x
     // . o x
     // . . .
-    cell_t cell_mat_idx = cell_material_idx(cell);
-    CellMaterial *cell_mat_ptr = _materials + cell_mat_idx;
-
-    cell_t out1;
-    cell_t out2;
-    cell_t *tl_ptr = cell_ptr - _width - 1;
-    cell_t tl = *tl_ptr;
-    cell_t tl_mat_idx = cell_material_idx(tl);
-    CellMaterial *tl_mat_ptr = _materials + cell_material_idx(tl);
-    int tl_result = step_reaction(cell_mat_idx, cell_mat_ptr, tl_mat_idx, tl_mat_ptr, rng, out1, out2);
-    if (tl_result == 2) {
-        active = true;
-        
-        if (out2 != tl_mat_idx) {
-            cell_set_material_idx(tl, out2);
-            *tl_ptr = tl;
-            set_area_active(x - 1, y - 1, tl_ptr);
-        }
-
-        if (out1 != cell_mat_idx) {
-            cell_mat_idx = out1;
-            cell_mat_ptr = _materials + cell_mat_idx;
-            changed = true;
-        }
-    } else if (tl_result == 1) {
-        active = true;
-    }
-    
-    cell_t *t_ptr = cell_ptr - _width;
-    cell_t t = *t_ptr;
-    cell_t t_mat_idx = cell_material_idx(t);
-    CellMaterial *t_mat_ptr = _materials + cell_material_idx(t);
-    int t_result = step_reaction(cell_mat_idx, cell_mat_ptr, t_mat_idx, t_mat_ptr, rng, out1, out2);
-    if (t_result == 2) {
-        active = true;
-        
-        if (out2 != t_mat_idx) {
-            cell_set_material_idx(t, out2);
-            *t_ptr = t;
-            set_area_active(x, y - 1, t_ptr);
-        }
-
-        if (out1 != cell_mat_idx) {
-            cell_mat_idx = out1;
-            cell_mat_ptr = _materials + cell_mat_idx;
-            changed = true;
-        }
-    } else if (t_result == 1) {
-        active = true;
-    }
-
-    cell_t *tr_ptr = cell_ptr - _width + 1;
-    cell_t tr = *tr_ptr;
-    cell_t tr_mat_idx = cell_material_idx(tr);
-    CellMaterial *tr_mat_ptr = _materials + cell_material_idx(tr);
-    int tr_result = step_reaction(cell_mat_idx, cell_mat_ptr, tr_mat_idx, tr_mat_ptr, rng, out1, out2);
-    if (tr_result == 2) {
-        active = true;
-        
-        if (out2 != tr_mat_idx) {
-            cell_set_material_idx(tr, out2);
-            *tr_ptr = tr;
-            set_area_active(x + 1, y - 1, tr_ptr);
-        }
-
-        if (out1 != cell_mat_idx) {
-            cell_mat_idx = out1;
-            cell_mat_ptr = _materials + cell_mat_idx;
-            changed = true;
-        }
-    } else if (tr_result == 1) {
-        active = true;
-    }
-
-    cell_t *r_ptr = cell_ptr + 1;
-    cell_t r = *r_ptr;
-    cell_t r_mat_idx = cell_material_idx(r);
-    CellMaterial *r_mat_ptr = _materials + cell_material_idx(r);
-    int r_result = step_reaction(cell_mat_idx, cell_mat_ptr, r_mat_idx, r_mat_ptr, rng, out1, out2);
-    if (r_result == 2) {
-        active = true;
-        
-        if (out2 != r_mat_idx) {
-            cell_set_material_idx(r, out2);
-            *r_ptr = r;
-            set_area_active(x + 1, y, r_ptr);
-        }
-
-        if (out1 != cell_mat_idx) {
-            cell_mat_idx = out1;
-            cell_mat_ptr = _materials + cell_mat_idx;
-            changed = true;
-        }
-    } else if (r_result == 1) {
-        active = true;
-    }
+    CellApi other = cell;
+    other.right();
+    step_reaction(cell, active, changed, other, rng);
+    other.up();
+    step_reaction(cell, active, changed, other, rng);
+    other.left();
+    step_reaction(cell, active, changed, other, rng);
+    other.left();
+    step_reaction(cell, active, changed, other, rng);
 
     // TODO: Movement
 
     if (changed) {
-        cell_set_updated(cell);
-        cell_set_material_idx(cell, cell_mat_idx);
-        *cell_ptr = cell;
-        set_area_active(x, y, cell_ptr);
+        cell.set_updated();
+        cell.set_area_active();
     } else if (active) {
-        cell_set_updated(cell);
-        cell_set_active(cell, true);
-        *cell_ptr = cell;
-        chunk_set_active(x, y);
+        cell.set_updated();
+        cell.set_active(true);
     } else {
-        cell_set_active(cell, false);
-        *cell_ptr = cell;
+        cell.set_active(false);
     }
 }
 
-// 0: Can not react
-// 1: Could react, but did not
-// 2: Reacted
-int Grid::step_reaction(
-    cell_t mat1_idx,
-    CellMaterial *mat1,
-    cell_t mat2_idx,
-    CellMaterial *mat2,
-    uint64_t &rng,
-    cell_t &out1,
-    cell_t &out2
-) {
+void Grid::step_reaction(CellApi &cell, bool &active, bool &changed, CellApi &other, uint32_t &rng) {
+    auto cell_material_idx = cell.material_idx();
+    auto other_material_idx = other.material_idx();
+
     bool swap;
     CellMaterial *mat;
-    cell_t reaction_range_idx;
-    if (mat1_idx > mat2_idx) {
+    uint32_t reaction_range_idx;
+    if (cell_material_idx > other_material_idx) {
         swap = true;
-        mat = mat2;
-        reaction_range_idx = mat1_idx - mat2_idx;
+        mat = CellMaterial::materials + other_material_idx;
+        reaction_range_idx = cell_material_idx - other_material_idx;
     } else {
         swap = false;
-        mat = mat1;
-        reaction_range_idx = mat2_idx - mat1_idx;
+        mat = CellMaterial::materials + cell_material_idx;
+        reaction_range_idx = other_material_idx - cell_material_idx;
     }
 
     if (reaction_range_idx >= mat->reaction_ranges_len) {
-        return 0;
+        return;
     }
 
     uint64_t reaction_range = *(mat->reaction_ranges + reaction_range_idx);
@@ -481,14 +336,17 @@ int Grid::step_reaction(
     uint64_t reaction_end = reaction_range >> 32;
 
     if (reaction_start >= reaction_end) {
-        return 0;
+        return;
     }
+
+    active = true;
 
     for (uint64_t i = reaction_start; i < reaction_end; i++) {
         CellReaction reaction = *(mat->reactions + i);
         
-        rng = rng * 6364136223846792969 + 1442695040888963401;
+        rng = rng * 1284865807 + 4150755601;
         if (reaction.probability >= rng) {
+            uint32_t out1, out2;
             if (swap) {
                 out1 = reaction.mat_idx_out2;
                 out2 = reaction.mat_idx_out1;
@@ -496,38 +354,46 @@ int Grid::step_reaction(
                 out1 = reaction.mat_idx_out1;
                 out2 = reaction.mat_idx_out2;
             }
+            
+            if (out1 != cell_material_idx) {
+                cell.set_material_idx(out1);
+                changed = true;
+            }
 
-            return 2;
+            if (out2 != other_material_idx) {
+                other.set_material_idx(out2);
+                other.set_area_active();
+            }
+
+            return;
         }
     }
 
-    return 1;
+    count++;
 }
 
-void Grid::delete_materials() {
-    if (_materials != nullptr) {
-        for (int i = 0; i < _materials_len; i++) {
-            CellMaterial *mat = _materials + i;
+void delete_materials() {
+    if (CellMaterial::materials != nullptr) {
+        for (int i = 0; i < CellMaterial::materials_len; i++) {
+            CellMaterial *mat = CellMaterial::materials + i;
             if (mat->reaction_ranges_len > 0) {
                 delete[] mat->reaction_ranges;
                 delete[] mat->reactions;
             }
         }
 
-        delete[] _materials;
-        _materials = nullptr;
-        _materials_len = 0;
+        delete[] CellMaterial::materials;
+        CellMaterial::materials = nullptr;
+        CellMaterial::materials_len = 0;
     }
 }
 
 void Grid::init_materials(int num_materials) {
     delete_materials();
 
-    if (num_materials == 0) {
-        UtilityFunctions::push_error("Number of materials must be greater than 0");
-    } else {
-        _materials = new CellMaterial[num_materials];
-        _materials_len = num_materials;
+    if (num_materials > 0) {
+        CellMaterial::materials = new CellMaterial[num_materials];
+        CellMaterial::materials_len = num_materials;
     }
 }
 
@@ -541,17 +407,12 @@ void Grid::add_material(
     Array reactions,
     int idx
 ) {
-    if (_materials == nullptr) {
+    if (CellMaterial::materials == nullptr) {
         UtilityFunctions::push_error("Materials not initialized");
         return;
     }
 
-    CellMaterial mat;
-    mat.cell_movement = cell_movement;
-    mat.density = density;
-    mat.durability = durability;
-    mat.cell_collision = cell_collision;
-    mat.friction = friction;
+    CellMaterial mat = CellMaterial();
 
     int num_reaction = 0;
     for (int i = 0; i < reactions.size(); i++) {
@@ -561,10 +422,7 @@ void Grid::add_material(
             num_reaction += r.size();
         }
     }
-    if (mat.reaction_ranges_len == 0) {
-        mat.reaction_ranges = nullptr;
-        mat.reactions = nullptr;
-    } else {
+    if (mat.reaction_ranges_len != 0) {
         mat.reaction_ranges = new uint64_t[mat.reaction_ranges_len];
         mat.reactions = new CellReaction[num_reaction];
 
@@ -599,7 +457,15 @@ void Grid::add_material(
         }
     }
 
-    _materials[idx] = mat;
+    CellMaterial::materials[idx] = mat;
+}
+
+bool Grid::is_chunk_active(Vector2i position) {
+    if (position.x < 0 || position.y < 0 || position.x >= width || position.y >= height) {
+        return false;
+    }
+
+    return (chunks + position.x + position.y * chunks_width)->is_active();
 }
 
 void Grid::free_memory() {
@@ -607,11 +473,23 @@ void Grid::free_memory() {
     delete_grid();
 }
 
-void Grid::print_materials() {
-    UtilityFunctions::print("num materials: ", _materials_len);
+int64_t Grid::get_tick() {
+    return tick;
+}
 
-    for (int i = 0; i < _materials_len; i++) {
-        CellMaterial mat = _materials[i];
+uint32_t Grid::get_cell_material_idx(Vector2i position) {
+    if (position.x < 0 || position.y < 0 || position.x >= width || position.y >= height) {
+        return 0;
+    }
+
+    return CellApi::cell_material_idx(cells[position.x + position.y * width]);
+}
+
+void Grid::print_materials() {
+    UtilityFunctions::print("num materials: ", CellMaterial::materials_len);
+
+    for (int i = 0; i < CellMaterial::materials_len; i++) {
+        CellMaterial &mat = CellMaterial::materials[i];
         UtilityFunctions::print("-----------", i, "-----------");
         UtilityFunctions::print("cell_movement ", mat.cell_movement);
         UtilityFunctions::print("density ", mat.density);
