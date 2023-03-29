@@ -1,6 +1,5 @@
 #include <bit>
 #include "chunk.h"
-#include "cell.h"
 
 void Chunk::set_inactive() {
     this->rows = 0;

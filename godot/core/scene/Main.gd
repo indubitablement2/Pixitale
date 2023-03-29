@@ -1,12 +1,14 @@
 extends Control
 
-const NUM_CHUNK = 1
+const NUM_CHUNK = 4
 const GRID_SIZE = 64 + 32 * NUM_CHUNK
 
 @onready var tex :ImageTexture
 @onready var sp := Sprite2D.new()
 
 func _ready() -> void:
+	Grid.run_tests()
+	
 	var img := Image.create(GRID_SIZE, GRID_SIZE, false, Image.FORMAT_RGBA8)
 	tex = ImageTexture.create_from_image(img)
 	

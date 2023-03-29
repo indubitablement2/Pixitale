@@ -5,7 +5,6 @@
 #include <godot_cpp/classes/node2d.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 #include "chunk.h"
-#include "cell.h"
 
 using namespace godot;
 
@@ -20,9 +19,6 @@ struct CellReaction {
 
 class CellMaterial {
 public:
-    inline static CellMaterial *materials = nullptr;
-    inline static int materials_len = 0;
-
     // StringName display_name;
     // color: ();
     int cell_movement;
@@ -52,6 +48,22 @@ public:
     {};
 };
 
+inline static uint32_t *cells = nullptr;
+inline static int width = 0;
+inline static int height = 0;
+
+inline static Chunk *chunks = nullptr;
+inline static int chunks_width = 0;
+inline static int chunks_height = 0;
+
+inline static int64_t tick = 0;
+inline static uint32_t updated_bit = 0;
+
+inline static CellMaterial *cell_materials = nullptr;
+inline static int cell_materials_len = 0;
+
+inline static int count = 0;
+
 class Grid : public Object {
     GDCLASS(Grid, Object);
 
@@ -67,31 +79,19 @@ private:
     //     bool changed
     // );
 
-    static void step_column(int column_idx); 
-    static void step_chunk(
-        Chunk *chunk,
-        uint32_t *cell_start,
-        uint32_t rows,
-        ChunkActiveRect rect,
-        uint32_t &rng
-    );
-    static void step_cell(CellApi &cell, uint32_t &rng);
-    static void step_reaction(CellApi &cell, bool &active, bool &changed, CellApi &other, uint32_t &rng);
+    // static void step_column(int column_idx); 
+    // static void step_chunk(
+    //     Chunk *chunk,
+    //     uint32_t *cell_start,
+    //     uint32_t rows,
+    //     ChunkActiveRect rect,
+    //     uint32_t &rng
+    // );
+    // static void step_cell(CellApi &cell, uint32_t &rng);
+    // static void step_reaction(CellApi &cell, bool &active, bool &changed, CellApi &other, uint32_t &rng);
 
 public:
-    inline static uint32_t *cells = nullptr;
-    inline static int width = 0;
-    inline static int height = 0;
-    
-    inline static Chunk *chunks = nullptr;
-    inline static int chunks_width = 0;
-    inline static int chunks_height = 0;
-
-    inline static int64_t tick = 0;
-
     inline const static float GRID_SCALE = 4.0f;
-
-    inline static int count = 0;
 
     enum CellMovement {
         CELL_MOVEMENT_SOLID,
@@ -112,6 +112,7 @@ public:
     static Vector2i get_size();
     static Vector2i get_size_chunk();
     static void update_texture_data(Ref<ImageTexture> texture, Vector2i position);
+    
     static void step_manual();
 
     static void init_materials(int num_materials);
@@ -132,6 +133,7 @@ public:
 
     static void free_memory();
     static void print_materials();
+    static void run_tests();
 };
 
 VARIANT_ENUM_CAST(Grid::CellMovement);
