@@ -1,15 +1,13 @@
-#include <algorithm>
-#include <cstdint>
-#include <cstring>
+// #define NDEBUG 
+#include <assert.h>
+
+#include <bit>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 
-// #define NDEBUG 
-#include "assert.h"
-#include "godot_cpp/core/class_db.hpp"
-#include "godot_cpp/variant/vector2i.hpp"
 #include "grid.h"
-#include "chunk.h"
+
+using namespace godot;
 
 namespace Cell {
 
@@ -60,62 +58,115 @@ inline void set_active(uint32_t &cell, const bool active) {
 
 } // namespace Cell
 
+namespace Chunk {
+
+struct ChunkActiveRect {
+    int x_start;
+    int x_end;
+    int y_start;
+    int y_end;
+};
+
+uint32_t get_rows(uint64_t chunk) {
+    return (uint32_t)chunk;
+}
+
+uint32_t get_columns(uint64_t chunk) {
+    return (uint32_t)(chunk >> 32);
+}
+
+ChunkActiveRect active_rect(uint64_t chunk) {
+    ChunkActiveRect rect;
+
+    if (chunk == 0) {
+        rect.x_start = 0;
+        rect.x_end = 0;
+        rect.y_start = 0;
+        rect.y_end = 0;
+        return rect;
+    }
+
+    uint32_t rows = get_rows(chunk);
+    uint32_t columns = get_columns(chunk);
+
+    assert(rows > 0);
+    assert(columns > 0);
+
+    rect.x_start = std::countr_zero(columns);
+    rect.x_end = 32 - std::countl_zero(columns);
+    rect.y_start = std::countr_zero(rows);
+    rect.y_end = 32 - std::countl_zero(rows);
+
+    return rect;
+}
+
 // Rect needs to be within a single chunk.
-void activate_rect(Chunk *chunk, int x_offset, int y_offset, uint64_t width, uint64_t height) {
-    assert(x_offset >= 0 && y_offset >= 0 && x_offset + width <= 32 && y_offset + height <= 32);
+void activate_rect(uint64_t *chunk_ptr, uint64_t x_offset, uint64_t y_offset, uint64_t width, uint64_t height) {
+    assert(x_offset >= 0);
+    assert(y_offset >= 0);
+    assert(x_offset < 32);
+    assert(y_offset < 32);
+    assert(x_offset + width <= 32);
+    assert(y_offset + height <= 32);
+    assert(width > 0);
+    assert(height > 0);
 
-    chunk->rows |= ((1 << height) - 1) << y_offset;
-    chunk->columns |= ((1 << width) - 1) << x_offset; // TODO: +32
+    *chunk_ptr |= ((1uLL << height) - 1uLL) << y_offset; // Set rows
+    *chunk_ptr |= ((1uLL << width) - 1uLL) << (x_offset + 32); // Set columns
+    
+    assert(get_rows(*chunk_ptr) > 0);
+    assert(get_columns(*chunk_ptr) > 0);
 }
 
-void activate_point(Chunk *chunk, int x, int y) {
-    activate_rect(chunk, x, y, 1, 1);
+void activate_point(uint64_t *chunk_ptr, int x, int y) {
+    activate_rect(chunk_ptr, x, y, 1, 1);
 }
 
-void activate_neightbors(Chunk *chunk, int local_x, int local_y, uint32_t *cell) {
+// Unlike other functions, this one also activate the cells.
+void activate_neightbors(uint64_t *chunk_ptr, int local_x, int local_y, uint32_t *cell) {
     if (local_x <= 0 && local_y <= 0) {
         // Top left corner
-        activate_rect(chunk, 0, 0, 2, 2);
-        activate_rect(chunk - 1, 31, 0, 1, 2);
-        activate_rect(chunk - 1 - chunks_width, 31, 31, 1, 1);
-        activate_rect(chunk - chunks_width, 0, 31, 2, 1);
+        activate_rect(chunk_ptr, 0, 0, 2, 2);
+        activate_rect(chunk_ptr - chunks_height, 31, 0, 1, 2);
+        activate_rect(chunk_ptr - chunks_height - 1, 31, 31, 1, 1);
+        activate_rect(chunk_ptr - 1, 0, 31, 2, 1);
     } else if (local_x <= 0 && local_y >= 31) {
         // Bottom left corner
-        activate_rect(chunk, 0, 30, 2, 2);
-        activate_rect(chunk - 1, 31, 30, 1, 2);
-        activate_rect(chunk - 1 + chunks_width, 31, 0, 1, 1);
-        activate_rect(chunk + chunks_width, 0, 0, 2, 1);
+        activate_rect(chunk_ptr, 0, 30, 2, 2);
+        activate_rect(chunk_ptr - chunks_height, 31, 30, 1, 2);
+        activate_rect(chunk_ptr - chunks_height + 1, 31, 0, 1, 1);
+        activate_rect(chunk_ptr + 1, 0, 0, 2, 1);
     } else if (local_x >= 31 && local_y <= 0) {
         // Top right corner
-        activate_rect(chunk, 30, 0, 2, 2);
-        activate_rect(chunk + 1, 0, 0, 1, 2);
-        activate_rect(chunk + 1 - chunks_width, 0, 31, 1, 1);
-        activate_rect(chunk - chunks_width, 30, 31, 2, 1);
+        activate_rect(chunk_ptr, 30, 0, 2, 2);
+        activate_rect(chunk_ptr + chunks_height, 0, 0, 1, 2);
+        activate_rect(chunk_ptr + chunks_height - 1, 0, 31, 1, 1);
+        activate_rect(chunk_ptr - 1, 30, 31, 2, 1);
     } else if (local_x >= 31 && local_y >= 31) {
         // Bottom right corner
-        activate_rect(chunk, 30, 30, 2, 2);
-        activate_rect(chunk + 1, 0, 30, 1, 2);
-        activate_rect(chunk + 1 + chunks_width, 0, 0, 1, 1);
-        activate_rect(chunk + chunks_width, 30, 0, 2, 1);
+        activate_rect(chunk_ptr, 30, 30, 2, 2);
+        activate_rect(chunk_ptr + chunks_height, 0, 30, 1, 2);
+        activate_rect(chunk_ptr + chunks_height + 1, 0, 0, 1, 1);
+        activate_rect(chunk_ptr + 1, 30, 0, 2, 1);
     } else if (local_x <= 0) {
         // Left edge
-        activate_rect(chunk, 0, local_y - 1, 2, 3);
-        activate_rect(chunk - 1, 31, local_y - 1, 1, 3);
+        activate_rect(chunk_ptr, 0, local_y - 1, 2, 3);
+        activate_rect(chunk_ptr - chunks_height, 31, local_y - 1, 1, 3);
     } else if (local_y <= 0) {
         // Top edge
-        activate_rect(chunk, local_x - 1, 0, 3, 2);
-        activate_rect(chunk - chunks_width, local_x - 1, 31, 3, 1);
+        activate_rect(chunk_ptr, local_x - 1, 0, 3, 2);
+        activate_rect(chunk_ptr - 1, local_x - 1, 31, 3, 1);
     } else if (local_x >= 31) {
         // Right edge
-        activate_rect(chunk, 30, local_y - 1, 2, 3);
-        activate_rect(chunk + 1, 0, local_y - 1, 1, 3);
+        activate_rect(chunk_ptr, 30, local_y - 1, 2, 3);
+        activate_rect(chunk_ptr + chunks_height, 0, local_y - 1, 1, 3);
     } else if (local_y >= 31) {
         // Bottom edge
-        activate_rect(chunk, local_x - 1, 30, 3, 2);
-        activate_rect(chunk + chunks_width, local_x - 1, 0, 3, 1);
+        activate_rect(chunk_ptr, local_x - 1, 30, 3, 2);
+        activate_rect(chunk_ptr + 1, local_x - 1, 0, 3, 1);
     } else {
         // Middle
-        activate_rect(chunk, local_x - 1, local_y - 1, 3, 3);
+        activate_rect(chunk_ptr, local_x - 1, local_y - 1, 3, 3);
     }
 
     Cell::set_active(*(cell - 1), true);
@@ -130,27 +181,43 @@ void activate_neightbors(Chunk *chunk, int local_x, int local_y, uint32_t *cell)
 }
 
 // Only works for offset up to 32.
-void offset_chunk_local_position(Chunk *&chunk, int &local_x, int &local_y, int offset_x, int offset_y) {
-    assert(offset_x <= 32 && offset_y <= 32);
+void offset_chunk_local_position(
+    uint64_t *&chunk_ptr,
+    int &local_x,
+    int &local_y,
+    int offset_x,
+    int offset_y
+) {
+    assert(offset_x <= 32);
+    assert(offset_y <= 32);
+    assert(offset_x >= -32);
+    assert(offset_y >= -32);
     
     local_x += offset_x;
     local_y += offset_y;
 
     if (local_x < 0) {
-        chunk -= 1;
+        chunk_ptr -= chunks_height;
         local_x += 32;
     } else if (local_x >= 32) {
-        chunk += 1;
+        chunk_ptr += chunks_height;
         local_x -= 32;
     }
 
     if (local_y < 0) {
-        chunk -= chunks_width;
+        chunk_ptr -= 1;
         local_y += 32;
     } else if (local_y >= 32) {
-        chunk += chunks_width;
+        chunk_ptr += 1;
         local_y -= 32;
     }
+
+    assert(local_x >= 0);
+    assert(local_y >= 0);
+    assert(local_x < 32);
+    assert(local_y < 32);
+}
+
 }
 
 namespace Step {
@@ -159,7 +226,7 @@ void step_reaction(
     uint32_t &cell_material_idx,
     bool &active,
     bool &changed,
-    Chunk *chunk,
+    uint64_t *chunk_ptr,
     int local_x,
     int local_y,
     uint32_t *other_ptr,
@@ -217,29 +284,32 @@ void step_reaction(
 
             if (out2 != other_material_idx) {
                 Cell::set_material_idx(*other_ptr, out2);
-                auto other_chunk = chunk;
+                auto other_chunk_ptr = chunk_ptr;
                 auto other_local_x = local_x;
                 auto other_local_y = local_y;
-                offset_chunk_local_position(
-                    other_chunk,
+                Chunk::offset_chunk_local_position(
+                    other_chunk_ptr,
                     other_local_x,
                     other_local_y,
                     other_offset_x,
                     other_offset_y
                 );
-                activate_neightbors(other_chunk, other_local_x, other_local_y, other_ptr);
+                Chunk::activate_neightbors(
+                    other_chunk_ptr,
+                    other_local_x,
+                    other_local_y,
+                    other_ptr
+                );
             }
 
             return;
         }
     }
-
-    count++;
 }
 
 void step_cell(
     uint32_t *cell_ptr,
-    Chunk *chunk,
+    uint64_t *chunk_ptr,
     int local_x,
     int local_y,
     uint32_t &rng
@@ -265,7 +335,7 @@ void step_cell(
         cell_material_idx,
         active,
         changed,
-        chunk,
+        chunk_ptr,
         local_x,
         local_y,
         cell_ptr + 1,
@@ -278,7 +348,7 @@ void step_cell(
         cell_material_idx,
         active,
         changed,
-        chunk,
+        chunk_ptr,
         local_x,
         local_y,
         cell_ptr - width - 1,
@@ -291,7 +361,7 @@ void step_cell(
         cell_material_idx,
         active,
         changed,
-        chunk,
+        chunk_ptr,
         local_x,
         local_y,
         cell_ptr - width,
@@ -304,7 +374,7 @@ void step_cell(
         cell_material_idx,
         active,
         changed,
-        chunk,
+        chunk_ptr,
         local_x,
         local_y,
         cell_ptr - width + 1,
@@ -320,13 +390,13 @@ void step_cell(
         Cell::set_updated(cell);
         *cell_ptr = cell;
 
-        activate_neightbors(chunk, local_x, local_y, cell_ptr);
+        Chunk::activate_neightbors(chunk_ptr, local_x, local_y, cell_ptr);
     } else if (active) {
         Cell::set_updated(cell);
         Cell::set_active(cell, true);
         *cell_ptr = cell;
 
-        activate_point(chunk, local_x, local_y);
+        Chunk::activate_point(chunk_ptr, local_x, local_y);
     } else {
         Cell::set_active(cell, false);
         *cell_ptr = cell;
@@ -334,17 +404,17 @@ void step_cell(
 }
 
 void step_chunk(
-    Chunk *chunk,
+    uint64_t chunk,
+    uint64_t *chunk_ptr,
     uint32_t *cell_start,
-    uint32_t rows,
-    ChunkActiveRect rect,
     uint32_t &rng
 ) {
-    if (rows == 0) {
+    if (chunk == 0) {
         return;
     }
 
-    UtilityFunctions::print("x_start ", rect.x_start, " x_end ", rect.x_end, " y_start ", rect.y_start, " y_end ", rect.y_end);
+    auto rows = Chunk::get_rows(chunk);
+    auto rect = Chunk::active_rect(chunk);
 
     // Iterate over each cell in the chunk.
     for (int local_y = rect.y_end - 1; local_y >= rect.y_start; local_y--) {
@@ -354,7 +424,7 @@ void step_chunk(
 
         for (int local_x = rect.x_start; local_x < rect.x_end; local_x++) {
             auto cell_ptr = cell_start + local_x + local_y * width;
-            step_cell(cell_ptr, chunk, local_x, local_y, rng);
+            step_cell(cell_ptr, chunk_ptr, local_x, local_y, rng);
         }
     }
 }
@@ -362,29 +432,26 @@ void step_chunk(
 void step_column(int column_idx) {
     uint32_t rng = (uint32_t)((int64_t)column_idx * tick * 6364136223846792969);
 
-    Chunk *chunk_end = chunks + column_idx;
-    Chunk *next_chunk = chunk_end + (chunks_height - 2) * chunks_width;
+    uint64_t *chunk_end_ptr = chunks + column_idx * chunks_height;
+    uint64_t *next_chunk_ptr = chunk_end_ptr + (chunks_height - 2);
 
-    auto next_chunk_rows = next_chunk->rows;
-    auto next_chunk_rect = next_chunk->active_rect();
-    next_chunk->set_inactive();
+    auto next_chunk = *next_chunk_ptr;
+    *next_chunk_ptr = 0;
     
     auto cell_start = cells + ((height - 32) * width + column_idx * 32);
 
     // Iterate over each chunk from the bottom.
-    while (next_chunk > chunk_end) {
-        auto rows = next_chunk_rows;
-        auto rect = next_chunk_rect;
+    while (next_chunk_ptr > chunk_end_ptr) {
         auto chunk = next_chunk;
+        auto chunk_ptr = next_chunk_ptr;
 
-        next_chunk -= chunks_width;
-        next_chunk_rows = next_chunk->rows;
-        next_chunk_rect = next_chunk->active_rect();
-        next_chunk->set_inactive();
+        next_chunk_ptr -= 1;
+        next_chunk = *next_chunk_ptr;
+        *next_chunk_ptr = 0;
 
         cell_start -= 32 * width;
 
-        step_chunk(chunk, cell_start, rows, rect, rng);
+        step_chunk(chunk, chunk_ptr, cell_start, rng);
     }
 }
 
@@ -514,18 +581,28 @@ void Grid::new_empty(int wish_width, int wish_height) {
 
     chunks_width = std::max(wish_width / 32, 3);
     chunks_height = std::max(wish_height / 32, 3);
-    chunks = new Chunk[chunks_width * chunks_height];
+    chunks = new uint64_t[chunks_width * chunks_height];
+    // Set all chunk to active.
+    for (int i = 0; i < chunks_width * chunks_height; i++) {
+        chunks[i] = 0xFFFFFFFFFFFFFFFF;
+    }
 
     width = chunks_width * 32;
     height = chunks_height * 32;
     cells = new uint32_t[width * height];
+    // Set all cells to empty.
+    for (int i = 0; i < width * height; i++) {
+        cells[i] = 0;
+    }
 
     // iterate over all cells
-    for (int i = 0; i < height * width; i++) {
-        auto cell_ptr = cells + i;
-        uint32_t cell = i % 2;
-        Cell::set_active(cell, true);
-        *cell_ptr = cell;
+    for (int x = 32; x < width - 32; x++) {
+        for (int y = 32; y < height - 32; y++) {
+            auto cell_ptr = cells + (y * width + x);
+            uint32_t cell = x % 2;
+            Cell::set_active(cell, true);
+            *cell_ptr = cell;
+        }
     }
 }
 
@@ -606,7 +683,7 @@ void Grid::step_manual() {
         Step::step_column(column_idx);
     }
 
-    UtilityFunctions::print("count: ", count);
+    // UtilityFunctions::print("count: ", count);
 }
 
 void delete_materials() {
@@ -702,7 +779,7 @@ bool Grid::is_chunk_active(Vector2i position) {
         return false;
     }
 
-    return (chunks + position.x + position.y * chunks_width)->is_active();
+    return *(chunks + position.x * chunks_height + position.y);
 }
 
 void Grid::free_memory() {
@@ -757,46 +834,86 @@ void Grid::print_materials() {
 
 namespace Test {
 
-void activate_chunk() {
+void test_activate_chunk() {
     Grid::new_empty(96, 96);
-    auto chunk = chunks + 1 + chunks_width;
+    auto chunk = chunks + chunks_height + 1;
     auto cell_ptr = cells + 32 + 32 * width;
+    *chunk = 0;
 
-    activate_neightbors(chunk, 15, 15, cell_ptr + 15 + 15 * width);
+    Chunk::activate_neightbors(chunk, 15, 15, cell_ptr + 15 + 15 * width);
     UtilityFunctions::print("activate center: OK");
 
-    activate_neightbors(chunk, 0, 0, cell_ptr);
+    Chunk::activate_neightbors(chunk, 0, 0, cell_ptr);
     UtilityFunctions::print("activate top left: OK");
 
-    activate_neightbors(chunk, 31, 31, cell_ptr + 31 + 31 * width);
+    Chunk::activate_neightbors(chunk, 31, 31, cell_ptr + 31 + 31 * width);
     UtilityFunctions::print("activate bottom right: OK");
 
-    activate_neightbors(chunk, 31, 0, cell_ptr + 31);
+    Chunk::activate_neightbors(chunk, 31, 0, cell_ptr + 31);
     UtilityFunctions::print("activate top right: OK");
 
-    activate_neightbors(chunk, 0, 31, cell_ptr + 31 * width);
+    Chunk::activate_neightbors(chunk, 0, 31, cell_ptr + 31 * width);
     UtilityFunctions::print("activate bottom left: OK");
 
-    activate_neightbors(chunk, 15, 0, cell_ptr + 15);
+    Chunk::activate_neightbors(chunk, 15, 0, cell_ptr + 15);
     UtilityFunctions::print("activate top center: OK");
 
-    activate_neightbors(chunk, 15, 31, cell_ptr + 15 + 31 * width);
+    Chunk::activate_neightbors(chunk, 15, 31, cell_ptr + 15 + 31 * width);
     UtilityFunctions::print("activate bottom center: OK");
     
-    activate_neightbors(chunk, 0, 15, cell_ptr + 15 * width);
+    Chunk::activate_neightbors(chunk, 0, 15, cell_ptr + 15 * width);
     UtilityFunctions::print("activate left center: OK");
 
-    activate_neightbors(chunk, 31, 15, cell_ptr + 15 + 31 * width);
+    Chunk::activate_neightbors(chunk, 31, 15, cell_ptr + 15 + 31 * width);
     UtilityFunctions::print("activate right center: OK");
 
     Grid::delete_grid();
 }
 
+void test_activate_rect() {
+    uint64_t *chunk = new uint64_t;
+    *chunk = 0;
+
+    Chunk::activate_rect(chunk, 0, 0, 32, 32);
+    assert(*chunk == 0xffffffffffffffff);
+    UtilityFunctions::print("activate full rect: OK");
+
+    uint32_t rng = 12345789;
+    for (int i = 0; i < 10000; i++) {
+        *chunk = 0;
+
+        rng = rng * 1103515245 + 12345789;
+        int x_offset = rng % 32;
+        rng = rng * 1103515245 + 12345789;
+        int y_offset = rng % 32;
+        rng = rng * 1103515245 + 12345789;
+        uint64_t width = rng % (32 - x_offset) + 1;
+        rng = rng * 1103515245 + 12345789;
+        uint64_t height = rng % (32 - y_offset) + 1;
+
+        Chunk::activate_rect(chunk, x_offset, y_offset, width, height);
+
+        auto rect = Chunk::active_rect(*chunk);
+        assert(rect.x_start == x_offset);
+        assert(rect.y_start == y_offset);
+        assert(rect.x_end == x_offset + width);
+        assert(rect.y_end == y_offset + height);
+    }
+    UtilityFunctions::print("activate random rects: OK");
+
+    delete chunk;
+}
+
 } // namespace Test
 
 void Grid::run_tests() {
-    Test::activate_chunk();
-    UtilityFunctions::print("activate_chunk: OK");
+    UtilityFunctions::print("test_activate_chunk: STARTED");
+    Test::test_activate_chunk();
+    UtilityFunctions::print("test_activate_chunk: PASSED");
+
+    UtilityFunctions::print("test_activate_rect: STARTED");
+    Test::test_activate_rect();
+    UtilityFunctions::print("test_activate_rect: PASSED");
 
     UtilityFunctions::print("All tests passed");
 }

@@ -1,10 +1,8 @@
 #ifndef GRID_H
 #define GRID_H
 
-#include <cstdint>
 #include <godot_cpp/classes/node2d.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
-#include "chunk.h"
 
 using namespace godot;
 
@@ -48,11 +46,13 @@ public:
     {};
 };
 
+// Row major.
 inline static uint32_t *cells = nullptr;
 inline static int width = 0;
 inline static int height = 0;
 
-inline static Chunk *chunks = nullptr;
+// Column major.
+inline static uint64_t *chunks = nullptr;
 inline static int chunks_width = 0;
 inline static int chunks_height = 0;
 
