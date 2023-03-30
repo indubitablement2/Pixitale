@@ -9,7 +9,7 @@ const GRID_SIZE = 64 + 32 * NUM_CHUNK
 func _ready() -> void:
 	Grid.run_tests()
 	
-	var img := Image.create(GRID_SIZE, GRID_SIZE, false, Image.FORMAT_RGBA8)
+	var img := Image.create(GRID_SIZE + 64, GRID_SIZE, false, Image.FORMAT_RGBA8)
 	tex = ImageTexture.create_from_image(img)
 	
 	add_child(sp)
@@ -21,7 +21,7 @@ func _ready() -> void:
 	mat.set_shader(preload("res://core/shader/cell.gdshader"))
 	sp.set_material(mat)
 	
-	Grid.new_empty(GRID_SIZE, GRID_SIZE)
+	Grid.new_empty(GRID_SIZE + 64, GRID_SIZE)
 	Grid.update_texture_data(tex, Vector2i(0, 0))
 	
 	print("grid size: ", Grid.get_size())

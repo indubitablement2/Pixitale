@@ -2,6 +2,7 @@
 #include <assert.h>
 
 #include <bit>
+#include <cstdint>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 
@@ -9,11 +10,36 @@
 
 using namespace godot;
 
+namespace Rng {
+
+void next(uint64_t &rng) {
+    rng = rng * 2862933555777941757uLL + 3037000493uLL;
+}
+
+uint32_t gen_32bit(uint64_t &rng) {
+    next(rng);
+    return rng >> 32;
+}
+
+uint32_t gen_range_32bit(uint64_t &rng, uint32_t min, uint32_t max) {
+    assert(min < max);
+    assert(max > 0);
+
+    return (gen_32bit(rng) % (max - min)) + min;
+}
+
+bool gen_bool(uint64_t &rng) {
+    return gen_32bit(rng) & 1;
+}
+
+} // namespace Rng
+
 namespace Cell {
 
 enum Shifts {
     SHIFT_UPDATED = 12,
     SHIFT_ACTIVE = 14,
+    SHIFT_VALUE = 16,
     SHIFT_COLOR = 24,
 };
 
@@ -23,6 +49,8 @@ enum Masks {
     // 0 used for inactive/new cell. eg. always update.
     MASK_UPDATED = 0b11 << Shifts::SHIFT_UPDATED,
     MASK_ACTIVE = 1 << Shifts::SHIFT_ACTIVE,
+    // Liquid and gas use this as their velocity.
+    MASK_VALUE = 0xFF << Shifts::SHIFT_VALUE,
     MASK_COLOR = 0xFF << Shifts::SHIFT_COLOR,
 };
 
@@ -54,6 +82,22 @@ inline void set_active(uint32_t &cell, const bool active) {
         cell &= ~Masks::MASK_ACTIVE;
         cell &= ~Masks::MASK_UPDATED;
     }
+}
+
+inline int32_t value(const uint32_t &cell) {
+    return (cell & Masks::MASK_VALUE) >> Shifts::SHIFT_VALUE;
+}
+
+inline void set_value(uint32_t &cell, int32_t value, bool saturate) {
+    if (saturate) {
+        if (value > 0xFF) {
+            value = 0xFF;
+        } else if (value < 0) {
+            value = 0;
+        }
+    }
+
+    cell = (cell & ~Masks::MASK_VALUE) | ((uint32_t)value << Shifts::SHIFT_VALUE);
 }
 
 } // namespace Cell
@@ -101,7 +145,7 @@ ChunkActiveRect active_rect(uint64_t chunk) {
 }
 
 // Rect needs to be within a single chunk.
-void activate_rect(uint64_t *chunk_ptr, uint64_t x_offset, uint64_t y_offset, uint64_t width, uint64_t height) {
+void activate_rect(uint64_t *chunk_ptr, int x_offset, int y_offset, uint64_t width, uint64_t height) {
     assert(x_offset >= 0);
     assert(y_offset >= 0);
     assert(x_offset < 32);
@@ -118,8 +162,8 @@ void activate_rect(uint64_t *chunk_ptr, uint64_t x_offset, uint64_t y_offset, ui
     assert(get_columns(*chunk_ptr) > 0);
 }
 
-void activate_point(uint64_t *chunk_ptr, int x, int y) {
-    activate_rect(chunk_ptr, x, y, 1, 1);
+void activate_point(uint64_t *chunk_ptr, int local_x, int local_y) {
+    activate_rect(chunk_ptr, local_x, local_y, 1, 1);
 }
 
 // Unlike other functions, this one also activate the cells.
@@ -218,7 +262,19 @@ void offset_chunk_local_position(
     assert(local_y < 32);
 }
 
+void activate_neightbors_offset(
+    uint64_t *chunk_ptr,
+    int local_x,
+    int local_y,
+    int offset_x,
+    int offset_y,
+    uint32_t *other_ptr
+) {
+    offset_chunk_local_position(chunk_ptr, local_x, local_y, offset_x, offset_y);
+    activate_neightbors(chunk_ptr, local_x, local_y, other_ptr);
 }
+
+} // namespace Chunk
 
 namespace Step {
 
@@ -232,7 +288,7 @@ void step_reaction(
     uint32_t *other_ptr,
     int other_offset_x,
     int other_offset_y,
-    uint32_t &rng
+    uint64_t &rng
 ) {
     auto other_material_idx = Cell::material_idx(*other_ptr);
     
@@ -266,8 +322,7 @@ void step_reaction(
     for (uint64_t i = reaction_start; i < reaction_end; i++) {
         CellReaction reaction = *(mat->reactions + i);
 
-        rng = rng * 1284865807 + 4150755601;
-        if (reaction.probability >= rng) {
+        if (reaction.probability >= Rng::gen_32bit(rng)) {
             uint32_t out1, out2;
             if (swap) {
                 out1 = reaction.mat_idx_out2;
@@ -284,20 +339,12 @@ void step_reaction(
 
             if (out2 != other_material_idx) {
                 Cell::set_material_idx(*other_ptr, out2);
-                auto other_chunk_ptr = chunk_ptr;
-                auto other_local_x = local_x;
-                auto other_local_y = local_y;
-                Chunk::offset_chunk_local_position(
-                    other_chunk_ptr,
-                    other_local_x,
-                    other_local_y,
+                Chunk::activate_neightbors_offset(
+                    chunk_ptr,
+                    local_x,
+                    local_y,
                     other_offset_x,
-                    other_offset_y
-                );
-                Chunk::activate_neightbors(
-                    other_chunk_ptr,
-                    other_local_x,
-                    other_local_y,
+                    other_offset_y,
                     other_ptr
                 );
             }
@@ -307,12 +354,35 @@ void step_reaction(
     }
 }
 
+void swap_cells(
+    uint32_t cell,
+    uint32_t *cell_ptr,
+    uint64_t *chunk_ptr,
+    int local_x,
+    int local_y,
+    uint32_t *other_ptr,
+    int other_offset_x,
+    int other_offset_y
+) {
+    *cell_ptr = *other_ptr;
+    *other_ptr = cell;
+    Chunk::activate_neightbors(chunk_ptr, local_x, local_y, cell_ptr);
+    Chunk::activate_neightbors_offset(
+        chunk_ptr,
+        local_x,
+        local_y,
+        other_offset_x,
+        other_offset_y,
+        other_ptr
+    );
+}
+
 void step_cell(
     uint32_t *cell_ptr,
     uint64_t *chunk_ptr,
     int local_x,
     int local_y,
-    uint32_t &rng
+    uint64_t &rng
 ) {
     uint32_t cell = *cell_ptr;
 
@@ -383,16 +453,241 @@ void step_cell(
         rng
     );
 
-    // TODO: Movement
+    Cell::set_material_idx(cell, cell_material_idx);
+    Cell::set_updated(cell);
+
+    // Movement
+
+    CellMaterial *mat = cell_materials + cell_material_idx;
+
+    auto b = cell_ptr + width;
+    CellMaterial *b_mat = cell_materials + Cell::material_idx(*b);
+
+    auto br = cell_ptr + width + 1;
+    CellMaterial *br_mat = cell_materials + Cell::material_idx(*br);
+
+    auto bl = cell_ptr + width - 1;
+    CellMaterial *bl_mat = cell_materials + Cell::material_idx(*bl);
+
+    auto l = cell_ptr - 1;
+    CellMaterial *l_mat = cell_materials + Cell::material_idx(*l);
+
+    auto r = cell_ptr + 1;
+    CellMaterial *r_mat = cell_materials + Cell::material_idx(*r);
+
+    auto t = cell_ptr - width;
+    CellMaterial *t_mat = cell_materials + Cell::material_idx(*t);
+
+    auto tl = cell_ptr - width - 1;
+    CellMaterial *tl_mat = cell_materials + Cell::material_idx(*tl);
+
+    auto tr = cell_ptr - width + 1;
+    CellMaterial *tr_mat = cell_materials + Cell::material_idx(*tr);
+
+    switch (mat->cell_movement) {
+        case Grid::CELL_MOVEMENT_SOLID: {
+            
+        }
+        break;
+        case Grid::CELL_MOVEMENT_POWDER: {
+            if (b_mat->density < mat->density) {
+                swap_cells(
+                    cell,
+                    cell_ptr,
+                    chunk_ptr,
+                    local_x,
+                    local_y,
+                    b,
+                    0,
+                    1
+                );
+                return;
+            } else if (bl_mat->density < mat->density && br_mat->density < mat->density) {
+                if (Rng::gen_bool(rng)) {
+                    swap_cells(
+                        cell,
+                        cell_ptr,
+                        chunk_ptr,
+                        local_x,
+                        local_y,
+                        bl,
+                        -1,
+                        1
+                    );
+                    return;
+                } else {
+                    swap_cells(
+                        cell,
+                        cell_ptr,
+                        chunk_ptr,
+                        local_x,
+                        local_y,
+                        br,
+                        1,
+                        1
+                    );
+                    return;
+                }
+            } else if (bl_mat->density < mat->density) {
+                swap_cells(
+                    cell,
+                    cell_ptr,
+                    chunk_ptr,
+                    local_x,
+                    local_y,
+                    bl,
+                    -1,
+                    1
+                );
+                return;
+            } else if (br_mat->density < mat->density) {
+                swap_cells(
+                    cell,
+                    cell_ptr,
+                    chunk_ptr,
+                    local_x,
+                    local_y,
+                    br,
+                    1,
+                    1
+                );
+                return;
+            }
+        }
+        break;
+        case Grid::CELL_MOVEMENT_LIQUID: {
+            const uint32_t dissipate_chance = 8388608;
+
+            if (b_mat->density < mat->density) {
+                swap_cells(
+                    cell,
+                    cell_ptr,
+                    chunk_ptr,
+                    local_x,
+                    local_y,
+                    b,
+                    0,
+                    1
+                );
+                return;
+            // } else if (bl_mat->density < mat->density && br_mat->density < mat->density) {
+
+            } else if (bl_mat->density < mat->density) {
+                Cell::set_value(cell, 1, false);
+
+                swap_cells(
+                    cell,
+                    cell_ptr,
+                    chunk_ptr,
+                    local_x,
+                    local_y,
+                    bl,
+                    -1,
+                    1
+                );
+                return;
+            } else if (br_mat->density < mat->density) {
+                Cell::set_value(cell, 0, false);
+
+                swap_cells(
+                    cell,
+                    cell_ptr,
+                    chunk_ptr,
+                    local_x,
+                    local_y,
+                    br,
+                    1,
+                    1
+                );
+                return;
+            } else if (l_mat->density < mat->density && r_mat->density < mat->density) {
+                if (Cell::value(cell)) {
+                    if (Rng::gen_32bit(rng) < dissipate_chance) {
+                        cell = 0;
+                        changed = true;
+                    } else {
+                        swap_cells(
+                            cell,
+                            cell_ptr,
+                            chunk_ptr,
+                            local_x,
+                            local_y,
+                            l,
+                            -1,
+                            0
+                        );
+                        return;
+                    }
+                } else {
+                    if (Rng::gen_32bit(rng) < dissipate_chance) {
+                        cell = 0;
+                        changed = true;
+                    } else {
+                        swap_cells(
+                            cell,
+                            cell_ptr,
+                            chunk_ptr,
+                            local_x,
+                            local_y,
+                            r,
+                            1,
+                            0
+                        );
+                        return;
+                    }
+                }
+            } else if (l_mat->density < mat->density) {
+                if (Rng::gen_32bit(rng) < dissipate_chance) {
+                    cell = 0;
+                    changed = true;
+                } else {
+                    Cell::set_value(cell, 1, false);
+                    
+                    swap_cells(
+                        cell,
+                        cell_ptr,
+                        chunk_ptr,
+                        local_x,
+                        local_y,
+                        l,
+                        -1,
+                        0
+                    );
+                    return;
+                }
+            } else if (r_mat->density < mat->density) {
+                if (Rng::gen_32bit(rng) < dissipate_chance) {
+                    cell = 0;
+                    changed = true;
+                } else {
+                    Cell::set_value(cell, 0, false);
+
+                    swap_cells(
+                        cell,
+                        cell_ptr,
+                        chunk_ptr,
+                        local_x,
+                        local_y,
+                        r,
+                        1,
+                        0
+                    );
+                    return;
+                }
+            }
+        }
+        break;
+        case Grid::CELL_MOVEMENT_GAS: {
+            // TODO: Reverse liquid movement.
+        }
+        break;
+    }
 
     if (changed) {
-        Cell::set_material_idx(cell, cell_material_idx);
-        Cell::set_updated(cell);
         *cell_ptr = cell;
 
         Chunk::activate_neightbors(chunk_ptr, local_x, local_y, cell_ptr);
     } else if (active) {
-        Cell::set_updated(cell);
         Cell::set_active(cell, true);
         *cell_ptr = cell;
 
@@ -407,7 +702,7 @@ void step_chunk(
     uint64_t chunk,
     uint64_t *chunk_ptr,
     uint32_t *cell_start,
-    uint32_t &rng
+    uint64_t &rng
 ) {
     if (chunk == 0) {
         return;
@@ -430,7 +725,7 @@ void step_chunk(
 }
 
 void step_column(int column_idx) {
-    uint32_t rng = (uint32_t)((int64_t)column_idx * tick * 6364136223846792969);
+    uint64_t rng = (uint64_t)column_idx * (uint64_t)tick * 6364136223846792969uLL;
 
     uint64_t *chunk_end_ptr = chunks + column_idx * chunks_height;
     uint64_t *next_chunk_ptr = chunk_end_ptr + (chunks_height - 2);
@@ -461,7 +756,7 @@ void pre_step() {
     tick++;
 }
 
-} // namespace Grid
+} // namespace Step
 
 void Grid::_bind_methods() {
     ClassDB::bind_static_method(
@@ -599,7 +894,7 @@ void Grid::new_empty(int wish_width, int wish_height) {
     for (int x = 32; x < width - 32; x++) {
         for (int y = 32; y < height - 32; y++) {
             auto cell_ptr = cells + (y * width + x);
-            uint32_t cell = x % 2;
+            uint32_t cell = x % cell_materials_len;
             Cell::set_active(cell, true);
             *cell_ptr = cell;
         }
@@ -727,6 +1022,11 @@ void Grid::add_material(
     }
 
     CellMaterial mat = CellMaterial();
+    mat.cell_movement = cell_movement;
+    mat.density = density;
+    mat.durability = durability;
+    mat.cell_collision = cell_collision;
+    mat.friction = friction;
 
     int num_reaction = 0;
     for (int i = 0; i < reactions.size(); i++) {
@@ -878,18 +1178,14 @@ void test_activate_rect() {
     assert(*chunk == 0xffffffffffffffff);
     UtilityFunctions::print("activate full rect: OK");
 
-    uint32_t rng = 12345789;
+    uint64_t rng = 12345789;
     for (int i = 0; i < 10000; i++) {
         *chunk = 0;
 
-        rng = rng * 1103515245 + 12345789;
-        int x_offset = rng % 32;
-        rng = rng * 1103515245 + 12345789;
-        int y_offset = rng % 32;
-        rng = rng * 1103515245 + 12345789;
-        uint64_t width = rng % (32 - x_offset) + 1;
-        rng = rng * 1103515245 + 12345789;
-        uint64_t height = rng % (32 - y_offset) + 1;
+        int x_offset = Rng::gen_range_32bit(rng, 0, 32);
+        int y_offset = Rng::gen_range_32bit(rng, 0, 32);
+        uint64_t width = Rng::gen_range_32bit(rng, 0, 32 - x_offset) + 1;
+        uint64_t height = Rng::gen_range_32bit(rng, 0, 32 - y_offset) + 1;
 
         Chunk::activate_rect(chunk, x_offset, y_offset, width, height);
 
@@ -904,16 +1200,36 @@ void test_activate_rect() {
     delete chunk;
 }
 
+void test_rng() {
+    int num_tests = 100000;
+    int num_true = 0;
+    
+    uint64_t rng = 12345789;
+
+    for (int i = 0; i < num_tests; i++) {
+        if (Rng::gen_bool(rng)) {
+            num_true++;
+        }
+    }
+    double true_bias = (double)num_true / (double)num_tests;
+    UtilityFunctions::print("rng true bias ", true_bias);
+    assert(true_bias > 0.45 && true_bias < 0.55);
+    assert(true_bias != 0.5);
+
+    UtilityFunctions::print("rng non-bias: OK");
+}
+
 } // namespace Test
 
 void Grid::run_tests() {
-    UtilityFunctions::print("test_activate_chunk: STARTED");
+    UtilityFunctions::print("---------- test_activate_chunk: STARTED");
     Test::test_activate_chunk();
-    UtilityFunctions::print("test_activate_chunk: PASSED");
 
-    UtilityFunctions::print("test_activate_rect: STARTED");
+    UtilityFunctions::print("---------- test_activate_rect: STARTED");
     Test::test_activate_rect();
-    UtilityFunctions::print("test_activate_rect: PASSED");
 
-    UtilityFunctions::print("All tests passed");
+    UtilityFunctions::print("---------- test_rng: STARTED");
+    Test::test_rng();
+
+    UtilityFunctions::print("---------- All tests passed!");
 }

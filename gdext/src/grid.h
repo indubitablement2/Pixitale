@@ -19,6 +19,7 @@ class CellMaterial {
 public:
     // StringName display_name;
     // color: ();
+    
     int cell_movement;
     int density;
 

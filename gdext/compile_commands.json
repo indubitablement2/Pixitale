@@ -1,11 +1,5 @@
 [
     {
-        "command": "g++ -o src/chunk.os -c -std=c++17 -std=c++20 -fPIC -Wwrite-strings -m64 -march=x86-64 -O2 -fPIC -DDEBUG_ENABLED -DDEBUG_METHODS_ENABLED -Igodot-cpp/gdextension -Igodot-cpp/include -Igodot-cpp/gen/include -Isrc src/chunk.cpp",
-        "directory": "/home/username/Dev/Pixitale/gdext",
-        "file": "src/chunk.cpp",
-        "output": "src/chunk.os"
-    },
-    {
         "command": "g++ -o src/grid.os -c -std=c++17 -std=c++20 -fPIC -Wwrite-strings -m64 -march=x86-64 -O2 -fPIC -DDEBUG_ENABLED -DDEBUG_METHODS_ENABLED -Igodot-cpp/gdextension -Igodot-cpp/include -Igodot-cpp/gen/include -Isrc src/grid.cpp",
         "directory": "/home/username/Dev/Pixitale/gdext",
         "file": "src/grid.cpp",
