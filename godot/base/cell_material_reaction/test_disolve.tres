@@ -6,7 +6,7 @@
 script = ExtResource("1_res3t")
 in1 = "test"
 in2 = ""
-probability = 0.001
+probability = 0.1
 do_not_change_material1 = false
 out1 = ""
 do_not_change_material2 = false

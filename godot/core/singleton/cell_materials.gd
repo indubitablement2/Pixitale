@@ -7,7 +7,6 @@ func _ready() -> void:
 
 func load_cell_materials() -> void:
 	var materials := _get_materials()
-	print(materials)
 	
 	cell_material_names.resize(materials.size())
 	cell_material_names.fill(&"")

@@ -1,280 +1,17 @@
 // #define NDEBUG 
+#include <algorithm>
 #include <assert.h>
 
-#include <bit>
-#include <cstdint>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
+#include <godot_cpp/variant/vector2.hpp>
 
 #include "grid.h"
+#include "cell.hpp"
+#include "rng.hpp"
+#include "chunk.hpp"
 
 using namespace godot;
-
-namespace Rng {
-
-void next(uint64_t &rng) {
-    rng = rng * 2862933555777941757uLL + 3037000493uLL;
-}
-
-uint32_t gen_32bit(uint64_t &rng) {
-    next(rng);
-    return rng >> 32;
-}
-
-uint32_t gen_range_32bit(uint64_t &rng, uint32_t min, uint32_t max) {
-    assert(min < max);
-    assert(max > 0);
-
-    return (gen_32bit(rng) % (max - min)) + min;
-}
-
-bool gen_bool(uint64_t &rng) {
-    return gen_32bit(rng) & 1;
-}
-
-} // namespace Rng
-
-namespace Cell {
-
-enum Shifts {
-    SHIFT_UPDATED = 12,
-    SHIFT_ACTIVE = 14,
-    SHIFT_VALUE = 16,
-    SHIFT_COLOR = 24,
-};
-
-enum Masks {
-    MASK_MATERIAL = 0xFFF,
-    // Alternate between 1, 2 and 3. 
-    // 0 used for inactive/new cell. eg. always update.
-    MASK_UPDATED = 0b11 << Shifts::SHIFT_UPDATED,
-    MASK_ACTIVE = 1 << Shifts::SHIFT_ACTIVE,
-    // Liquid and gas use this as their velocity.
-    MASK_VALUE = 0xFF << Shifts::SHIFT_VALUE,
-    MASK_COLOR = 0xFF << Shifts::SHIFT_COLOR,
-};
-
-inline uint32_t material_idx(const uint32_t &cell) {
-    return cell & Masks::MASK_MATERIAL;
-}
-
-inline void set_material_idx(uint32_t &cell, const uint32_t material_idx) {
-    cell = (cell & ~Masks::MASK_MATERIAL) | material_idx;
-}
-
-inline bool is_updated(const uint32_t &cell) {
-    return (cell & Masks::MASK_UPDATED) == updated_bit;
-}
-
-inline void set_updated(uint32_t &cell) {
-    cell = (cell & ~Masks::MASK_UPDATED) | updated_bit;
-}
-
-inline bool is_active(const uint32_t &cell) {
-    return cell & Masks::MASK_ACTIVE;
-}
-
-// When inactive, set updated bit to 0 (never skip when it return to active).
-inline void set_active(uint32_t &cell, const bool active) {
-    if (active) {
-        cell |= Masks::MASK_ACTIVE;
-    } else {
-        cell &= ~Masks::MASK_ACTIVE;
-        cell &= ~Masks::MASK_UPDATED;
-    }
-}
-
-inline int32_t value(const uint32_t &cell) {
-    return (cell & Masks::MASK_VALUE) >> Shifts::SHIFT_VALUE;
-}
-
-inline void set_value(uint32_t &cell, int32_t value, bool saturate) {
-    if (saturate) {
-        if (value > 0xFF) {
-            value = 0xFF;
-        } else if (value < 0) {
-            value = 0;
-        }
-    }
-
-    cell = (cell & ~Masks::MASK_VALUE) | ((uint32_t)value << Shifts::SHIFT_VALUE);
-}
-
-} // namespace Cell
-
-namespace Chunk {
-
-struct ChunkActiveRect {
-    int x_start;
-    int x_end;
-    int y_start;
-    int y_end;
-};
-
-uint32_t get_rows(uint64_t chunk) {
-    return (uint32_t)chunk;
-}
-
-uint32_t get_columns(uint64_t chunk) {
-    return (uint32_t)(chunk >> 32);
-}
-
-ChunkActiveRect active_rect(uint64_t chunk) {
-    ChunkActiveRect rect;
-
-    if (chunk == 0) {
-        rect.x_start = 0;
-        rect.x_end = 0;
-        rect.y_start = 0;
-        rect.y_end = 0;
-        return rect;
-    }
-
-    uint32_t rows = get_rows(chunk);
-    uint32_t columns = get_columns(chunk);
-
-    assert(rows > 0);
-    assert(columns > 0);
-
-    rect.x_start = std::countr_zero(columns);
-    rect.x_end = 32 - std::countl_zero(columns);
-    rect.y_start = std::countr_zero(rows);
-    rect.y_end = 32 - std::countl_zero(rows);
-
-    return rect;
-}
-
-// Rect needs to be within a single chunk.
-void activate_rect(uint64_t *chunk_ptr, int x_offset, int y_offset, uint64_t width, uint64_t height) {
-    assert(x_offset >= 0);
-    assert(y_offset >= 0);
-    assert(x_offset < 32);
-    assert(y_offset < 32);
-    assert(x_offset + width <= 32);
-    assert(y_offset + height <= 32);
-    assert(width > 0);
-    assert(height > 0);
-
-    *chunk_ptr |= ((1uLL << height) - 1uLL) << y_offset; // Set rows
-    *chunk_ptr |= ((1uLL << width) - 1uLL) << (x_offset + 32); // Set columns
-    
-    assert(get_rows(*chunk_ptr) > 0);
-    assert(get_columns(*chunk_ptr) > 0);
-}
-
-void activate_point(uint64_t *chunk_ptr, int local_x, int local_y) {
-    activate_rect(chunk_ptr, local_x, local_y, 1, 1);
-}
-
-// Unlike other functions, this one also activate the cells.
-void activate_neightbors(uint64_t *chunk_ptr, int local_x, int local_y, uint32_t *cell) {
-    if (local_x <= 0 && local_y <= 0) {
-        // Top left corner
-        activate_rect(chunk_ptr, 0, 0, 2, 2);
-        activate_rect(chunk_ptr - chunks_height, 31, 0, 1, 2);
-        activate_rect(chunk_ptr - chunks_height - 1, 31, 31, 1, 1);
-        activate_rect(chunk_ptr - 1, 0, 31, 2, 1);
-    } else if (local_x <= 0 && local_y >= 31) {
-        // Bottom left corner
-        activate_rect(chunk_ptr, 0, 30, 2, 2);
-        activate_rect(chunk_ptr - chunks_height, 31, 30, 1, 2);
-        activate_rect(chunk_ptr - chunks_height + 1, 31, 0, 1, 1);
-        activate_rect(chunk_ptr + 1, 0, 0, 2, 1);
-    } else if (local_x >= 31 && local_y <= 0) {
-        // Top right corner
-        activate_rect(chunk_ptr, 30, 0, 2, 2);
-        activate_rect(chunk_ptr + chunks_height, 0, 0, 1, 2);
-        activate_rect(chunk_ptr + chunks_height - 1, 0, 31, 1, 1);
-        activate_rect(chunk_ptr - 1, 30, 31, 2, 1);
-    } else if (local_x >= 31 && local_y >= 31) {
-        // Bottom right corner
-        activate_rect(chunk_ptr, 30, 30, 2, 2);
-        activate_rect(chunk_ptr + chunks_height, 0, 30, 1, 2);
-        activate_rect(chunk_ptr + chunks_height + 1, 0, 0, 1, 1);
-        activate_rect(chunk_ptr + 1, 30, 0, 2, 1);
-    } else if (local_x <= 0) {
-        // Left edge
-        activate_rect(chunk_ptr, 0, local_y - 1, 2, 3);
-        activate_rect(chunk_ptr - chunks_height, 31, local_y - 1, 1, 3);
-    } else if (local_y <= 0) {
-        // Top edge
-        activate_rect(chunk_ptr, local_x - 1, 0, 3, 2);
-        activate_rect(chunk_ptr - 1, local_x - 1, 31, 3, 1);
-    } else if (local_x >= 31) {
-        // Right edge
-        activate_rect(chunk_ptr, 30, local_y - 1, 2, 3);
-        activate_rect(chunk_ptr + chunks_height, 0, local_y - 1, 1, 3);
-    } else if (local_y >= 31) {
-        // Bottom edge
-        activate_rect(chunk_ptr, local_x - 1, 30, 3, 2);
-        activate_rect(chunk_ptr + 1, local_x - 1, 0, 3, 1);
-    } else {
-        // Middle
-        activate_rect(chunk_ptr, local_x - 1, local_y - 1, 3, 3);
-    }
-
-    Cell::set_active(*(cell - 1), true);
-    Cell::set_active(*cell, true);
-    Cell::set_active(*(cell + 1), true);
-    Cell::set_active(*(cell - width - 1), true);
-    Cell::set_active(*(cell - width), true);
-    Cell::set_active(*(cell - width + 1), true);
-    Cell::set_active(*(cell + width - 1), true);
-    Cell::set_active(*(cell + width), true);
-    Cell::set_active(*(cell + width + 1), true);
-}
-
-// Only works for offset up to 32.
-void offset_chunk_local_position(
-    uint64_t *&chunk_ptr,
-    int &local_x,
-    int &local_y,
-    int offset_x,
-    int offset_y
-) {
-    assert(offset_x <= 32);
-    assert(offset_y <= 32);
-    assert(offset_x >= -32);
-    assert(offset_y >= -32);
-    
-    local_x += offset_x;
-    local_y += offset_y;
-
-    if (local_x < 0) {
-        chunk_ptr -= chunks_height;
-        local_x += 32;
-    } else if (local_x >= 32) {
-        chunk_ptr += chunks_height;
-        local_x -= 32;
-    }
-
-    if (local_y < 0) {
-        chunk_ptr -= 1;
-        local_y += 32;
-    } else if (local_y >= 32) {
-        chunk_ptr += 1;
-        local_y -= 32;
-    }
-
-    assert(local_x >= 0);
-    assert(local_y >= 0);
-    assert(local_x < 32);
-    assert(local_y < 32);
-}
-
-void activate_neightbors_offset(
-    uint64_t *chunk_ptr,
-    int local_x,
-    int local_y,
-    int offset_x,
-    int offset_y,
-    uint32_t *other_ptr
-) {
-    offset_chunk_local_position(chunk_ptr, local_x, local_y, offset_x, offset_y);
-    activate_neightbors(chunk_ptr, local_x, local_y, other_ptr);
-}
-
-} // namespace Chunk
 
 namespace Step {
 
@@ -297,11 +34,11 @@ void step_reaction(
     uint32_t reaction_range_idx;
     if (cell_material_idx > other_material_idx) {
         swap = true;
-        mat = cell_materials + other_material_idx;
+        mat = Grid::cell_materials + other_material_idx;
         reaction_range_idx = cell_material_idx - other_material_idx;
     } else {
         swap = false;
-        mat = cell_materials + cell_material_idx;
+        mat = Grid::cell_materials + cell_material_idx;
         reaction_range_idx = other_material_idx - cell_material_idx;
     }
 
@@ -421,7 +158,7 @@ void step_cell(
         chunk_ptr,
         local_x,
         local_y,
-        cell_ptr - width - 1,
+        cell_ptr - Grid::width - 1,
         -1,
         -1,
         rng
@@ -434,7 +171,7 @@ void step_cell(
         chunk_ptr,
         local_x,
         local_y,
-        cell_ptr - width,
+        cell_ptr - Grid::width,
         0,
         -1,
         rng
@@ -447,7 +184,7 @@ void step_cell(
         chunk_ptr,
         local_x,
         local_y,
-        cell_ptr - width + 1,
+        cell_ptr - Grid::width + 1,
         1,
         -1,
         rng
@@ -458,31 +195,31 @@ void step_cell(
 
     // Movement
 
-    CellMaterial *mat = cell_materials + cell_material_idx;
+    CellMaterial *mat = Grid::cell_materials + cell_material_idx;
 
-    auto b = cell_ptr + width;
-    CellMaterial *b_mat = cell_materials + Cell::material_idx(*b);
+    auto b = cell_ptr + Grid::width;
+    CellMaterial *b_mat = Grid::cell_materials + Cell::material_idx(*b);
 
-    auto br = cell_ptr + width + 1;
-    CellMaterial *br_mat = cell_materials + Cell::material_idx(*br);
+    auto br = cell_ptr + Grid::width + 1;
+    CellMaterial *br_mat = Grid::cell_materials + Cell::material_idx(*br);
 
-    auto bl = cell_ptr + width - 1;
-    CellMaterial *bl_mat = cell_materials + Cell::material_idx(*bl);
+    auto bl = cell_ptr + Grid::width - 1;
+    CellMaterial *bl_mat = Grid::cell_materials + Cell::material_idx(*bl);
 
     auto l = cell_ptr - 1;
-    CellMaterial *l_mat = cell_materials + Cell::material_idx(*l);
+    CellMaterial *l_mat = Grid::cell_materials + Cell::material_idx(*l);
 
     auto r = cell_ptr + 1;
-    CellMaterial *r_mat = cell_materials + Cell::material_idx(*r);
+    CellMaterial *r_mat = Grid::cell_materials + Cell::material_idx(*r);
 
-    auto t = cell_ptr - width;
-    CellMaterial *t_mat = cell_materials + Cell::material_idx(*t);
+    auto t = cell_ptr - Grid::width;
+    CellMaterial *t_mat = Grid::cell_materials + Cell::material_idx(*t);
 
-    auto tl = cell_ptr - width - 1;
-    CellMaterial *tl_mat = cell_materials + Cell::material_idx(*tl);
+    auto tl = cell_ptr - Grid::width - 1;
+    CellMaterial *tl_mat = Grid::cell_materials + Cell::material_idx(*tl);
 
-    auto tr = cell_ptr - width + 1;
-    CellMaterial *tr_mat = cell_materials + Cell::material_idx(*tr);
+    auto tr = cell_ptr - Grid::width + 1;
+    CellMaterial *tr_mat = Grid::cell_materials + Cell::material_idx(*tr);
 
     switch (mat->cell_movement) {
         case Grid::CELL_MOVEMENT_SOLID: {
@@ -556,6 +293,8 @@ void step_cell(
         }
         break;
         case Grid::CELL_MOVEMENT_LIQUID: {
+            // TODO: Movemet speed.
+
             const uint32_t dissipate_chance = 8388608;
 
             if (b_mat->density < mat->density) {
@@ -711,29 +450,46 @@ void step_chunk(
     auto rows = Chunk::get_rows(chunk);
     auto rect = Chunk::active_rect(chunk);
 
+    // Alternate between left and right.
+    int x_start;
+    int x_end;
+    int x_step;
+    if ((Grid::tick & 1) == 0) {
+        x_start = rect.x_start;
+        x_end = rect.x_end;
+        x_step = 1;
+    } else {
+        x_start = rect.x_end - 1;
+        x_end = rect.x_start - 1;
+        x_step = -1;
+    }
+
     // Iterate over each cell in the chunk.
-    for (int local_y = rect.y_end - 1; local_y >= rect.y_start; local_y--) {
+    for (int local_y = rect.y_start; local_y < rect.y_end; local_y++) {
         if ((rows & (1 << local_y)) == 0) {
             continue;
         }
 
-        for (int local_x = rect.x_start; local_x < rect.x_end; local_x++) {
-            auto cell_ptr = cell_start + local_x + local_y * width;
+        int local_x = x_start;
+        while (local_x != x_end) {
+            auto cell_ptr = cell_start + local_x + local_y * Grid::width;
             step_cell(cell_ptr, chunk_ptr, local_x, local_y, rng);
+
+            local_x += x_step;
         }
     }
 }
 
 void step_column(int column_idx) {
-    uint64_t rng = (uint64_t)column_idx * (uint64_t)tick * 6364136223846792969uLL;
+    uint64_t rng = (uint64_t)column_idx * (uint64_t)Grid::tick * 6364136223846792969uLL;
 
-    uint64_t *chunk_end_ptr = chunks + column_idx * chunks_height;
-    uint64_t *next_chunk_ptr = chunk_end_ptr + (chunks_height - 2);
+    uint64_t *chunk_end_ptr = Grid::chunks + column_idx * Grid::chunks_height;
+    uint64_t *next_chunk_ptr = chunk_end_ptr + (Grid::chunks_height - 2);
 
     auto next_chunk = *next_chunk_ptr;
     *next_chunk_ptr = 0;
     
-    auto cell_start = cells + ((height - 32) * width + column_idx * 32);
+    auto cell_start = Grid::cells + ((Grid::height - 32) * Grid::width + column_idx * 32);
 
     // Iterate over each chunk from the bottom.
     while (next_chunk_ptr > chunk_end_ptr) {
@@ -744,16 +500,19 @@ void step_column(int column_idx) {
         next_chunk = *next_chunk_ptr;
         *next_chunk_ptr = 0;
 
-        cell_start -= 32 * width;
+        cell_start -= 32 * Grid::width;
 
         step_chunk(chunk, chunk_ptr, cell_start, rng);
     }
 }
 
 void pre_step() {
-    updated_bit = (((updated_bit >> Cell::Shifts::SHIFT_UPDATED) % 3) + 1) << Cell::Shifts::SHIFT_UPDATED;
+    Grid::updated_bit >>= Cell::Shifts::SHIFT_UPDATED;
+    Grid::updated_bit %= 3;
+    Grid::updated_bit += 1;
+    Grid::updated_bit <<= Cell::Shifts::SHIFT_UPDATED;
 
-    tick++;
+    Grid::tick++;
 }
 
 } // namespace Step
@@ -815,7 +574,8 @@ void Grid::_bind_methods() {
             "durability",
             "cell_collision",
             "friction",
-            "reactions"
+            "reactions",
+            "idx"
         ),
         &Grid::add_material
     );
@@ -859,6 +619,8 @@ void Grid::_bind_methods() {
 
 void Grid::delete_grid() {
     if (cells != nullptr) {
+        UtilityFunctions::print("Deleting grid");
+
         delete [] cells;
         cells = nullptr;
         width = 0;
@@ -875,6 +637,7 @@ void Grid::new_empty(int wish_width, int wish_height) {
     delete_grid();
 
     chunks_width = std::max(wish_width / 32, 3);
+    // TODO: Make sure that the height is a multiple of 64/8.
     chunks_height = std::max(wish_height / 32, 3);
     chunks = new uint64_t[chunks_width * chunks_height];
     // Set all chunk to active.
@@ -890,11 +653,20 @@ void Grid::new_empty(int wish_width, int wish_height) {
         cells[i] = 0;
     }
 
-    // iterate over all cells
+    // iterate over all cells.
     for (int x = 32; x < width - 32; x++) {
         for (int y = 32; y < height - 32; y++) {
+            uint32_t cell = 0;
+
+            if (x == 100 && y == 100) {
+                Cell::set_material_idx(cell, 3);
+            } else if (x < 60 || x > 200) {
+                Cell::set_material_idx(cell, 2);
+            } else if (y < 60) {
+                Cell::set_material_idx(cell, 1);
+            }
+
             auto cell_ptr = cells + (y * width + x);
-            uint32_t cell = x % cell_materials_len;
             Cell::set_active(cell, true);
             *cell_ptr = cell;
         }
@@ -940,7 +712,9 @@ void Grid::update_texture_data(Ref<ImageTexture> texture, Vector2i position) {
     data.resize(texture_width * texture_height);
     auto data_ptr = data.ptrw() + skip_texture_left + skip_texture_top * texture_width;
 
-    auto cell_ptr = reinterpret_cast<uint8_t*>(cells + skip_cell_left + skip_cell_top * width * sizeof(uint32_t));
+    auto cell_ptr = reinterpret_cast<uint8_t*>(
+        cells + skip_cell_left + skip_cell_top * width * sizeof(uint32_t)
+    );
 
     // Copy each rows.
     for (int y = 0; y < texture_write_height; y++) {
@@ -972,28 +746,26 @@ void Grid::step_manual() {
 
     Step::pre_step();
 
-    count = 0;
-
     for (int column_idx = 1; column_idx < chunks_width - 1; column_idx++) {
         Step::step_column(column_idx);
     }
-
-    // UtilityFunctions::print("count: ", count);
 }
 
 void delete_materials() {
-    if (cell_materials != nullptr) {
-        for (int i = 0; i < cell_materials_len; i++) {
-            CellMaterial *mat = cell_materials + i;
+    if (Grid::cell_materials != nullptr) {
+        UtilityFunctions::print("Deleting materials");
+
+        for (int i = 0; i < Grid::cell_materials_len; i++) {
+            CellMaterial *mat = Grid::cell_materials + i;
             if (mat->reaction_ranges_len > 0) {
-                delete[] mat->reaction_ranges;
-                delete[] mat->reactions;
+                delete [] mat->reaction_ranges;
+                delete [] mat->reactions;
             }
         }
 
-        delete[] cell_materials;
-        cell_materials = nullptr;
-        cell_materials_len = 0;
+        delete [] Grid::cell_materials;
+        Grid::cell_materials = nullptr;
+        Grid::cell_materials_len = 0;
     }
 }
 
@@ -1037,28 +809,35 @@ void Grid::add_material(
         }
     }
     if (mat.reaction_ranges_len != 0) {
+        assert(num_reaction > 0);
+
         mat.reaction_ranges = new uint64_t[mat.reaction_ranges_len];
         mat.reactions = new CellReaction[num_reaction];
 
         uint64_t next_reaction_idx = 0;
-        for (int i = 0; i < reactions.size(); i++) {
+
+        assert(mat.reaction_ranges_len <= reactions.size());
+        for (int i = 0; i < mat.reaction_ranges_len; i++) {
             uint64_t reactions_start = next_reaction_idx;
 
+            assert(reactions.size() >= i);
             Array reactions_with = reactions[i];
             for (int j = 0; j < reactions_with.size(); j++) {
                 Array reaction_data = reactions_with[j];
+                assert(reaction_data.size() == 3);
                 CellReaction reaction = {
                     reaction_data[0],
                     reaction_data[1],
                     reaction_data[2]
                 };
+                assert(next_reaction_idx < num_reaction);
                 mat.reactions[next_reaction_idx] = reaction;
 
                 next_reaction_idx++;
             }
 
+            assert(i < mat.reaction_ranges_len);
             uint64_t reactions_end = next_reaction_idx;
-
             if (reactions_start == reactions_end) {
                 mat.reaction_ranges[i] = 0;
             } else {
@@ -1066,16 +845,15 @@ void Grid::add_material(
             }
         }
 
-        if (next_reaction_idx != num_reaction) {
-            UtilityFunctions::push_error("Invalid reaction ranges, c++ logic error");
-        }
+        assert(next_reaction_idx == num_reaction);
     }
 
+    assert(idx < cell_materials_len);
     cell_materials[idx] = mat;
 }
 
 bool Grid::is_chunk_active(Vector2i position) {
-    if (position.x < 0 || position.y < 0 || position.x >= width || position.y >= height) {
+    if (position.x < 0 || position.y < 0 || position.x >= chunks_width || position.y >= chunks_height) {
         return false;
     }
 
@@ -1136,35 +914,80 @@ namespace Test {
 
 void test_activate_chunk() {
     Grid::new_empty(96, 96);
-    auto chunk = chunks + chunks_height + 1;
-    auto cell_ptr = cells + 32 + 32 * width;
+    auto chunk = Grid::chunks + Grid::chunks_height + 1;
+    auto cell_ptr = Grid::cells + 32 + 32 * Grid::width;
     *chunk = 0;
 
-    Chunk::activate_neightbors(chunk, 15, 15, cell_ptr + 15 + 15 * width);
+    Chunk::activate_neightbors(
+        chunk,
+        15,
+        15,
+        cell_ptr + 15 + 15 * Grid::width
+    );
     UtilityFunctions::print("activate center: OK");
 
-    Chunk::activate_neightbors(chunk, 0, 0, cell_ptr);
+    Chunk::activate_neightbors(
+        chunk,
+        0,
+        0,
+        cell_ptr
+    );
     UtilityFunctions::print("activate top left: OK");
 
-    Chunk::activate_neightbors(chunk, 31, 31, cell_ptr + 31 + 31 * width);
+    Chunk::activate_neightbors(
+        chunk,
+        31,
+        31,
+        cell_ptr + 31 + 31 * Grid::width
+    );
     UtilityFunctions::print("activate bottom right: OK");
 
-    Chunk::activate_neightbors(chunk, 31, 0, cell_ptr + 31);
+    Chunk::activate_neightbors(
+        chunk,
+        31,
+        0,
+        cell_ptr + 31
+    );
     UtilityFunctions::print("activate top right: OK");
 
-    Chunk::activate_neightbors(chunk, 0, 31, cell_ptr + 31 * width);
+    Chunk::activate_neightbors(
+        chunk,
+        0,
+        31,
+        cell_ptr + 31 * Grid::width
+    );
     UtilityFunctions::print("activate bottom left: OK");
 
-    Chunk::activate_neightbors(chunk, 15, 0, cell_ptr + 15);
+    Chunk::activate_neightbors(
+        chunk,
+        15,
+        0,
+        cell_ptr + 15
+    );
     UtilityFunctions::print("activate top center: OK");
 
-    Chunk::activate_neightbors(chunk, 15, 31, cell_ptr + 15 + 31 * width);
+    Chunk::activate_neightbors(
+        chunk,
+        15,
+        31,
+        cell_ptr + 15 + 31 * Grid::width
+    );
     UtilityFunctions::print("activate bottom center: OK");
     
-    Chunk::activate_neightbors(chunk, 0, 15, cell_ptr + 15 * width);
+    Chunk::activate_neightbors(
+        chunk,
+        0,
+        15,
+        cell_ptr + 15 * Grid::width
+    );
     UtilityFunctions::print("activate left center: OK");
 
-    Chunk::activate_neightbors(chunk, 31, 15, cell_ptr + 15 + 31 * width);
+    Chunk::activate_neightbors(
+        chunk,
+        31,
+        15,
+        cell_ptr + 15 + 31 * Grid::width
+    );
     UtilityFunctions::print("activate right center: OK");
 
     Grid::delete_grid();

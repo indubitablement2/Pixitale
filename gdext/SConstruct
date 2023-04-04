@@ -1,7 +1,6 @@
 env = SConscript('godot-cpp/SConstruct')
 
 env.Tool("compilation_db")
-# env.Alias("compiledb", env.CompilationDatabase())
 cdb = env.CompilationDatabase()
 
 env.Append(CPPPATH='src/')

@@ -12,6 +12,7 @@
 #include <godot_cpp/godot.hpp>
 
 #include "grid.h"
+#include "grid_character_body.h"
 
 using namespace godot;
 
@@ -21,6 +22,7 @@ void initialize_gdext_module(ModuleInitializationLevel p_level) {
 	}
 
 	ClassDB::register_class<Grid>();
+	ClassDB::register_class<GridCharacterBody>();
 }
 
 void uninitialize_gdext_module(ModuleInitializationLevel p_level) {

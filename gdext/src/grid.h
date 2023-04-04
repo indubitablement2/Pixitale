@@ -1,6 +1,8 @@
 #ifndef GRID_H
 #define GRID_H
 
+#include "godot_cpp/variant/rect2.hpp"
+#include "godot_cpp/variant/vector2.hpp"
 #include <godot_cpp/classes/node2d.hpp>
 #include <godot_cpp/classes/image_texture.hpp>
 
@@ -47,51 +49,29 @@ public:
     {};
 };
 
-// Row major.
-inline static uint32_t *cells = nullptr;
-inline static int width = 0;
-inline static int height = 0;
-
-// Column major.
-inline static uint64_t *chunks = nullptr;
-inline static int chunks_width = 0;
-inline static int chunks_height = 0;
-
-inline static int64_t tick = 0;
-inline static uint32_t updated_bit = 0;
-
-inline static CellMaterial *cell_materials = nullptr;
-inline static int cell_materials_len = 0;
-
-inline static int count = 0;
-
 class Grid : public Object {
     GDCLASS(Grid, Object);
 
 protected:
     static void _bind_methods();
 
-private:
-    // void set_cell(
-    //     int x,
-    //     int y,
-    //     uint32_t *cell,
-    //     bool active,
-    //     bool changed
-    // );
-
-    // static void step_column(int column_idx); 
-    // static void step_chunk(
-    //     Chunk *chunk,
-    //     uint32_t *cell_start,
-    //     uint32_t rows,
-    //     ChunkActiveRect rect,
-    //     uint32_t &rng
-    // );
-    // static void step_cell(CellApi &cell, uint32_t &rng);
-    // static void step_reaction(CellApi &cell, bool &active, bool &changed, CellApi &other, uint32_t &rng);
-
 public:
+    // Row major.
+    inline static uint32_t *cells = nullptr;
+    inline static int width = 0;
+    inline static int height = 0;
+
+    // Column major.
+    inline static uint64_t *chunks = nullptr;
+    inline static int chunks_width = 0;
+    inline static int chunks_height = 0;
+
+    inline static int64_t tick = 0;
+    inline static uint32_t updated_bit = 0;
+
+    inline static CellMaterial *cell_materials = nullptr;
+    inline static int cell_materials_len = 0;
+
     inline const static float GRID_SCALE = 4.0f;
 
     enum CellMovement {
@@ -102,10 +82,10 @@ public:
     };
 
     enum CellCollision {
+        CELL_COLLISION_NONE,
         CELL_COLLISION_SOLID,
         CELL_COLLISION_PLATFORM,
         CELL_COLLISION_LIQUID,
-        CELL_COLLISION_NONE,
     };
 
     static void delete_grid();
