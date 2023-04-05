@@ -26,7 +26,7 @@ public:
     bool hit_left_wall = false;
     bool hit_right_wall = false;
 
-    int max_steps_height = 3;
+    int max_steps_height = 4;
     void set_max_steps_height(int value);
     int get_max_steps_height() const;
 

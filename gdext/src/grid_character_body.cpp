@@ -1,6 +1,7 @@
 // #define NDEBUG 
 #include <assert.h>
 
+#include <cmath>
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/variant/color.hpp>
 #include <godot_cpp/variant/vector2.hpp>
@@ -51,7 +52,6 @@ bool block_or_step_left(
     int &top,
     int &bot,
     Vector2 &new_position,
-    Vector2 &velocity,
     float &step_offset,
     int max_steps_height
 ) {
@@ -83,8 +83,6 @@ bool block_or_step_left(
                     new_position.y = std::floor(new_position.y - float(floor)) - 0.02f;
 
                     step_offset -= new_position.y - pre_step_y;
-
-                    velocity.y = std::min(-0.0f, velocity.y);
                 }
             } else {
                 blocked = true;
@@ -103,7 +101,6 @@ bool block_or_step_right(
     int &top,
     int &bot,
     Vector2 &new_position,
-    Vector2 &velocity,
     float &step_offset,
     int max_steps_height
 ) {
@@ -135,8 +132,6 @@ bool block_or_step_right(
                     new_position.y = std::floor(new_position.y - float(floor)) - 0.02f;
 
                     step_offset -= new_position.y - pre_step_y;
-
-                    velocity.y = std::min(-0.0f, velocity.y);
                 }
             } else {
                 blocked = true;
@@ -233,10 +228,12 @@ void GridCharacterBody::move() {
     auto previous_position = get_position();
     previous_position.y -= step_offset;
 
-    step_offset *= 0.8f;
-    if (step_offset > 4.0f) {
-        step_offset *= 0.9f;
-    }
+    // TODO: Decrease faster when too high.
+    step_offset *= 0.65f;
+    // step_offset *= std::pow(0.95f, std::abs(step_offset) + 1);
+    // if (std::abs(step_offset) > 4.0f) {
+        // step_offset *= 0.8f;
+    // }
 
     if (!collision) {
         set_position(previous_position + velocity + Vector2(0.0, step_offset));
@@ -270,7 +267,6 @@ void GridCharacterBody::move() {
                 top,
                 bot,
                 new_position,
-                velocity,
                 step_offset,
                 max_steps_height
             )) {
@@ -280,7 +276,7 @@ void GridCharacterBody::move() {
                     new_position.x = std::floor(new_position.x + 1.0f) + 0.02f;
                 }
                 
-                velocity.x = -0.0f;
+                velocity.x = 0.0f;
                 break;
             } else {
                 left -= 1;
@@ -298,13 +294,12 @@ void GridCharacterBody::move() {
                 top,
                 bot,
                 new_position,
-                velocity,
                 step_offset,
                 max_steps_height
             )) {
                 hit_left_wall = true;
                 new_position.x = std::floor(new_position.x + 1.0f) + 0.02f;
-                velocity.x = -0.0f;
+                velocity.x = 0.0f;
             }
         }
 
@@ -318,7 +313,6 @@ void GridCharacterBody::move() {
                 top,
                 bot,
                 new_position,
-                velocity,
                 step_offset,
                 max_steps_height
             )) {
@@ -346,7 +340,6 @@ void GridCharacterBody::move() {
                 top,
                 bot,
                 new_position,
-                velocity,
                 step_offset,
                 max_steps_height
             )) {
@@ -359,21 +352,21 @@ void GridCharacterBody::move() {
         new_position.x = std::min(new_position.x, wish_horizontal_position);
     }
 
-    top = new_position.y - size.y * 0.5f;
-    bot = new_position.y + size.y * 0.5f;
-    left = new_position.x - size.x * 0.5f;
-    right = new_position.x + size.x * 0.5f;
+    top = int(new_position.y - size.y * 0.5f) - 1;
+    bot = int(new_position.y + size.y * 0.5f) + 1;
+    left = int(new_position.x - size.x * 0.5f) + 1;
+    right = int(new_position.x + size.x * 0.5f) - 1;
 
     float wish_vertical_position = new_position.y + velocity.y;
 
     // Vertical movement.
     if (velocity.y < -0.01f) {
-        // Move up until we hit a wall.
+        // Move up until we hit a ceiling.
         while (new_position.y > wish_vertical_position) {
             if (is_row_blocked(
-                left + 1,
-                right - 1,
-                top - 1
+                left,
+                right,
+                top 
             )) {
                 velocity.y = 0.0f;
                 new_position.y = std::floor(new_position.y) + 0.02f;
@@ -386,15 +379,15 @@ void GridCharacterBody::move() {
         }
 
         new_position.y = std::max(new_position.y, wish_vertical_position);
-    } else if (velocity.y > 0.01f) {
-        // Move down until we hit a wall.
+    } else {
+        // Move down until we hit a floor.
         while (new_position.y < wish_vertical_position) {
             if (is_row_blocked(
-                left + 1,
-                right - 1,
-                bot + 1
+                left,
+                right,
+                bot
             )) {
-                velocity.y = -0.0f;
+                velocity.y = 0.0f;
                 new_position.y = std::floor(new_position.y + 1.0f) - 0.02f;
                 is_on_floor = true;
                 break;
@@ -405,6 +398,39 @@ void GridCharacterBody::move() {
         }
 
         new_position.y = std::min(new_position.y, wish_vertical_position);
+    }
+
+    if (!is_on_floor && was_on_floor && stick_to_floor && velocity.y > 0.02f) {
+        bot = int(new_position.y + size.y * 0.5f) + 1;
+
+        // Move down until we hit a floor.
+        for (int i = 0; i <= max_steps_height; i++) {
+            if (is_row_blocked(
+                left,
+                right,
+                bot
+            )) {
+                velocity.y = 0.0f;
+                float pre_step_y = new_position.y;
+                new_position.y = std::floor(new_position.y + 1.0f) - 0.02f;
+                step_offset -= new_position.y - pre_step_y; 
+                is_on_floor = true;
+                break;
+            } else {
+                bot += 1;
+                new_position.y += 1.0f;
+                step_offset -= 1.0f;
+            }
+        }
+
+        if (!is_on_floor) {
+            new_position.y -= float(max_steps_height);
+            step_offset += float(max_steps_height);
+        }
+    }
+
+    if (is_on_floor && stick_to_floor) {
+        velocity.y = 0.0f;
     }
 
     new_position.y += step_offset;
