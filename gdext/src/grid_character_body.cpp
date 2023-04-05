@@ -1,14 +1,11 @@
 // #define NDEBUG 
-#include <algorithm>
 #include <assert.h>
 
-#include <cmath>
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/variant/color.hpp>
-#include <godot_cpp/variant/rect2.hpp>
 #include <godot_cpp/variant/vector2.hpp>
 
-#include "godot_cpp/variant/utility_functions.hpp"
+#include <godot_cpp/variant/utility_functions.hpp>
 #include "grid_character_body.h"
 #include "grid.h"
 #include "cell.hpp"
@@ -55,7 +52,7 @@ bool block_or_step_left(
     int &bot,
     Vector2 &new_position,
     Vector2 &velocity,
-    Vector2 &step_offset,
+    float &step_offset,
     int max_steps_height
 ) {
     bool blocked = false;
@@ -85,7 +82,7 @@ bool block_or_step_left(
                     float pre_step_y = new_position.y;
                     new_position.y = std::floor(new_position.y - float(floor)) - 0.02f;
 
-                    step_offset.y -= new_position.y - pre_step_y;
+                    step_offset -= new_position.y - pre_step_y;
 
                     velocity.y = std::min(-0.0f, velocity.y);
                 }
@@ -107,7 +104,7 @@ bool block_or_step_right(
     int &bot,
     Vector2 &new_position,
     Vector2 &velocity,
-    Vector2 &step_offset,
+    float &step_offset,
     int max_steps_height
 ) {
     bool blocked = false;
@@ -137,7 +134,7 @@ bool block_or_step_right(
                     float pre_step_y = new_position.y;
                     new_position.y = std::floor(new_position.y - float(floor)) - 0.02f;
 
-                    step_offset.y -= new_position.y - pre_step_y;
+                    step_offset -= new_position.y - pre_step_y;
 
                     velocity.y = std::min(-0.0f, velocity.y);
                 }
@@ -199,11 +196,6 @@ void GridCharacterBody::_bind_methods() {
     );
 
     ClassDB::bind_method(
-        D_METHOD("get_collision_rect"),
-        &GridCharacterBody::get_collision_rect
-    );
-
-    ClassDB::bind_method(
         D_METHOD("move"),
         &GridCharacterBody::move
     );
@@ -237,26 +229,17 @@ int GridCharacterBody::get_max_steps_height() const {
     return max_steps_height;
 }
 
-Rect2 GridCharacterBody::get_collision_rect() const {
-    auto position = get_position();
-    return Rect2(
-        position.x - size.x * 0.5f,
-        position.y - size.y * 0.5f,
-        size.x,
-        size.y
-    );
-}
-
 void GridCharacterBody::move() {
-    auto previous_position = get_position() - step_offset;
+    auto previous_position = get_position();
+    previous_position.y -= step_offset;
 
     step_offset *= 0.8f;
-    if (step_offset.length_squared() > 8.0f) {
+    if (step_offset > 4.0f) {
         step_offset *= 0.9f;
     }
 
     if (!collision) {
-        set_position(previous_position + velocity + step_offset);
+        set_position(previous_position + velocity + Vector2(0.0, step_offset));
         return;
     }
 
@@ -424,7 +407,8 @@ void GridCharacterBody::move() {
         new_position.y = std::min(new_position.y, wish_vertical_position);
     }
 
-    set_position(new_position + step_offset);
+    new_position.y += step_offset;
+    set_position(new_position);
 }
 
 void GridCharacterBody::_draw() {

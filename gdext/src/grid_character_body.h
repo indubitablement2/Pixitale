@@ -1,4 +1,3 @@
-#include <godot_cpp/variant/rect2.hpp>
 #include <godot_cpp/variant/vector2.hpp>
 #include <godot_cpp/classes/node2d.hpp>
 
@@ -8,7 +7,7 @@ class GridCharacterBody : public Node2D {
     GDCLASS(GridCharacterBody, Node2D);
 
 private:
-    Vector2 step_offset = Vector2(0.0f, 0.0f);
+    float step_offset = 0.0f;
 
 protected:
     static void _bind_methods();
@@ -35,7 +34,6 @@ public:
 
     bool collision = true;
 
-    Rect2 get_collision_rect() const;
     void move();
 
     virtual void _draw() override;
