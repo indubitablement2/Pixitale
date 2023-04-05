@@ -29,7 +29,7 @@ func load_cell_materials() -> void:
 		idx += 1
 	
 	print(cell_material_names)
-	Grid.print_materials()
+#	Grid.print_materials()
 
 func _get_materials() -> Array[CellMaterialData]:
 	var materials: Array[CellMaterialData] = []

@@ -1,3 +1,7 @@
+// #define NDEBUG 
+#include <algorithm>
+#include <assert.h>
+
 #include <cmath>
 #include <godot_cpp/classes/engine.hpp>
 #include <godot_cpp/variant/color.hpp>
@@ -25,6 +29,20 @@ bool is_blocking(int x, int y) {
     auto mat_ptr = Grid::cell_materials + mat_idx;
     if (mat_ptr->cell_collision == Grid::CELL_COLLISION_SOLID) {
         return true;
+    }
+
+    return false;
+}
+
+bool is_row_blocked(
+    int left,
+    int right,
+    int y
+) {
+    for (int x = left; x <= right; x++) {
+        if (is_blocking(x, y)) {
+            return true;
+        }
     }
 
     return false;
@@ -229,19 +247,17 @@ Rect2 GridCharacterBody::get_collision_rect() const {
     );
 }
 
-bool GridCharacterBody::move() {
-    if (Grid::cells == nullptr) {
-        return false;
-    }
-
+void GridCharacterBody::move() {
     auto previous_position = get_position() - step_offset;
-    auto wish_position = previous_position + velocity;
 
     step_offset *= 0.8f;
+    if (step_offset.length_squared() > 8.0f) {
+        step_offset *= 0.9f;
+    }
 
     if (!collision) {
-        set_position(wish_position + step_offset);
-        return false;
+        set_position(previous_position + velocity + step_offset);
+        return;
     }
 
     auto new_position = previous_position;
@@ -251,15 +267,20 @@ bool GridCharacterBody::move() {
     int left = previous_position.x - size.x * 0.5f;
     int right = previous_position.x + size.x * 0.5f;
 
-    bool hit_left_wall = false;
-    bool hit_right_wall = false;
+    hit_left_wall = false;
+    hit_right_wall = false;
+    hit_ceiling = false;
 
-    int horizontal_steps = 0;
+    bool was_on_floor = is_on_floor;
+    is_on_floor = false;
 
-    // Move left
+    int steps = 0;
+    float wish_horizontal_position = previous_position.x + velocity.x;
+
+    // Horizontal movement.
     if (velocity.x < -0.01f) {
         // Move left until we hit a wall.
-        while (new_position.x > wish_position.x) {
+        while (new_position.x > wish_horizontal_position) {
             if (block_or_step_left(
                 left,
                 right,
@@ -272,7 +293,7 @@ bool GridCharacterBody::move() {
             )) {
                 hit_left_wall = true;
 
-                if (horizontal_steps > 0) {
+                if (steps > 0) {
                     new_position.x = std::floor(new_position.x + 1.0f) + 0.02f;
                 }
                 
@@ -283,7 +304,7 @@ bool GridCharacterBody::move() {
                 right -= 1;
                 new_position.x -= 1.0f;
                 
-                horizontal_steps++;
+                steps++;
             }
         }
         
@@ -304,10 +325,10 @@ bool GridCharacterBody::move() {
             }
         }
 
-        new_position.x = std::max(new_position.x, wish_position.x);
+        new_position.x = std::max(new_position.x, wish_horizontal_position);
     } else if (velocity.x > 0.01f) {
         // Move right until we hit a wall.
-        while (new_position.x < wish_position.x) {
+        while (new_position.x < wish_horizontal_position) {
             if (block_or_step_right(
                 left,
                 right,
@@ -320,8 +341,7 @@ bool GridCharacterBody::move() {
             )) {
                 hit_right_wall = true;
 
-                if (horizontal_steps > 0) {
-                    // TODO: is this right?
+                if (steps > 0) {
                     new_position.x = std::floor(new_position.x) - 0.02f;
                 }
                 
@@ -332,7 +352,7 @@ bool GridCharacterBody::move() {
                 right += 1;
                 new_position.x += 1.0f;
                 
-                horizontal_steps++;
+                steps++;
             }
         }
         
@@ -353,14 +373,58 @@ bool GridCharacterBody::move() {
             }
         }
 
-        new_position.x = std::min(new_position.x, wish_position.x);
+        new_position.x = std::min(new_position.x, wish_horizontal_position);
     }
 
-    new_position.y += velocity.y;
+    top = new_position.y - size.y * 0.5f;
+    bot = new_position.y + size.y * 0.5f;
+    left = new_position.x - size.x * 0.5f;
+    right = new_position.x + size.x * 0.5f;
+
+    float wish_vertical_position = new_position.y + velocity.y;
+
+    // Vertical movement.
+    if (velocity.y < -0.01f) {
+        // Move up until we hit a wall.
+        while (new_position.y > wish_vertical_position) {
+            if (is_row_blocked(
+                left + 1,
+                right - 1,
+                top - 1
+            )) {
+                velocity.y = 0.0f;
+                new_position.y = std::floor(new_position.y) + 0.02f;
+                hit_ceiling = true;
+                break;
+            } else {
+                top -= 1;
+                new_position.y -= 1.0f;
+            }
+        }
+
+        new_position.y = std::max(new_position.y, wish_vertical_position);
+    } else if (velocity.y > 0.01f) {
+        // Move down until we hit a wall.
+        while (new_position.y < wish_vertical_position) {
+            if (is_row_blocked(
+                left + 1,
+                right - 1,
+                bot + 1
+            )) {
+                velocity.y = -0.0f;
+                new_position.y = std::floor(new_position.y + 1.0f) - 0.02f;
+                is_on_floor = true;
+                break;
+            } else {
+                bot += 1;
+                new_position.y += 1.0f;
+            }
+        }
+
+        new_position.y = std::min(new_position.y, wish_vertical_position);
+    }
 
     set_position(new_position + step_offset);
-
-    return hit_left_wall;
 }
 
 void GridCharacterBody::_draw() {

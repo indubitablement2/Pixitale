@@ -74,11 +74,11 @@ text = "asdasdasa"
 [node name="render" type="Node2D" parent="."]
 
 [node name="GridBody" type="GridCharacterBody" parent="render"]
+z_index = 3000
 position = Vector2(111, 99)
 script = ExtResource("3_op8v7")
 
 [node name="Sprite2D" type="Sprite2D" parent="render/GridBody"]
-z_index = 3000
 scale = Vector2(10, 10)
 texture = ExtResource("3_vq0ne")
 
@@ -86,3 +86,10 @@ texture = ExtResource("3_vq0ne")
 zoom = Vector2(4, 4)
 position_smoothing_enabled = true
 position_smoothing_speed = 10.0
+
+[node name="velocity" type="Label" parent="render/GridBody"]
+offset_left = -21.0
+offset_top = -28.0
+offset_right = 19.0
+offset_bottom = -5.0
+text = "asdasd"

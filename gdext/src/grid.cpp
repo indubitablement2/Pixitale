@@ -1,5 +1,4 @@
 // #define NDEBUG 
-#include <algorithm>
 #include <assert.h>
 
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -660,6 +659,8 @@ void Grid::new_empty(int wish_width, int wish_height) {
 
             if (x == 100 && y == 100) {
                 Cell::set_material_idx(cell, 3);
+            } else if (y > height - 40) {
+                Cell::set_material_idx(cell, 2);
             } else if (x < 60 || x > 200) {
                 Cell::set_material_idx(cell, 2);
             } else if (y < 60) {

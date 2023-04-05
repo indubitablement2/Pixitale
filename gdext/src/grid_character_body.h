@@ -22,19 +22,21 @@ public:
     void set_velocity(Vector2 value);
     Vector2 get_velocity() const;
 
+    bool is_on_floor = false;
+    bool hit_ceiling = false;
+    bool hit_left_wall = false;
+    bool hit_right_wall = false;
+
     int max_steps_height = 3;
     void set_max_steps_height(int value);
     int get_max_steps_height() const;
-
-    int min_ledge_width = 2;
-    // TODO: set/get
 
     bool stick_to_floor = true;
 
     bool collision = true;
 
     Rect2 get_collision_rect() const;
-    bool move();
+    void move();
 
     virtual void _draw() override;
 };
