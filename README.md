@@ -1,2 +1,2 @@
 # Pixitale
-![Project Logo](godot/core/texture/util/error.png)
+![Project Logo](godot/screenshot.png)
