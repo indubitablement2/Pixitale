@@ -12,11 +12,12 @@ func _ready() -> void:
 	Grid.new_empty(GRID_WIDTH, GRID_HEIGHT)
 	var grid_size := Grid.get_size()
 	
-	var img := Image.create(grid_size.x, grid_size.y, false, Image.FORMAT_RGBA8)
+	var img := Image.create(grid_size.x + 50, grid_size.y + 50, false, Image.FORMAT_RF)
 	tex = ImageTexture.create_from_image(img)
 	
 	$render.add_child(sp)
 	sp.centered = false
+	sp.position = Vector2(-25.0, -25.0)
 	sp.set_texture(tex)
 	
 	var mat := ShaderMaterial.new()
@@ -36,7 +37,7 @@ func _ready() -> void:
 func _process(_delta: float) -> void:
 #	if Input.is_action_pressed("up"):
 	Grid.step_manual()
-	Grid.update_texture_data(tex, Vector2i(0, 0))
+	Grid.update_texture_data(tex, Vector2i(sp.position))
 	
 	var mouse_pos := get_global_mouse_position() / Grid.GRID_SCALE
 	var grid_pos := Vector2i(mouse_pos)

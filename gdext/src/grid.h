@@ -93,6 +93,8 @@ public:
     static Vector2i get_size();
     static Vector2i get_size_chunk();
     static void update_texture_data(Ref<ImageTexture> texture, Vector2i position);
+    // Return fallback cell if out of bounds.
+    static uint32_t get_cell_checked(int x, int y);
     
     static void step_manual();
 
