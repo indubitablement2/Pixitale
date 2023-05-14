@@ -1,0 +1,25 @@
+[gd_scene load_steps=3 format=3 uid="uid://dgnqog1dj4nuq"]
+
+[ext_resource type="Script" path="res://base/test collider/test_collider.gd" id="1_qmidl"]
+[ext_resource type="Texture2D" uid="uid://ck73ei3ddic5k" path="res://core/texture/util/pixel.png" id="2_f72o1"]
+
+[node name="GridBody" type="GridCharacterBody"]
+z_index = 3000
+position = Vector2(111, 99)
+script = ExtResource("1_qmidl")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(10, 10)
+texture = ExtResource("2_f72o1")
+
+[node name="Camera2D" type="Camera2D" parent="."]
+zoom = Vector2(4, 4)
+position_smoothing_enabled = true
+position_smoothing_speed = 10.0
+
+[node name="velocity" type="Label" parent="."]
+offset_left = -21.0
+offset_top = -28.0
+offset_right = 19.0
+offset_bottom = -5.0
+text = "asdasd"

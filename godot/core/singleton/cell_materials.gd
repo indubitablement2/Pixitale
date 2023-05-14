@@ -4,6 +4,9 @@ var cell_material_names: Array[StringName] = []
 
 func _ready() -> void:
 	load_cell_materials()
+	
+	if OS.is_debug_build():
+		Grid.run_tests()
 
 func load_cell_materials() -> void:
 	var materials := _get_materials()

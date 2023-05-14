@@ -12,9 +12,10 @@ func _unhandled_input(event: InputEvent) -> void:
 		zoom = zoom.clamp(ZOOM_MIN, ZOOM_MAX)
 
 func _process(delta: float) -> void:
-	var dir = Vector2(
+	var dir := Vector2(
 		Input.get_action_strength("right") - Input.get_action_strength("left"),
 		Input.get_action_strength("down") - Input.get_action_strength("up")
 	)
 	
 	position += dir * delta * 100.0
+	position = position.round()
