@@ -20,7 +20,7 @@ script = ExtResource("4_y6yaj")
 [node name="Camera" type="Camera2D" parent="."]
 process_priority = 10
 position = Vector2(216, 104)
-zoom = Vector2(2, 2)
+zoom = Vector2(4, 4)
 position_smoothing_enabled = true
 position_smoothing_speed = 15.0
 script = ExtResource("2_edovp")

@@ -11,6 +11,7 @@
 #include "godot_cpp/core/math.hpp"
 #include "godot_cpp/variant/packed_byte_array.hpp"
 #include "godot_cpp/variant/rect2i.hpp"
+#include "godot_cpp/variant/vector2i.hpp"
 #include "grid.h"
 #include "rng.hpp"
 
@@ -512,8 +513,8 @@ void Grid::_bind_methods() {
 			&Grid::get_size_chunk);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("update_image_data", "image", "rect"),
-			&Grid::update_image_data);
+			D_METHOD("get_cell_data", "image_size", "rect"),
+			&Grid::get_cell_data);
 	ClassDB::bind_static_method(
 			"Grid",
 			D_METHOD("step_manual"),
@@ -644,14 +645,7 @@ Vector2i Grid::get_size_chunk() {
 	return Vector2i(chunks_width, chunks_height);
 }
 
-void Grid::update_image_data(Ref<Image> image, Rect2i rect) {
-	if (image->get_format() != Image::FORMAT_RF) {
-		UtilityFunctions::push_warning("Image format is not FORMAT_RF");
-		return;
-	}
-
-	const auto image_size = image->get_size();
-
+Ref<Image> Grid::get_cell_data(Vector2i image_size, Rect2i rect) {
 	auto image_data = PackedByteArray();
 	image_data.resize(image_size.x * image_size.y * 4);
 	auto image_buffer = reinterpret_cast<uint32_t *>(image_data.ptrw());
@@ -667,7 +661,7 @@ void Grid::update_image_data(Ref<Image> image, Rect2i rect) {
 		}
 	}
 
-	image->set_data(
+	return Image::create_from_data(
 			image_size.x,
 			image_size.y,
 			false,

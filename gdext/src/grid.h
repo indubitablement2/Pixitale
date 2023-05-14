@@ -5,6 +5,7 @@
 #include "godot_cpp/variant/rect2.hpp"
 #include "godot_cpp/variant/rect2i.hpp"
 #include "godot_cpp/variant/vector2.hpp"
+#include "godot_cpp/variant/vector2i.hpp"
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/classes/node2d.hpp>
 
@@ -93,7 +94,7 @@ public:
 	static void new_empty(int wish_width, int wish_height);
 	static Vector2i get_size();
 	static Vector2i get_size_chunk();
-	static void update_image_data(Ref<Image> image, Rect2i rect);
+	static Ref<Image> get_cell_data(Vector2i image_size, Rect2i rect);
 	static void update_texture_data(Ref<ImageTexture> texture, Vector2i position);
 	static uint32_t get_cell_fallback(int x, int y);
 	// Return fallback cell if out of bounds.
