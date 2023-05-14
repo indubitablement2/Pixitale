@@ -1,31 +1,56 @@
 extends Sprite2D
+class_name  GridSprite
 
-@onready var img_tex := texture
+var draw_size := Vector2i(1, 1) : set = _set_draw_size
+var draw_position := Vector2i.ZERO : set = _set_draw_position
+var _resized := true
+
+@onready var _img := Image.create(1, 1, false, Image.FORMAT_RF)
+@onready var _tex := ImageTexture.create_from_image(_img)
 
 func _ready() -> void:
-	var img := Image.create(1, 1, false, Image.FORMAT_RF)
-	(texture as ImageTexture).set_image(img)
+	texture = _tex
 
-func _process(delta: float) -> void:
-	if Grid.get_size().x == 0:
+func _process(_delta: float) -> void:
+	Grid.update_image_data(_img, Rect2i(draw_position, draw_size))
+	
+	if _resized:
+		_tex.set_image(_img)
+		_resized = false
+	else:
+		_tex.update(_img)
+
+func _resize(new_size: Vector2i) -> void:
+	_img = Image.create(
+		nearest_po2(new_size.x),
+		nearest_po2(new_size.y),
+		false,
+		Image.FORMAT_RF
+	)
+	
+	_resized = true
+	
+	print("new img size: ", _img.get_size())
+
+#func _view_rect() -> Rect2i:
+#	var ctrans := get_canvas_transform()
+#	var view_origin := -ctrans.get_origin() / ctrans.get_scale()
+#	var view_size := get_viewport_rect().size / ctrans.get_scale()
+#
+#	return Rect2i(view_origin, view_size + Vector2.ONE)
+
+func _set_draw_size(value: Vector2i) -> void:
+	if value == draw_size:
 		return
 	
-	var rect := _view_rect()
+	draw_size = value
 	
-	if rect.size.x > texture.get_width() || rect.size.y > texture.get_height():
-		_resize_texture(rect.size)
-	
-	position = rect.position
-	Grid.update_texture_data(texture as ImageTexture, rect.position)
+	var img_size := _img.get_size()
+	if img_size.x < draw_size.x || img_size.y < draw_size.y:
+		_resize(draw_size)
 
-func _resize_texture(texture_size: Vector2i) -> void:
-	texture_size.x = nearest_po2(texture_size.x)
-	texture_size.y = nearest_po2(texture_size.y)
-	(texture as ImageTexture).set_size_override(texture_size)
+func _set_draw_position(value: Vector2i) -> void:
+	draw_position = value
+	position = draw_position
 
-func _view_rect() -> Rect2i:
-	var ctrans := get_canvas_transform()
-	var view_origin := -ctrans.get_origin() / ctrans.get_scale()
-	var view_size := get_viewport_rect().size / ctrans.get_scale()
-	
-	return Rect2i(view_origin, view_size + Vector2.ONE)
+

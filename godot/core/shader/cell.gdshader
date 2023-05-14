@@ -1,7 +1,6 @@
 shader_type canvas_item;
 
-const uint MATERIAL_IDX_MASK = uint(1 << 12) - 1u;
-
+const uint MATERIAL_IDX_MASK = 4095u;
 
 void fragment() {
 	ivec2 coords = ivec2((UV * vec2(textureSize(TEXTURE, 0))));

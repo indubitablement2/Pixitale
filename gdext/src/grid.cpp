@@ -1,12 +1,16 @@
-// #define NDEBUG
 #include <assert.h>
 
+#include <cstring>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/variant/vector2.hpp>
 
 #include "cell.hpp"
 #include "chunk.hpp"
+#include "godot_cpp/classes/image.hpp"
+#include "godot_cpp/core/math.hpp"
+#include "godot_cpp/variant/packed_byte_array.hpp"
+#include "godot_cpp/variant/rect2i.hpp"
 #include "grid.h"
 #include "rng.hpp"
 
@@ -508,8 +512,8 @@ void Grid::_bind_methods() {
 			&Grid::get_size_chunk);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("update_texture_data", "texture", "position"),
-			&Grid::update_texture_data);
+			D_METHOD("update_image_data", "image", "rect"),
+			&Grid::update_image_data);
 	ClassDB::bind_static_method(
 			"Grid",
 			D_METHOD("step_manual"),
@@ -640,50 +644,51 @@ Vector2i Grid::get_size_chunk() {
 	return Vector2i(chunks_width, chunks_height);
 }
 
-void Grid::update_texture_data(Ref<ImageTexture> texture, Vector2i position) {
-	if (cells == nullptr) {
-		UtilityFunctions::push_warning("Grid is not initialized");
+void Grid::update_image_data(Ref<Image> image, Rect2i rect) {
+	if (image->get_format() != Image::FORMAT_RF) {
+		UtilityFunctions::push_warning("Image format is not FORMAT_RF");
 		return;
 	}
 
-	int texture_width = texture->get_width();
-	int texture_height = texture->get_height();
+	const auto image_size = image->get_size();
 
-	if (texture_width == 0 || texture_height == 0) {
-		UtilityFunctions::push_warning("Texture has zero size");
-		return;
-	}
+	auto image_data = PackedByteArray();
+	image_data.resize(image_size.x * image_size.y * 4);
+	auto image_buffer = reinterpret_cast<uint32_t *>(image_data.ptrw());
 
-	// TODO: Reuse this buffer.
-	PackedByteArray data = PackedByteArray();
-	data.resize(texture_width * texture_height * sizeof(uint32_t));
-	auto data_ptr = reinterpret_cast<uint32_t *>(data.ptrw());
+	// TODO: Could be optimized by handling oob separately.
+	for (int img_y = 0; img_y < Math::min(image_size.y, rect.size.y); img_y++) {
+		const int cell_y = rect.position.y + img_y;
 
-	int i = 0;
-	for (int y = position.y; y < position.y + texture_height; y++) {
-		for (int x = position.x; x < position.x + texture_width; x++) {
-			data_ptr[i] = get_cell_checked(x, y);
-			i++;
+		for (int img_x = 0; img_x < Math::min(image_size.x, rect.size.x); img_x++) {
+			const int cell_x = rect.position.x + img_x;
+
+			image_buffer[img_y * image_size.x + img_x] = get_cell_checked(cell_x, cell_y);
 		}
 	}
 
-	Ref<Image> image = Image::create_from_data(
-			texture_width,
-			texture_height,
+	image->set_data(
+			image_size.x,
+			image_size.y,
 			false,
 			Image::FORMAT_RF,
-			data);
+			image_data);
+}
 
-	// UtilityFunctions::print("texture size: ", texture->get_size());
-	// UtilityFunctions::print("image size: ", image->get_size());
-
-	texture->update(image);
+uint32_t Grid::get_cell_fallback(int x, int y) {
+	// TODO: empty/water/sand/rock/empty/lava
+	uint32_t cell = 0;
+	if (y > 64) {
+		cell = 3;
+	} else if (y > 32) {
+		cell = 2;
+	}
+	return cell;
 }
 
 uint32_t Grid::get_cell_checked(int x, int y) {
 	if (x < 0 || x >= width || y < 0 || y >= height) {
-		// TODO: empty/water/sand/rock/empty/lava
-		return 0;
+		return get_cell_fallback(x, y);
 	}
 
 	return cells[y * width + x];
