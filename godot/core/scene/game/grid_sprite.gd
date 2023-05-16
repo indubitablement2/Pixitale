@@ -16,7 +16,7 @@ func _process(_delta: float) -> void:
 	var draw_size := Vector2i(view_size) + Vector2i.ONE
 	var resized := _resize(draw_size)
 	
-	var draw_position := Vector2i(view_origin)
+	var draw_position := Vector2i(view_origin.floor())
 	position = draw_position
 	
 	var img := Grid.get_cell_data(

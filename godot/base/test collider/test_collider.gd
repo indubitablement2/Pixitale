@@ -1,7 +1,7 @@
 extends GridCharacterBody
 
 const ACCELERATION = Vector2(9.0, 0.0)
-const GRAVITY = 10.0
+const GRAVITY = 12.0
 
 func _physics_process(delta: float) -> void:
 	var dir := Vector2(
