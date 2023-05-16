@@ -517,6 +517,14 @@ void Grid::_bind_methods() {
 			&Grid::get_cell_data);
 	ClassDB::bind_static_method(
 			"Grid",
+			D_METHOD("set_cell_rect", "rect", "cell_material_idx"),
+			&Grid::set_cell_rect);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("set_cell", "position", "cell_material_idx"),
+			&Grid::set_cell);
+	ClassDB::bind_static_method(
+			"Grid",
 			D_METHOD("step_manual"),
 			&Grid::step_manual);
 
@@ -686,6 +694,87 @@ uint32_t Grid::get_cell_checked(int x, int y) {
 	}
 
 	return cells[y * width + x];
+}
+
+void Grid::activate_rect(Rect2i rect) {
+	// Somewhat hacky. We activate every other cells and their neighbors in the rect.
+	// This should rarely be called I think, so it's not a big deal.
+	// Otherwise a more efficient algorithm should be used.
+
+	rect = rect.intersection(Rect2i(0, 0, width, height));
+
+	if (rect.size.x <= 0 || rect.size.y <= 0) {
+		return;
+	}
+
+	auto chunk_ptr_y = chunks + (rect.position.x >> 5) * chunks_height + (rect.position.y >> 5);
+	auto chunk_ptr = chunk_ptr_y;
+
+	auto cell_ptr_y = cells + rect.position.y * width + rect.position.x;
+	auto cell_ptr = cell_ptr_y;
+
+	auto local_x = rect.position.x & 31;
+	auto local_y = rect.position.y & 31;
+
+	for (int y = 0; y < rect.size.y >> 1; y++) {
+		for (int x = 0; x < rect.size.x >> 1; x++) {
+			Chunk::activate_neightbors(chunk_ptr, local_x, local_y, cell_ptr);
+
+			local_x += 2;
+			cell_ptr += 2;
+			if (local_x >= 32) {
+				local_x -= 32;
+				chunk_ptr += chunks_height;
+			}
+		}
+
+		local_y += 2;
+		cell_ptr_y += width * 2;
+		cell_ptr = cell_ptr_y;
+
+		if (local_y >= 32) {
+			local_y -= 32;
+			chunk_ptr_y++;
+		}
+		chunk_ptr = chunk_ptr_y;
+	}
+}
+
+void Grid::set_cell_rect(Rect2i rect, uint32_t cell_material_idx) {
+	if (cells == nullptr) {
+		UtilityFunctions::push_warning("Grid is not initialized");
+		return;
+	}
+
+	rect = rect.intersection(Rect2i(0, 0, width, height));
+
+	for (int y = rect.position.y; y < rect.position.y + rect.size.y; y++) {
+		for (int x = rect.position.x; x < rect.position.x + rect.size.x; x++) {
+			auto cell_ptr = cells + y * width + x;
+			Cell::set_material_idx(*cell_ptr, cell_material_idx);
+		}
+	}
+
+	activate_rect(rect);
+}
+
+void Grid::set_cell(Vector2i position, uint32_t cell_material_idx) {
+	if (cells == nullptr) {
+		UtilityFunctions::push_warning("Grid is not initialized");
+		return;
+	}
+
+	if (position.x < 0 || position.x >= width || position.y < 0 || position.y >= height) {
+		return;
+	}
+
+	auto cell_ptr = cells + position.y * width + position.x;
+	Cell::set_material_idx(*cell_ptr, cell_material_idx);
+
+	auto chunk_ptr = chunks + (position.x >> 5) * chunks_height + (position.y >> 5);
+	auto local_x = position.x & 31;
+	auto local_y = position.y & 31;
+	Chunk::activate_neightbors(chunk_ptr, local_x, local_y, cell_ptr);
 }
 
 void Grid::step_manual() {

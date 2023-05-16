@@ -100,6 +100,10 @@ public:
 	// Return fallback cell if out of bounds.
 	static uint32_t get_cell_checked(int x, int y);
 
+	static void activate_rect(Rect2i rect);
+	static void set_cell_rect(Rect2i rect, uint32_t cell_material_idx);
+	static void set_cell(Vector2i position, uint32_t cell_material_idx);
+
 	static void step_manual();
 
 	static void init_materials(int num_materials);

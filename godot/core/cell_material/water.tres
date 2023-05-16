@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CellMaterialData" load_steps=2 format=3 uid="uid://bkof4u2mx5bx1"]
+
+[ext_resource type="Script" path="res://core/data/cell_material_data.gd" id="1_iaj3u"]
+
+[resource]
+script = ExtResource("1_iaj3u")
+display_name = &"Water"
+id = "water"
+tags = PackedStringArray()
+color = Color(0.0901961, 0.403922, 0.611765, 0.835294)
+movement_type = 2
+density = 0
+durability = 0
+collision_type = 3
+friction = 1.4
+use_fire_preset = false
+ignite_chance = 0.1
+ignite_temperature_needed = 0
+ignite_into_preset = ""
+ignite_into_custom = ""
+on_destroyed = false
