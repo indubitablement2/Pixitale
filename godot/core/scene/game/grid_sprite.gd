@@ -13,7 +13,7 @@ func _process(_delta: float) -> void:
 	var view_origin := -ctrans.get_origin() / ctrans.get_scale()
 	var view_size := get_viewport_rect().size / ctrans.get_scale()
 	
-	var draw_size = Vector2i(view_size) + Vector2i.ONE
+	var draw_size := Vector2i(view_size) + Vector2i.ONE
 	var resized := _resize(draw_size)
 	
 	var draw_position := Vector2i(view_origin)

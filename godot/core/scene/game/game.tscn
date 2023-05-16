@@ -11,12 +11,13 @@ shader = ExtResource("2_s0mi1")
 [node name="Game" type="Node2D"]
 script = ExtResource("1_tksre")
 
+[node name="GridSprite" type="Sprite2D" parent="."]
+process_priority = 10
+material = SubResource("ShaderMaterial_n22xw")
+centered = false
+script = ExtResource("3_tsdm6")
+
 [node name="GridBody" parent="." instance=ExtResource("5_r2jck")]
 
 [node name="Camera2D2" type="Camera2D" parent="GridBody"]
 zoom = Vector2(4, 4)
-
-[node name="GridSprite" type="Sprite2D" parent="."]
-material = SubResource("ShaderMaterial_n22xw")
-centered = false
-script = ExtResource("3_tsdm6")
