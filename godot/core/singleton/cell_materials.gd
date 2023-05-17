@@ -1,23 +1,21 @@
 extends Node
 
-var cell_material_names: Array[StringName] = []
+var cell_materials : Array[CellMaterialData]
+var cell_materials_data_texture : ImageTexture
 
 func _ready() -> void:
 	load_cell_materials()
 	
-	if OS.is_debug_build():
-		Grid.run_tests()
+#	if OS.is_debug_build():
+#		Grid.run_tests()
+#		Grid.print_materials()
 
 func load_cell_materials() -> void:
-	var materials := _get_materials()
+	cell_materials = _get_materials()
 	
-	cell_material_names.resize(materials.size())
-	cell_material_names.fill(&"")
-	
-	Grid.init_materials(materials.size())
+	Grid.init_materials(cell_materials.size())
 	var idx := 0
-	for m in materials:
-		cell_material_names[idx] = m.display_name
+	for m in cell_materials:
 		
 		Grid.add_material(
 			m.movement_type,
@@ -31,8 +29,24 @@ func load_cell_materials() -> void:
 		
 		idx += 1
 	
-	print(cell_material_names)
-#	Grid.print_materials()
+	_make_cell_materials_texture()
+
+func _make_cell_materials_texture() -> void:
+	var img := Image.create(
+		cell_materials.size(),
+		1,
+		false,
+		Image.FORMAT_RGBA8
+	)
+	
+	var idx := 0
+	for m in cell_materials:
+		img.set_pixel(idx, 0, m.base_color)
+		idx += 1
+	
+#	img.save_png("user://cell_data.png")
+	
+	cell_materials_data_texture = ImageTexture.create_from_image(img)
 
 func _get_materials() -> Array[CellMaterialData]:
 	var materials: Array[CellMaterialData] = []

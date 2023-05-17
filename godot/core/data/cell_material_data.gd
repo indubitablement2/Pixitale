@@ -6,7 +6,7 @@ class_name CellMaterialData
 @export var id: String
 @export var tags: PackedStringArray
 
-@export var color := Color.TRANSPARENT
+@export var base_color := Color.TRANSPARENT
 
 @export_category("Movement")
 @export var movement_type := Grid.CELL_MOVEMENT_SOLID
@@ -53,5 +53,5 @@ var reactions := []
 # stain
 
 func _to_string() -> String:
-	return id + " - " + display_name + ": " + str(reactions)
+	return id + " - " + display_name
 	

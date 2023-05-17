@@ -1,11 +1,11 @@
 - [ ] Cell rendering.
-    - [ ] Pass cell material data to shader.
-        - [ ] Create image with 32bits cell material data for each cell material.
-        - [ ] Pass to cell shader as a texture.
-    - [ ] Display cell color.
-    	- [ ] Cell have a base color.
-		- [ ] Take base colors from cell material and compile into a color palette texture.
-		- [ ] Add base cell color (from cell resource) palette to shader.
+    - [x] Pass cell material data to shader.
+        - [x] Create image with 32bits cell material data for each cell material.
+        - [x] Pass to cell shader as a texture.
+    - [x] Display base cell color.
+    	- [x] Cell have a base color.
+		- [x] Take base colors from cell material and compile into a color palette texture.
+		- [x] Add base cell color (from cell resource) palette to shader.
     - [ ] Color value 16
 		- [x] Define gamma correct value palette.
 		- [ ] Add 4 bits modulate to cell data.
