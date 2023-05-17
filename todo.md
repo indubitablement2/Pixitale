@@ -7,7 +7,7 @@
 		- [ ] Take base colors from cell material and compile into a color palette texture.
 		- [ ] Add base cell color (from cell resource) palette to shader.
     - [ ] Color value 16
-		- [ ] Define gamma correct value palette.
+		- [x] Define gamma correct value palette.
 		- [ ] Add 4 bits modulate to cell data.
 		- [ ] Add value palette to cell shader.
 		- [ ] Add booleant to ignore color value in cell material.
