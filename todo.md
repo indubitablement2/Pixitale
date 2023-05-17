@@ -1,3 +1,24 @@
--a
--b
--c
+- [ ] Cell rendering.
+    - [ ] Pass cell material data to shader.
+        - [ ] Create image with 32bits cell material data for each cell material.
+        - [ ] Pass to cell shader as a texture.
+    - [ ] Display cell color.
+    	- [ ] Cell have a base color.
+		- [ ] Take base colors from cell material and compile into a color palette texture.
+		- [ ] Add base cell color (from cell resource) palette to shader.
+    - [ ] Color value 16
+		- [ ] Define gamma correct value palette.
+		- [ ] Add 4 bits modulate to cell data.
+		- [ ] Add value palette to cell shader.
+		- [ ] Add booleant to ignore color value in cell material.
+    - [ ] Color modulate 16
+        - [ ] Define color palette.
+        - [ ] Add 4 bits modulate to cell data.
+        - [ ] Apply modulate on cell shader.
+        - [ ] Add booleant to ignore color modulate in cell material.
+    - [ ] Color generation (noise/sudoku)
+        - [ ] Generation type can be set on cell material data.
+- [ ] Bloom 80%+
+    - [ ] Add bloom to environment.
+- [ ] Light
+    - [ ] Cell data and position is a global shader variable.
