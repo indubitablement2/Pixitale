@@ -18,6 +18,8 @@
         - [ ] Add booleant to ignore color modulate in cell material.
     - [ ] Color generation (noise/sudoku)
         - [ ] Generation type can be set on cell material data.
+- [ ] Bordel cells
+    - [ ] Looping border.
 - [ ] Bloom 80%+
     - [ ] Add bloom to environment.
 - [ ] Light

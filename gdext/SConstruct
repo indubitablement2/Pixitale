@@ -5,7 +5,7 @@ cdb = env.CompilationDatabase()
 
 env.Append(CPPPATH='src/')
 
-# ? Really need 20?
+# Really need 20?
 if env.get("is_msvc", False):
     env.Append(CXXFLAGS=["/std:c++20"])
 else:
