@@ -1,8 +1,3 @@
-/* godot-cpp integration testing project.
- *
- * This is free and unencumbered software released into the public domain.
- */
-
 #include "register_types.h"
 
 #include <gdextension_interface.h>
