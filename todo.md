@@ -18,8 +18,11 @@
         - [ ] Add booleant to ignore color modulate in cell material.
     - [ ] Color generation (noise/sudoku)
         - [ ] Generation type can be set on cell material data.
+- [ ] World gen.
+    - [ ] Can configure infinite border cells material.
+    - [ ] Figure out gdscript interface.
 - [ ] Bordel cells
-    - [ ] Looping border.
+    - [ ] Looping infinite border.
 - [ ] Bloom 80%+
     - [ ] Add bloom to environment.
 - [ ] Light
