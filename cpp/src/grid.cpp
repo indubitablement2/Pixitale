@@ -701,7 +701,7 @@ void Grid::activate_rect(Rect2i rect) {
 	// This should rarely be called I think, so it's not a big deal.
 	// Otherwise a more efficient algorithm should be used.
 
-	rect = rect.intersection(Rect2i(0, 0, width, height));
+	rect = rect.intersection(Rect2i(1, 1, width - 1, height - 1));
 
 	if (rect.size.x <= 0 || rect.size.y <= 0) {
 		return;
@@ -770,6 +770,11 @@ void Grid::set_cell(Vector2i position, uint32_t cell_material_idx) {
 
 	auto cell_ptr = cells + position.y * width + position.x;
 	Cell::set_material_idx(*cell_ptr, cell_material_idx);
+
+	if (position.x <= 1 || position.x >= width - 1 || position.y <= 1 || position.y >= height - 1) {
+		// Do not activate border cell.
+		return;
+	}
 
 	auto chunk_ptr = chunks + (position.x >> 5) * chunks_height + (position.y >> 5);
 	auto local_x = position.x & 31;
