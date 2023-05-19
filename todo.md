@@ -19,8 +19,8 @@
     - [ ] Color generation (noise/sudoku)
         - [ ] Generation type can be set on cell material data.
 - [ ] World gen.
-    - [ ] Can configure infinite border cells material.
-    - [ ] Figure out gdscript interface.
+    - [x] Can configure infinite border cells material.
+    - [x] Figure out gdscript interface.
 - [ ] Bordel cells.
     - [x] Looping infinite border.
     - [ ] Reapply border cell when border is modified.
@@ -28,4 +28,3 @@
     - [ ] Add bloom to environment.
 - [ ] Light
     - [ ] Cell data and position is a global shader variable.
-- [ ] fix grid character oob!!
