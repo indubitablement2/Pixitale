@@ -1,5 +1,6 @@
 #include <assert.h>
 
+#include <cstdint>
 #include <cstring>
 #include <godot_cpp/classes/image_texture.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -8,6 +9,7 @@
 #include "cell.hpp"
 #include "chunk.hpp"
 #include "godot_cpp/classes/image.hpp"
+#include "godot_cpp/core/class_db.hpp"
 #include "godot_cpp/core/math.hpp"
 #include "godot_cpp/variant/packed_byte_array.hpp"
 #include "godot_cpp/variant/rect2i.hpp"
@@ -525,6 +527,10 @@ void Grid::_bind_methods() {
 			&Grid::set_cell);
 	ClassDB::bind_static_method(
 			"Grid",
+			D_METHOD("set_border_cell", "position", "cell_material_idx"),
+			&Grid::set_border_cell);
+	ClassDB::bind_static_method(
+			"Grid",
 			D_METHOD("step_manual"),
 			&Grid::step_manual);
 
@@ -556,6 +562,15 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
+			D_METHOD("get_seed"),
+			&Grid::get_seed);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("set_seed", "seed"),
+			&Grid::set_seed);
+
+	ClassDB::bind_static_method(
+			"Grid",
 			D_METHOD("is_chunk_active", "position"),
 			&Grid::is_chunk_active);
 	ClassDB::bind_static_method(
@@ -573,8 +588,6 @@ void Grid::_bind_methods() {
 
 	// ADD_GROUP("Test group", "group_");
 	// ADD_SUBGROUP("Test subgroup", "group_subgroup_");
-
-	BIND_CONSTANT(GRID_SCALE);
 
 	BIND_ENUM_CONSTANT(CELL_COLLISION_SOLID);
 	BIND_ENUM_CONSTANT(CELL_COLLISION_PLATFORM);
@@ -595,6 +608,9 @@ void Grid::delete_grid() {
 		cells = nullptr;
 		width = 0;
 		height = 0;
+
+		delete[] border_cells;
+		border_cells = nullptr;
 
 		delete[] chunks;
 		chunks = nullptr;
@@ -623,25 +639,10 @@ void Grid::new_empty(int wish_width, int wish_height) {
 		cells[i] = 0;
 	}
 
-	// iterate over all cells.
-	for (int x = 32; x < width - 32; x++) {
-		for (int y = 32; y < height - 32; y++) {
-			uint32_t cell = 0;
-
-			if (x == 100 && y == 100) {
-				Cell::set_material_idx(cell, 3);
-			} else if (y > height - 40) {
-				Cell::set_material_idx(cell, 2);
-			} else if (x < 60 || x > 200) {
-				Cell::set_material_idx(cell, 2);
-			} else if (y < 60) {
-				Cell::set_material_idx(cell, 1);
-			}
-
-			auto cell_ptr = cells + (y * width + x);
-			Cell::set_active(cell, true);
-			*cell_ptr = cell;
-		}
+	border_cells = new uint32_t[height * 32];
+	// Set all border cells to empty.
+	for (int i = 0; i < height * 32; i++) {
+		border_cells[i] = 0;
 	}
 }
 
@@ -677,20 +678,17 @@ Ref<Image> Grid::get_cell_data(Vector2i image_size, Rect2i rect) {
 			image_data);
 }
 
-uint32_t Grid::get_cell_fallback(int x, int y) {
-	// TODO: empty/water/sand/rock/empty/lava
-	uint32_t cell = 0;
-	if (y > 64) {
-		cell = 3;
-	} else if (y > 32) {
-		cell = 2;
-	}
-	return cell;
-}
-
 uint32_t Grid::get_cell_checked(int x, int y) {
-	if (x < 0 || x >= width || y < 0 || y >= height) {
-		return get_cell_fallback(x, y);
+	if (cells == nullptr) {
+		return 0;
+	} else if (y < 0) {
+		return border_cells[0];
+	} else if (y >= height) {
+		return border_cells[(height - 1) * 32];
+	} else if (x < 0) {
+		return border_cells[y * 32 + x & 31];
+	} else if (x >= width) {
+		return border_cells[y * 32 + x & 31];
 	}
 
 	return cells[y * width + x];
@@ -769,7 +767,7 @@ void Grid::set_cell(Vector2i position, uint32_t cell_material_idx) {
 	}
 
 	auto cell_ptr = cells + position.y * width + position.x;
-	Cell::set_material_idx(*cell_ptr, cell_material_idx);
+	*cell_ptr = cell_material_idx;
 
 	if (position.x <= 1 || position.x >= width - 1 || position.y <= 1 || position.y >= height - 1) {
 		// Do not activate border cell.
@@ -780,6 +778,19 @@ void Grid::set_cell(Vector2i position, uint32_t cell_material_idx) {
 	auto local_x = position.x & 31;
 	auto local_y = position.y & 31;
 	Chunk::activate_neightbors(chunk_ptr, local_x, local_y, cell_ptr);
+}
+
+void Grid::set_border_cell(Vector2i position, uint32_t cell_material_idx) {
+	if (border_cells == nullptr) {
+		UtilityFunctions::push_warning("Grid is not initialized");
+		return;
+	}
+
+	if (position.x < 0 || position.x >= 32 || position.y < 0 || position.y >= 32) {
+		return;
+	}
+
+	border_cells[position.y * 32 + position.x] = cell_material_idx;
 }
 
 void Grid::step_manual() {
@@ -903,6 +914,14 @@ bool Grid::is_chunk_active(Vector2i position) {
 	return *(chunks + position.x * chunks_height + position.y);
 }
 
+void Grid::set_seed(int64_t seed) {
+	Grid::seed = seed;
+}
+
+int64_t Grid::get_seed() {
+	return seed;
+}
+
 void Grid::free_memory() {
 	delete_materials();
 	delete_grid();
@@ -913,11 +932,7 @@ int64_t Grid::get_tick() {
 }
 
 uint32_t Grid::get_cell_material_idx(Vector2i position) {
-	if (position.x < 0 || position.y < 0 || position.x >= width || position.y >= height) {
-		return 0;
-	}
-
-	return Cell::material_idx(cells[position.x + position.y * width]);
+	return Cell::material_idx(get_cell_checked(position.x, position.y));
 }
 
 void Grid::print_materials() {

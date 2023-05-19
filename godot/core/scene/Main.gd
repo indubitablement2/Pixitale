@@ -1,7 +1,22 @@
 extends Control
 
+var t := 0
+
+func _ready() -> void:
+	set_process(false)
+	WorldGeneration.generation_started.connect(_on_generation_started)
+	WorldGeneration.generation_finished.connect(_on_generation_finished, 1)
+	
+	WorldGeneration.call_deferred("generate_world", 1024, 512, 1337)
+
+func _on_generation_started() -> void:
+	set_process(false)
+
+func _on_generation_finished(_canceled: bool) -> void:
+	set_process(true)
+
 func _process(_delta: float) -> void:
-	var mouse_pos := get_global_mouse_position() / Grid.GRID_SCALE
+	var mouse_pos := get_global_mouse_position()
 	var grid_pos := Vector2i(mouse_pos)
 	var mat_idx := Grid.get_cell_material_idx(grid_pos)
 

@@ -1,4 +1,3 @@
-// #define NDEBUG
 #include <assert.h>
 
 #include <cmath>

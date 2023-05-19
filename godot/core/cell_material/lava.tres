@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="CellMaterialData" load_steps=2 format=3 uid="uid://55ck6n48nm8u"]
+
+[ext_resource type="Script" path="res://core/data/cell_material_data.gd" id="1_qu6x0"]
+
+[resource]
+script = ExtResource("1_qu6x0")
+display_name = &"Lava"
+id = "lava"
+tags = PackedStringArray()
+base_color = Color(0.901961, 0.286275, 0, 1)
+movement_type = 2
+density = 4
+durability = 0
+collision_type = 3
+friction = 2.0
+use_fire_preset = false
+ignite_chance = 0.1
+ignite_temperature_needed = 0
+ignite_into_preset = ""
+ignite_into_custom = ""
+on_destroyed = false

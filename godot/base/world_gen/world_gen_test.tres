@@ -1,0 +1,7 @@
+[gd_resource type="Resource" load_steps=2 format=3 uid="uid://ddugeyvl6c1lm"]
+
+[ext_resource type="Script" path="res://base/world_gen/world_gen_test.gd" id="1_udkep"]
+
+[resource]
+script = ExtResource("1_udkep")
+pass_name = "test!!!"

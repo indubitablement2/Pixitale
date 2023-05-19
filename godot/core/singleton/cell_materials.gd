@@ -10,6 +10,20 @@ func _ready() -> void:
 #		Grid.run_tests()
 #		Grid.print_materials()
 
+# Return -1 if cell material not found.
+func get_cell_materials_idx(id: StringName) -> int:
+	var idx := 0
+	for m in cell_materials:
+		if m.id == id:
+			break
+		idx += 1
+	
+	if idx >= cell_materials.size():
+		push_warning("cell material not found for ", id)
+		idx = 0
+	
+	return idx
+
 func load_cell_materials() -> void:
 	cell_materials = _get_materials()
 	

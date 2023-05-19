@@ -7,7 +7,6 @@ var _image_size := Vector2i.ZERO
 
 func _ready() -> void:
 	texture = _tex
-	print(CellMaterials.cell_materials_data_texture.get_size())
 	(material as ShaderMaterial).set_shader_parameter("materials_data", CellMaterials.cell_materials_data_texture)
 
 func _process(_delta: float) -> void:

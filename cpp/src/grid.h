@@ -63,6 +63,9 @@ public:
 	inline static int width = 0;
 	inline static int height = 0;
 
+	// Row major. Same height as cells. Width is one chunk (32).
+	inline static uint32_t *border_cells = nullptr;
+
 	// Column major.
 	inline static uint64_t *chunks = nullptr;
 	inline static int chunks_width = 0;
@@ -74,7 +77,7 @@ public:
 	inline static CellMaterial *cell_materials = nullptr;
 	inline static int cell_materials_len = 0;
 
-	inline const static float GRID_SCALE = 4.0f;
+	inline static int64_t seed = 0;
 
 	enum CellMovement {
 		CELL_MOVEMENT_SOLID,
@@ -94,15 +97,15 @@ public:
 	static void new_empty(int wish_width, int wish_height);
 	static Vector2i get_size();
 	static Vector2i get_size_chunk();
+
 	static Ref<Image> get_cell_data(Vector2i image_size, Rect2i rect);
-	static void update_texture_data(Ref<ImageTexture> texture, Vector2i position);
-	static uint32_t get_cell_fallback(int x, int y);
 	// Return fallback cell if out of bounds.
 	static uint32_t get_cell_checked(int x, int y);
 
 	static void activate_rect(Rect2i rect);
 	static void set_cell_rect(Rect2i rect, uint32_t cell_material_idx);
 	static void set_cell(Vector2i position, uint32_t cell_material_idx);
+	static void set_border_cell(Vector2i position, uint32_t cell_material_idx);
 
 	static void step_manual();
 
@@ -120,6 +123,9 @@ public:
 	static int64_t get_tick();
 	static uint32_t get_cell_material_idx(Vector2i position);
 	static bool is_chunk_active(Vector2i position);
+
+	static void set_seed(int64_t seed);
+	static int64_t get_seed();
 
 	static void free_memory();
 	static void print_materials();

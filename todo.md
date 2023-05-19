@@ -21,9 +21,11 @@
 - [ ] World gen.
     - [ ] Can configure infinite border cells material.
     - [ ] Figure out gdscript interface.
-- [ ] Bordel cells
-    - [ ] Looping infinite border.
+- [ ] Bordel cells.
+    - [x] Looping infinite border.
+    - [ ] Reapply border cell when border is modified.
 - [ ] Bloom 80%+
     - [ ] Add bloom to environment.
 - [ ] Light
     - [ ] Cell data and position is a global shader variable.
+- [ ] fix grid character oob!!
