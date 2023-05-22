@@ -2,6 +2,6 @@ extends ModEntry
 
 static func entry() -> void:
 	print("Mod entered!")
-	WorldGeneration.get_passes().push_back(
-		preload("res://base/world_gen/surface_pass.tres")
-	)
+	var passes := WorldGeneration.get_passes()
+	passes.push_back(preload("res://base/world_gen/surface.tres"))
+	passes.push_back(preload("res://base/world_gen/cavern.tres"))

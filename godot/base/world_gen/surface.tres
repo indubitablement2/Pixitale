@@ -1,6 +1,6 @@
-[gd_resource type="Resource" load_steps=5 format=3 uid="uid://b7likp4irg6hp"]
+[gd_resource type="Resource" load_steps=5 format=3 uid="uid://do3sn4vwbdk37"]
 
-[ext_resource type="Script" path="res://base/world_gen/surface_pass.gd" id="1_udkep"]
+[ext_resource type="Script" path="res://base/world_gen/surface.gd" id="1_udkep"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_j66pf"]
 frequency = 0.001
@@ -32,4 +32,3 @@ first_rock_frequency = 5.0
 first_rock_detail_strenght = 0.25
 first_rock_as_dirt_threshold = 0.08
 first_rock_as_dirt_falloff = 1.5
-pass_name = "Creating surface"
