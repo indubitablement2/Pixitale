@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=3 uid="uid://ca1ifxu63elb6"]
 
 [ext_resource type="Script" path="res://core/scene/Main.gd" id="1_c4ry3"]
-[ext_resource type="PackedScene" uid="uid://d1p5dq5fwm6v2" path="res://core/scene/game/game.tscn" id="2_euwsc"]
+[ext_resource type="PackedScene" uid="uid://d1p5dq5fwm6v2" path="res://core/scene/game/game.tscn" id="2_3xn8j"]
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -70,4 +70,4 @@ grow_horizontal = 0
 grow_vertical = 0
 text = "asdasdasa"
 
-[node name="Game" parent="." instance=ExtResource("2_euwsc")]
+[node name="Game" parent="." instance=ExtResource("2_3xn8j")]

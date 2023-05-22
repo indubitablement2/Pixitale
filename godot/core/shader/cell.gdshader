@@ -2,16 +2,17 @@ shader_type canvas_item;
 
 const uint MATERIAL_IDX_MASK = 4095u;
 
-uniform sampler2D materials_data;
+uniform sampler2D cell_materials_data;
 
 void fragment() {
+	
 	ivec2 coords = ivec2((UV * vec2(textureSize(TEXTURE, 0))));
 	uint data = floatBitsToUint(texelFetch(TEXTURE, coords, 0).x);
 
 	uint material_idx = data & MATERIAL_IDX_MASK;
 	
 	vec4 base_color = texelFetch(
-		materials_data,
+		cell_materials_data,
 		ivec2(int(material_idx), 0),
 		0
 	);

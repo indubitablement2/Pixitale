@@ -1,7 +1,6 @@
 extends Node
 
 var cell_materials : Array[CellMaterialData]
-var cell_materials_data_texture : ImageTexture
 
 func _ready() -> void:
 	load_cell_materials()
@@ -60,7 +59,7 @@ func _make_cell_materials_texture() -> void:
 	
 #	img.save_png("user://cell_data.png")
 	
-	cell_materials_data_texture = ImageTexture.create_from_image(img)
+	preload("res://core/shader/cell_materials_data.tres").set_image(img)
 
 func _get_materials() -> Array[CellMaterialData]:
 	var materials: Array[CellMaterialData] = []

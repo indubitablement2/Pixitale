@@ -2,7 +2,7 @@ extends Node
 
 @onready var _thread := Thread.new()
 var _is_canceled := false
-var _passes : Array[WorldGenerationPass] = []
+var _passes : Array[Resource] = []
 
 signal generation_started
 signal generation_pass_changed(pass_name: String)
@@ -16,23 +16,32 @@ func generate_world(wish_width: int, wish_height: int, base_seed: int) -> void:
 		push_error("is already generating world")
 		return
 	
-	generation_started.emit()
-	
 	Grid.new_empty(wish_width, wish_height)
 	Grid.set_seed(base_seed)
 	seed(base_seed)
 	
 	_thread.start(_generate)
+	
+	generation_started.emit()
 
 func cancel_generation() -> void:
 	if is_generating():
 		_is_canceled = true
 
-func get_passes() -> Array[WorldGenerationPass]:
+# Each passes should have:
+# a generate function `func generate() -> void`
+# and a String property named pass_name `const pass_name = "hello"`
+func get_passes() -> Array[Resource]:
 	if is_generating():
 		push_error("can not modify passes while generating")
 		return []
 	return _passes
+
+func get_pass(pass_name: String) -> Resource:
+	for p in _passes:
+		if p.pass_name == pass_name:
+			return p
+	return null
 
 func _generation_pass_changed(pass_name: String) -> void:
 	generation_pass_changed.emit(pass_name)
