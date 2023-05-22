@@ -21,6 +21,19 @@
 - [ ] World gen.
     - [x] Can configure infinite border cells material.
     - [x] Figure out gdscript interface.
+    - [ ] Generation passes
+        - [ ] Carvern
+        - [ ] Ocean
+        - [ ] Desert
+        - [ ] Pyramid
+        - [ ] Ice
+        - [ ] Ice ocean
+        - [ ] Bedrock
+        - [ ] Hell
+        - [ ] Tower
+        - [ ] Sky islands
+        - [ ] Surface plateau
+        - [ ] Mountain
 - [ ] Bordel cells.
     - [x] Looping infinite border.
     - [ ] Reapply border cell when border is modified.
