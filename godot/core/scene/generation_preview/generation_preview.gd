@@ -4,8 +4,8 @@ const IMG_SIZE = 1024
 
 var _generation_start_time := 0
 
-@export var world_size := Vector2i(20000, 10000)
-@export var show_border := Vector2i(300, 300)
+@export var world_size := Vector2i(32768, 16384)
+@export var show_border := Vector2i(256, 256)
 
 var _i := 0
 var _sps : Array[Sprite2D] = []

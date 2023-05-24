@@ -52,11 +52,22 @@ func _generation_finished() -> void:
 	_is_canceled = false
 
 func _generate() -> void:
+	var start_start := Time.get_ticks_msec()
+	var start := start_start
+	var end := start
+	
 	for p in _passes:
 		if _is_canceled:
 			break
 		
 		call_deferred("_generation_pass_changed", p.pass_name)
+		
 		p.generate()
+		
+		end = Time.get_ticks_msec()
+		print(p.pass_name , " in ", end - start, "ms.")
+		start = end
+	
+	print("Generation done in ", end - start_start, "ms.")
 	
 	call_deferred("_generation_finished")

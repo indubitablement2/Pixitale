@@ -41,3 +41,4 @@
     - [ ] Add bloom to environment.
 - [ ] Light
     - [ ] Cell data and position is a global shader variable.
+- [x] Benchmark

@@ -699,42 +699,22 @@ void Grid::activate_rect(Rect2i rect) {
 	// This should rarely be called I think, so it's not a big deal.
 	// Otherwise a more efficient algorithm should be used.
 
-	rect = rect.intersection(Rect2i(1, 1, width - 1, height - 1));
+	rect = rect.intersection(Rect2i(16, 16, width - 16, height - 16));
 
 	if (rect.size.x <= 0 || rect.size.y <= 0) {
 		return;
 	}
 
-	auto chunk_ptr_y = chunks + (rect.position.x >> 5) * chunks_height + (rect.position.y >> 5);
-	auto chunk_ptr = chunk_ptr_y;
+	for (int y = rect.position.y; y < rect.get_end().y; y += 2) {
+		for (int x = rect.position.x; x < rect.get_end().x; x += 2) {
+			auto chunk_ptr = chunks + (x >> 5) * chunks_height + (y >> 5);
+			auto cell_ptr = cells + y * width + x;
 
-	auto cell_ptr_y = cells + rect.position.y * width + rect.position.x;
-	auto cell_ptr = cell_ptr_y;
+			assert(chunk_ptr < chunks + chunks_width * chunks_height);
+			assert(cell_ptr < cells + width * height);
 
-	auto local_x = rect.position.x & 31;
-	auto local_y = rect.position.y & 31;
-
-	for (int y = 0; y < rect.size.y >> 1; y++) {
-		for (int x = 0; x < rect.size.x >> 1; x++) {
-			Chunk::activate_neightbors(chunk_ptr, local_x, local_y, cell_ptr);
-
-			local_x += 2;
-			cell_ptr += 2;
-			if (local_x >= 32) {
-				local_x -= 32;
-				chunk_ptr += chunks_height;
-			}
+			Chunk::activate_neightbors(chunk_ptr, x & 31, y & 31, cell_ptr);
 		}
-
-		local_y += 2;
-		cell_ptr_y += width * 2;
-		cell_ptr = cell_ptr_y;
-
-		if (local_y >= 32) {
-			local_y -= 32;
-			chunk_ptr_y++;
-		}
-		chunk_ptr = chunk_ptr_y;
 	}
 }
 
