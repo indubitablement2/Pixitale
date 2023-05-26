@@ -28,9 +28,9 @@ func cancel_generation() -> void:
 	if is_generating():
 		_is_canceled = true
 
-# Each passes should have:
-# a generate function `func generate() -> void`
-# and a String property named pass_name `const pass_name = "hello"`
+# Each passes should have at lease these 2 functions:
+# `func generate() -> void`
+# `func pass_name -> String`
 func get_passes() -> Array[Resource]:
 	if is_generating():
 		push_error("can not modify passes while generating")
@@ -39,8 +39,9 @@ func get_passes() -> Array[Resource]:
 
 func get_pass(pass_name: String) -> Resource:
 	for p in _passes:
-		if p.pass_name == pass_name:
+		if p.pass_name() == pass_name:
 			return p
+	push_error(pass_name, " does not exist")
 	return null
 
 func _generation_pass_changed(pass_name: String) -> void:
@@ -60,12 +61,12 @@ func _generate() -> void:
 		if _is_canceled:
 			break
 		
-		call_deferred("_generation_pass_changed", p.pass_name)
+		call_deferred("_generation_pass_changed", p.pass_name())
 		
 		p.generate()
 		
 		end = Time.get_ticks_msec()
-		print(p.pass_name , " in ", end - start, "ms.")
+		print(p.pass_name() , " in ", end - start, "ms.")
 		start = end
 	
 	print("Generation done in ", end - start_start, "ms.")

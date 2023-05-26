@@ -64,6 +64,8 @@ inline void activate_rect(uint64_t *chunk_ptr, int x_offset, int y_offset, uint6
 	assert(width > 0);
 	assert(height > 0);
 
+	assert(chunk_ptr >= Grid::chunks && chunk_ptr < Grid::chunks + Grid::chunks_width * Grid::chunks_height);
+
 	*chunk_ptr |= ((1uLL << height) - 1uLL) << y_offset; // Set rows
 	*chunk_ptr |= ((1uLL << width) - 1uLL) << (x_offset + 32); // Set columns
 
@@ -122,14 +124,23 @@ inline void activate_neightbors(uint64_t *chunk_ptr, int local_x, int local_y, u
 		activate_rect(chunk_ptr, local_x - 1, local_y - 1, 3, 3);
 	}
 
+	assert(cell - 1 >= Grid::cells && cell - 1 < Grid::cells + Grid::width * Grid::height);
 	Cell::set_active(*(cell - 1), true);
+	assert(cell >= Grid::cells && cell < Grid::cells + Grid::width * Grid::height);
 	Cell::set_active(*cell, true);
+	assert(cell + 1 >= Grid::cells && cell + 1 < Grid::cells + Grid::width * Grid::height);
 	Cell::set_active(*(cell + 1), true);
+	assert(cell - Grid::width - 1 >= Grid::cells && cell - Grid::width - 1 < Grid::cells + Grid::width * Grid::height);
 	Cell::set_active(*(cell - Grid::width - 1), true);
+	assert(cell - Grid::width >= Grid::cells && cell - Grid::width < Grid::cells + Grid::width * Grid::height);
 	Cell::set_active(*(cell - Grid::width), true);
+	assert(cell - Grid::width + 1 >= Grid::cells && cell - Grid::width + 1 < Grid::cells + Grid::width * Grid::height);
 	Cell::set_active(*(cell - Grid::width + 1), true);
+	assert(cell + Grid::width - 1 >= Grid::cells && cell + Grid::width - 1 < Grid::cells + Grid::width * Grid::height);
 	Cell::set_active(*(cell + Grid::width - 1), true);
+	assert(cell + Grid::width >= Grid::cells && cell + Grid::width < Grid::cells + Grid::width * Grid::height);
 	Cell::set_active(*(cell + Grid::width), true);
+	assert(cell + Grid::width + 1 >= Grid::cells && cell + Grid::width + 1 < Grid::cells + Grid::width * Grid::height);
 	Cell::set_active(*(cell + Grid::width + 1), true);
 }
 

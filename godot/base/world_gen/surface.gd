@@ -1,7 +1,5 @@
 extends Resource
 
-const pass_name := "Creating surface"
-
 @export var hills_top_relative := 0.2
 @export var hills_height := 1000
 @export var hills_gradient_strenght := 1.0
@@ -20,6 +18,9 @@ const pass_name := "Creating surface"
 
 var surface_top : int
 var surface_bot : int
+
+func pass_name() -> String:
+	return "Creating surface"
 
 func generate() -> void:
 	hills.seed = Grid.get_seed() + 1
@@ -41,6 +42,7 @@ func generate() -> void:
 	var yf : float
 	
 	Grid.set_cell_rect(Rect2i(0, surface_bot, size.x, size.y), rock)
+	return
 	
 	# Hills
 	while y < surface_bot:

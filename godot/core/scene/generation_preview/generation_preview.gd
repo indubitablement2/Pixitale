@@ -2,8 +2,6 @@ extends Node2D
 
 const IMG_SIZE = 1024
 
-var _generation_start_time := 0
-
 @export var world_size := Vector2i(32768, 16384)
 @export var show_border := Vector2i(256, 256)
 
@@ -19,7 +17,7 @@ func _ready() -> void:
 	WorldGeneration.call_deferred("generate_world", world_size.x, world_size.y, randi())
 
 func _unhandled_input(event: InputEvent) -> void:
-	if event.is_action_pressed("attack"):
+	if event.is_action_pressed("up"):
 		WorldGeneration.generate_world(world_size.x, world_size.y, randi())
 
 func _process(_delta: float) -> void:
@@ -40,8 +38,6 @@ func _update_sp(sp: Sprite2D) -> void:
 	sp.texture.update(img)
 
 func _on_generation_started() -> void:
-	_generation_start_time = Time.get_ticks_msec()
-	
 	queue_redraw()
 	
 	_i = 0
@@ -68,11 +64,6 @@ func _on_generation_started() -> void:
 			pos.x += IMG_SIZE
 		
 		pos.y += IMG_SIZE
-	
-	print("generation started")
 
 func _on_generation_finished(_canceled: bool) -> void:
 	_update_all = 0
-	
-	var generation_time := Time.get_ticks_msec() - _generation_start_time
-	print("generation done in ", generation_time, "ms")

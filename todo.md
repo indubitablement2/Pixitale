@@ -42,3 +42,8 @@
 - [ ] Light
     - [ ] Cell data and position is a global shader variable.
 - [x] Benchmark
+- [ ] Simulation
+    - [ ] Run without blocking main thread.
+    - [ ] Run using multiple thread.
+    - [ ] Slow reaction are handled in bulk.
+    - [ ] Consider storing ractions in hashmap.

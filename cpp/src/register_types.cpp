@@ -7,6 +7,8 @@
 #include <godot_cpp/godot.hpp>
 
 #include "grid.h"
+
+#include "generation.h"
 #include "grid_character_body.h"
 
 using namespace godot;
@@ -18,6 +20,7 @@ void initialize_gdext_module(ModuleInitializationLevel p_level) {
 
 	ClassDB::register_class<Grid>();
 	ClassDB::register_class<GridCharacterBody>();
+	ClassDB::register_class<Generation>();
 }
 
 void uninitialize_gdext_module(ModuleInitializationLevel p_level) {

@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://base/world_gen/cavern.gd" id="1_ospt8"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_6qsr6"]
+noise_type = 0
 frequency = 0.003
 fractal_octaves = 4
 fractal_lacunarity = 2.87
