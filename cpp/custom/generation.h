@@ -1,10 +1,10 @@
 #ifndef GENERATION_H
 #define GENERATION_H
 
-#include <godot_cpp/classes/curve.hpp>
-#include <godot_cpp/classes/fast_noise_lite.hpp>
-
-using namespace godot;
+#include "core/typedefs.h"
+#include "modules/noise/fastnoise_lite.h"
+#include "scene/resources/curve.h"
+#include <cstdint>
 
 class Generation : public Object {
 	GDCLASS(Generation, Object);
@@ -18,7 +18,7 @@ public:
 			Ref<Curve> vertical_gradient,
 			Ref<FastNoiseLite> cavern,
 			float cavern_x_scale,
-			int surface_top);
+			uint32_t surface_top);
 };
 
 #endif

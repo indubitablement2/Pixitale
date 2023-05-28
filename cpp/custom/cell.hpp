@@ -1,11 +1,8 @@
 #ifndef CELL_HPP
 #define CELL_HPP
 
-#include "godot_cpp/godot.hpp"
+#include "godot/core/typedefs.h"
 #include "grid.h"
-#include <cstdint>
-
-using namespace godot;
 
 namespace Cell {
 

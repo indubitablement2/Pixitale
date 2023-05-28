@@ -1,7 +1,6 @@
-#include <godot_cpp/classes/node2d.hpp>
-#include <godot_cpp/variant/vector2.hpp>
-
-using namespace godot;
+#include "core/object/class_db.h"
+#include "godot/core/typedefs.h"
+#include "scene/2d/node_2d.h"
 
 class GridCharacterBody : public Node2D {
 	GDCLASS(GridCharacterBody, Node2D);
@@ -10,6 +9,8 @@ private:
 	float step_offset = 0.0f;
 
 protected:
+	void _notification(int p_what);
+
 	static void _bind_methods();
 
 public:
@@ -36,5 +37,6 @@ public:
 
 	void move();
 
-	virtual void _draw() override;
+	GridCharacterBody(){};
+	~GridCharacterBody(){};
 };

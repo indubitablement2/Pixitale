@@ -1,22 +1,14 @@
+#include "grid.h"
+
 #include <assert.h>
-#include <cstdint>
-#include <cstring>
-#include <godot_cpp/classes/image_texture.hpp>
-#include <godot_cpp/variant/utility_functions.hpp>
-#include <godot_cpp/variant/vector2.hpp>
 
 #include "cell.hpp"
 #include "chunk.hpp"
-#include "godot_cpp/classes/image.hpp"
-#include "godot_cpp/core/class_db.hpp"
-#include "godot_cpp/core/math.hpp"
-#include "godot_cpp/variant/packed_byte_array.hpp"
-#include "godot_cpp/variant/rect2i.hpp"
-#include "godot_cpp/variant/vector2i.hpp"
-#include "grid.h"
 #include "rng.hpp"
 
-using namespace godot;
+#include "core/error/error_macros.h"
+#include "core/string/print_string.h"
+#include "core/typedefs.h"
 
 namespace Step {
 
@@ -459,7 +451,7 @@ void step_chunk(
 }
 
 void step_column(int column_idx) {
-	uint64_t rng = (uint64_t)column_idx * (uint64_t)Grid::tick * 6364136223846792969uLL;
+	uint64_t rng = ((uint64_t)column_idx + (uint64_t)Grid::tick) * 6364136223846792969uLL;
 
 	uint64_t *chunk_end_ptr = Grid::chunks + column_idx * Grid::chunks_height;
 	uint64_t *next_chunk_ptr = chunk_end_ptr + (Grid::chunks_height - 2);
@@ -470,6 +462,7 @@ void step_column(int column_idx) {
 	auto cell_start = Grid::cells + ((Grid::height - 32) * Grid::width + column_idx * 32);
 
 	// Iterate over each chunk from the bottom.
+	// TODO: Iterate from the top.
 	while (next_chunk_ptr > chunk_end_ptr) {
 		auto chunk = next_chunk;
 		auto chunk_ptr = next_chunk_ptr;
@@ -502,7 +495,7 @@ void Grid::_bind_methods() {
 			&Grid::delete_grid);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("new_empty", "width", "height"),
+			D_METHOD("new_empty", "wish_width", "wish_height"),
 			&Grid::new_empty);
 	ClassDB::bind_static_method(
 			"Grid",
@@ -601,7 +594,7 @@ void Grid::_bind_methods() {
 
 void Grid::delete_grid() {
 	if (cells != nullptr) {
-		UtilityFunctions::print("Deleting grid");
+		print_line("Deleting grid");
 
 		delete[] cells;
 		cells = nullptr;
@@ -618,12 +611,12 @@ void Grid::delete_grid() {
 	}
 }
 
-void Grid::new_empty(int wish_width, int wish_height) {
+void Grid::new_empty(uint32_t wish_width, uint32_t wish_height) {
 	delete_grid();
 
-	chunks_width = std::max(wish_width / 32, 3);
+	chunks_width = MAX(wish_width / 32, 3);
 	// TODO: Make sure that the height is a multiple of 64/8.
-	chunks_height = std::max(wish_height / 32, 3);
+	chunks_height = MAX(wish_height / 32, 3);
 	chunks = new uint64_t[chunks_width * chunks_height];
 	// Set all chunk to active.
 	for (int i = 0; i < chunks_width * chunks_height; i++) {
@@ -633,9 +626,9 @@ void Grid::new_empty(int wish_width, int wish_height) {
 	width = chunks_width * 32;
 	height = chunks_height * 32;
 	cells = new uint32_t[width * height];
-	// Set all cells to empty.
+	// Set all cells to empty and active.
 	for (int i = 0; i < width * height; i++) {
-		cells[i] = 0;
+		cells[i] = Cell::Masks::MASK_ACTIVE;
 	}
 
 	border_cells = new uint32_t[height * 32];
@@ -659,10 +652,10 @@ Ref<Image> Grid::get_cell_data(Vector2i image_size, Rect2i rect) {
 	auto image_buffer = reinterpret_cast<uint32_t *>(image_data.ptrw());
 
 	// TODO: Could be optimized by handling oob separately.
-	for (int img_y = 0; img_y < Math::min(image_size.y, rect.size.y); img_y++) {
+	for (int img_y = 0; img_y < fmin(image_size.y, rect.size.y); img_y++) {
 		const int cell_y = rect.position.y + img_y;
 
-		for (int img_x = 0; img_x < Math::min(image_size.x, rect.size.x); img_x++) {
+		for (int img_x = 0; img_x < fmin(image_size.x, rect.size.x); img_x++) {
 			const int cell_x = rect.position.x + img_x;
 
 			image_buffer[img_y * image_size.x + img_x] = get_cell_checked(cell_x, cell_y);
@@ -677,7 +670,7 @@ Ref<Image> Grid::get_cell_data(Vector2i image_size, Rect2i rect) {
 			image_data);
 }
 
-uint32_t Grid::get_cell_checked(int x, int y) {
+uint32_t Grid::get_cell_checked(uint32_t x, uint32_t y) {
 	if (cells == nullptr) {
 		return 0;
 	} else if (y < 0) {
@@ -693,16 +686,32 @@ uint32_t Grid::get_cell_checked(int x, int y) {
 	return cells[y * width + x];
 }
 
-void Grid::activate_rect(Rect2i rect) {
-	// Somewhat hacky. We activate every other cells and their neighbors in the rect.
-	// This should rarely be called I think, so it's not a big deal.
-	// Otherwise a more efficient algorithm should be used.
+void Grid::set_cell_rect(Rect2i rect, uint32_t cell_material_idx) {
+	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");
 
+	rect = rect.intersection(Rect2i(32, 32, width - 64, height - 64));
+	if (rect.size.x <= 0 || rect.size.y <= 0) {
+		// Empty rect.
+		return;
+	}
 	assert(rect.position.x >= 32);
 	assert(rect.position.y >= 32);
 	assert(rect.get_end().x <= width - 32);
 	assert(rect.get_end().y <= height - 32);
 
+	for (int y = rect.position.y; y < rect.get_end().y; y++) {
+		for (int x = rect.position.x; x < rect.get_end().x; x++) {
+			auto cell_ptr = cells + y * width + x;
+
+			assert(cell_ptr < cells + width * height);
+
+			Cell::set_material_idx(*cell_ptr, cell_material_idx);
+		}
+	}
+
+	// Somewhat hacky. We activate every other cells and their neighbors in the rect.
+	// This should rarely be called I think, so it's not a big deal.
+	// Otherwise a more efficient algorithm should be used.
 	for (int y = rect.position.y; y < rect.get_end().y; y += 2) {
 		for (int x = rect.position.x; x < rect.get_end().x; x += 2) {
 			auto chunk_ptr = chunks + (x >> 5) * chunks_height + (y >> 5);
@@ -716,36 +725,8 @@ void Grid::activate_rect(Rect2i rect) {
 	}
 }
 
-void Grid::set_cell_rect(Rect2i rect, uint32_t cell_material_idx) {
-	if (cells == nullptr) {
-		UtilityFunctions::push_warning("Grid is not initialized");
-		return;
-	}
-
-	rect = rect.intersection(Rect2i(32, 32, width - 64, height - 64));
-	if (rect.size.x <= 0 || rect.size.y <= 0) {
-		// Empty rect.
-		return;
-	}
-
-	for (int y = rect.position.y; y < rect.get_end().y; y++) {
-		for (int x = rect.position.x; x < rect.get_end().x; x++) {
-			auto cell_ptr = cells + y * width + x;
-
-			assert(cell_ptr < cells + width * height);
-
-			Cell::set_material_idx(*cell_ptr, cell_material_idx);
-		}
-	}
-
-	activate_rect(rect);
-}
-
 void Grid::set_cell(Vector2i position, uint32_t cell_material_idx) {
-	if (cells == nullptr) {
-		UtilityFunctions::push_warning("Grid is not initialized");
-		return;
-	}
+	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");
 
 	if (position.x < 32 || position.x >= width - 32 || position.y < 32 || position.y >= height - 32) {
 		return;
@@ -761,10 +742,7 @@ void Grid::set_cell(Vector2i position, uint32_t cell_material_idx) {
 }
 
 void Grid::set_border_cell(Vector2i position, uint32_t cell_material_idx) {
-	if (border_cells == nullptr) {
-		UtilityFunctions::push_warning("Grid is not initialized");
-		return;
-	}
+	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");
 
 	if (position.x < 0 || position.x >= 32 || position.y < 0 || position.y >= 32) {
 		return;
@@ -774,10 +752,7 @@ void Grid::set_border_cell(Vector2i position, uint32_t cell_material_idx) {
 }
 
 void Grid::step_manual() {
-	if (cells == nullptr) {
-		UtilityFunctions::push_warning("Grid is not initialized");
-		return;
-	}
+	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");
 
 	Step::pre_step();
 
@@ -788,7 +763,7 @@ void Grid::step_manual() {
 
 void delete_materials() {
 	if (Grid::cell_materials != nullptr) {
-		UtilityFunctions::print("Deleting materials");
+		print_line("Deleting materials");
 
 		for (int i = 0; i < Grid::cell_materials_len; i++) {
 			CellMaterial *mat = Grid::cell_materials + i;
@@ -804,7 +779,7 @@ void delete_materials() {
 	}
 }
 
-void Grid::init_materials(int num_materials) {
+void Grid::init_materials(uint32_t num_materials) {
 	delete_materials();
 
 	if (num_materials > 0) {
@@ -822,10 +797,7 @@ void Grid::add_material(
 		// probability, out1, out2
 		Array reactions,
 		int idx) {
-	if (cell_materials == nullptr) {
-		UtilityFunctions::push_error("Materials not initialized");
-		return;
-	}
+	ERR_FAIL_COND_MSG(cell_materials == nullptr, "Materials not initialized");
 
 	CellMaterial mat = CellMaterial();
 	mat.cell_movement = cell_movement;
@@ -894,8 +866,8 @@ bool Grid::is_chunk_active(Vector2i position) {
 	return *(chunks + position.x * chunks_height + position.y);
 }
 
-void Grid::set_seed(int64_t seed) {
-	Grid::seed = seed;
+void Grid::set_seed(int64_t new_seed) {
+	Grid::seed = new_seed;
 }
 
 int64_t Grid::get_seed() {
@@ -916,33 +888,33 @@ uint32_t Grid::get_cell_material_idx(Vector2i position) {
 }
 
 void Grid::print_materials() {
-	UtilityFunctions::print("num materials: ", cell_materials_len);
+	print_line("num materials: ", cell_materials_len);
 
 	for (int i = 0; i < cell_materials_len; i++) {
 		CellMaterial &mat = cell_materials[i];
-		UtilityFunctions::print("-----------", i, "-----------");
-		UtilityFunctions::print("cell_movement ", mat.cell_movement);
-		UtilityFunctions::print("density ", mat.density);
-		UtilityFunctions::print("durability ", mat.durability);
-		UtilityFunctions::print("cell_collision ", mat.cell_collision);
-		UtilityFunctions::print("friction ", mat.friction);
+		print_line("-----------", i, "-----------");
+		print_line("cell_movement ", mat.cell_movement);
+		print_line("density ", mat.density);
+		print_line("durability ", mat.durability);
+		print_line("cell_collision ", mat.cell_collision);
+		print_line("friction ", mat.friction);
 
-		UtilityFunctions::print("reaction_ranges_len ", mat.reaction_ranges_len);
+		print_line("reaction_ranges_len ", mat.reaction_ranges_len);
 		for (int j = 0; j < mat.reaction_ranges_len; j++) {
-			UtilityFunctions::print("   reaction_range ", j);
+			print_line("   reaction_range ", j);
 			uint64_t reaction_range = *(mat.reaction_ranges + j);
 			uint64_t reaction_start = reaction_range & 0xffffffff;
 			uint64_t reaction_end = reaction_range >> 32;
-			UtilityFunctions::print("       reaction_start ", reaction_start);
-			UtilityFunctions::print("       reaction_end ", reaction_end);
+			print_line("       reaction_start ", reaction_start);
+			print_line("       reaction_end ", reaction_end);
 			for (int k = reaction_start; k < reaction_end; k++) {
 				CellReaction reaction = *(mat.reactions + k);
-				UtilityFunctions::print("          reaction ", k);
-				UtilityFunctions::print("          in1 ", i);
-				UtilityFunctions::print("          in2 ", i + j);
-				UtilityFunctions::print("          probability ", reaction.probability);
-				UtilityFunctions::print("          out1 ", reaction.mat_idx_out1);
-				UtilityFunctions::print("          out2 ", reaction.mat_idx_out2);
+				print_line("          reaction ", k);
+				print_line("          in1 ", i);
+				print_line("          in2 ", i + j);
+				print_line("          probability ", reaction.probability);
+				print_line("          out1 ", reaction.mat_idx_out1);
+				print_line("          out2 ", reaction.mat_idx_out2);
 			}
 		}
 	}
@@ -961,63 +933,63 @@ void test_activate_chunk() {
 			15,
 			15,
 			cell_ptr + 15 + 15 * Grid::width);
-	UtilityFunctions::print("activate center: OK");
+	print_line("activate center: OK");
 
 	Chunk::activate_neightbors(
 			chunk,
 			0,
 			0,
 			cell_ptr);
-	UtilityFunctions::print("activate top left: OK");
+	print_line("activate top left: OK");
 
 	Chunk::activate_neightbors(
 			chunk,
 			31,
 			31,
 			cell_ptr + 31 + 31 * Grid::width);
-	UtilityFunctions::print("activate bottom right: OK");
+	print_line("activate bottom right: OK");
 
 	Chunk::activate_neightbors(
 			chunk,
 			31,
 			0,
 			cell_ptr + 31);
-	UtilityFunctions::print("activate top right: OK");
+	print_line("activate top right: OK");
 
 	Chunk::activate_neightbors(
 			chunk,
 			0,
 			31,
 			cell_ptr + 31 * Grid::width);
-	UtilityFunctions::print("activate bottom left: OK");
+	print_line("activate bottom left: OK");
 
 	Chunk::activate_neightbors(
 			chunk,
 			15,
 			0,
 			cell_ptr + 15);
-	UtilityFunctions::print("activate top center: OK");
+	print_line("activate top center: OK");
 
 	Chunk::activate_neightbors(
 			chunk,
 			15,
 			31,
 			cell_ptr + 15 + 31 * Grid::width);
-	UtilityFunctions::print("activate bottom center: OK");
+	print_line("activate bottom center: OK");
 
 	Chunk::activate_neightbors(
 			chunk,
 			0,
 			15,
 			cell_ptr + 15 * Grid::width);
-	UtilityFunctions::print("activate left center: OK");
+	print_line("activate left center: OK");
 
 	Chunk::activate_neightbors(
 			chunk,
 			31,
 			15,
 			cell_ptr + 15 + 31 * Grid::width);
-	UtilityFunctions::print("activate right center: OK");
+	print_line("activate right center: OK");
 
 	Grid::delete_grid();
 }
@@ -1028,7 +1000,7 @@ void test_activate_rect() {
 
 	Chunk::activate_rect(chunk, 0, 0, 32, 32);
 	assert(*chunk == 0xffffffffffffffff);
-	UtilityFunctions::print("activate full rect: OK");
+	print_line("activate full rect: OK");
 
 	uint64_t rng = 12345789;
 	for (int i = 0; i < 10000; i++) {
@@ -1041,13 +1013,12 @@ void test_activate_rect() {
 
 		Chunk::activate_rect(chunk, x_offset, y_offset, width, height);
 
-		auto rect = Chunk::active_rect(*chunk);
-		assert(rect.x_start == x_offset);
-		assert(rect.y_start == y_offset);
-		assert(rect.x_end == x_offset + width);
-		assert(rect.y_end == y_offset + height);
+		assert(Chunk::active_rect(*chunk).x_start == x_offset);
+		assert(Chunk::active_rect(*chunk).y_start == y_offset);
+		assert(Chunk::active_rect(*chunk).x_end == x_offset + width);
+		assert(Chunk::active_rect(*chunk).y_end == y_offset + height);
 	}
-	UtilityFunctions::print("activate random rects: OK");
+	print_line("activate random rects: OK");
 
 	delete chunk;
 }
@@ -1064,24 +1035,24 @@ void test_rng() {
 		}
 	}
 	double true_bias = (double)num_true / (double)num_tests;
-	UtilityFunctions::print("rng true bias ", true_bias);
+	print_line("rng true bias ", true_bias);
 	assert(true_bias > 0.45 && true_bias < 0.55);
 	assert(true_bias != 0.5);
 
-	UtilityFunctions::print("rng non-bias: OK");
+	print_line("rng non-bias: OK");
 }
 
 } // namespace Test
 
 void Grid::run_tests() {
-	UtilityFunctions::print("---------- test_activate_chunk: STARTED");
+	print_line("---------- test_activate_chunk: STARTED");
 	Test::test_activate_chunk();
 
-	UtilityFunctions::print("---------- test_activate_rect: STARTED");
+	print_line("---------- test_activate_rect: STARTED");
 	Test::test_activate_rect();
 
-	UtilityFunctions::print("---------- test_rng: STARTED");
+	print_line("---------- test_rng: STARTED");
 	Test::test_rng();
 
-	UtilityFunctions::print("---------- All tests passed!");
+	print_line("---------- All tests passed!");
 }

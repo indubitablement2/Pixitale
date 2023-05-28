@@ -1,15 +1,10 @@
 #ifndef GRID_H
 #define GRID_H
 
-#include "godot_cpp/classes/image.hpp"
-#include "godot_cpp/variant/rect2.hpp"
-#include "godot_cpp/variant/rect2i.hpp"
-#include "godot_cpp/variant/vector2.hpp"
-#include "godot_cpp/variant/vector2i.hpp"
-#include <godot_cpp/classes/image_texture.hpp>
-#include <godot_cpp/classes/node2d.hpp>
-
-using namespace godot;
+#include "core/io/image.h"
+#include "core/object/class_db.h"
+#include "core/object/object.h"
+#include "godot/core/typedefs.h"
 
 struct CellReaction {
 	// chance/2^32 - 1.
@@ -60,24 +55,25 @@ protected:
 public:
 	// Row major.
 	inline static uint32_t *cells = nullptr;
-	inline static int width = 0;
-	inline static int height = 0;
+	inline static uint32_t width = 0;
+	inline static uint32_t height = 0;
 
 	// Row major. Same height as cells. Width is one chunk (32).
 	inline static uint32_t *border_cells = nullptr;
 
+	// TODO: Store chunks row major as we can update per row instead.
 	// Column major.
 	inline static uint64_t *chunks = nullptr;
-	inline static int chunks_width = 0;
-	inline static int chunks_height = 0;
+	inline static uint32_t chunks_width = 0;
+	inline static uint32_t chunks_height = 0;
 
 	inline static int64_t tick = 0;
 	inline static uint32_t updated_bit = 0;
 
 	inline static CellMaterial *cell_materials = nullptr;
-	inline static int cell_materials_len = 0;
+	inline static uint32_t cell_materials_len = 0;
 
-	inline static int64_t seed = 0;
+	inline static uint64_t seed = 0;
 
 	enum CellMovement {
 		CELL_MOVEMENT_SOLID,
@@ -94,22 +90,21 @@ public:
 	};
 
 	static void delete_grid();
-	static void new_empty(int wish_width, int wish_height);
+	static void new_empty(uint32_t wish_width, uint32_t wish_height);
 	static Vector2i get_size();
 	static Vector2i get_size_chunk();
 
 	static Ref<Image> get_cell_data(Vector2i image_size, Rect2i rect);
 	// Return fallback cell if out of bounds.
-	static uint32_t get_cell_checked(int x, int y);
+	static uint32_t get_cell_checked(uint32_t x, uint32_t y);
 
-	static void activate_rect(Rect2i rect);
 	static void set_cell_rect(Rect2i rect, uint32_t cell_material_idx);
 	static void set_cell(Vector2i position, uint32_t cell_material_idx);
 	static void set_border_cell(Vector2i position, uint32_t cell_material_idx);
 
 	static void step_manual();
 
-	static void init_materials(int num_materials);
+	static void init_materials(uint32_t num_materials);
 	static void add_material(
 			int cell_movement,
 			int density,
@@ -124,7 +119,7 @@ public:
 	static uint32_t get_cell_material_idx(Vector2i position);
 	static bool is_chunk_active(Vector2i position);
 
-	static void set_seed(int64_t seed);
+	static void set_seed(int64_t new_seed);
 	static int64_t get_seed();
 
 	static void free_memory();

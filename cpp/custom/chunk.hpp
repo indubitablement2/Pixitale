@@ -1,13 +1,11 @@
 #ifndef CHUNK_HPP
 #define CHUNK_HPP
 
-#include <assert.h>
-
-#include <bit>
-
 #include "cell.hpp"
-#include "godot_cpp/godot.hpp"
+#include "godot/core/typedefs.h"
 #include "grid.h"
+#include <assert.h>
+#include <bit>
 
 using namespace godot;
 

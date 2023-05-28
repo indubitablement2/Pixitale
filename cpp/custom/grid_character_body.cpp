@@ -1,14 +1,9 @@
-#include <assert.h>
+#include "grid_character_body.h"
 
-#include <cmath>
-#include <godot_cpp/classes/engine.hpp>
-#include <godot_cpp/variant/color.hpp>
-#include <godot_cpp/variant/utility_functions.hpp>
-#include <godot_cpp/variant/vector2.hpp>
+#include <assert.h>
 
 #include "cell.hpp"
 #include "grid.h"
-#include "grid_character_body.h"
 
 bool is_blocking(int x, int y) {
 	auto cell = Grid::get_cell_checked(x, y);
@@ -134,6 +129,19 @@ bool block_or_step_right(
 	}
 
 	return blocked;
+}
+
+void GridCharacterBody::_notification(int p_what) {
+	switch (p_what) {
+		case NOTIFICATION_DRAW: {
+			if (Engine::get_singleton()->is_editor_hint()) {
+				draw_rect(
+						Rect2(size * -0.5f, size),
+						Color(1.0f, 0.0f, 0.0f, 0.5f),
+						false);
+			}
+		} break;
+	}
 }
 
 void GridCharacterBody::_bind_methods() {
@@ -410,13 +418,4 @@ void GridCharacterBody::move() {
 
 	new_position.y += step_offset;
 	set_position(new_position);
-}
-
-void GridCharacterBody::_draw() {
-	if (Engine::get_singleton()->is_editor_hint()) {
-		draw_rect(
-				Rect2(size * -0.5f, size),
-				Color(1.0f, 0.0f, 0.0f, 0.5f),
-				false);
-	}
 }

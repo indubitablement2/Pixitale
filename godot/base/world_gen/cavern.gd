@@ -10,16 +10,6 @@ func pass_name() -> String:
 	return "Creating caverns"
 
 func generate() -> void:
-	var v := 0.0
-	
-	var i := 0
-	while i < 50000000:
-		v += horizontal_gradient.sample(float(i) / 50000000.0)
-		i += 1
-	
-	print(v, " ", i)
-	return
-	
 	caverns.seed = Grid.get_seed() + 11
 	
 	var surface_pass : int = WorldGeneration.get_pass("Creating surface").surface_top
