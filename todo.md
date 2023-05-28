@@ -12,7 +12,7 @@
 		- [ ] Add value palette to cell shader.
 		- [ ] Add booleant to ignore color value in cell material.
     - [ ] Color modulate 16
-        - [ ] Define color palette.
+        - [x] Define color palette.
         - [ ] Add 4 bits modulate to cell data.
         - [ ] Apply modulate on cell shader.
         - [ ] Add booleant to ignore color modulate in cell material.
@@ -34,16 +34,17 @@
         - [ ] Sky islands
         - [ ] Surface plateau
         - [ ] Mountain
-- [ ] Bordel cells.
+- [ ] Border cells.
     - [x] Looping infinite border.
     - [ ] Reapply border cell when border is modified.
 - [ ] Bloom 80%+
     - [ ] Add bloom to environment.
 - [ ] Light
-    - [ ] Cell data and position is a global shader variable.
+    - [x] Cell data and position is a global shader variable.
 - [x] Benchmark
 - [ ] Simulation
     - [ ] Run without blocking main thread.
     - [ ] Run using multiple thread.
     - [ ] Slow reaction are handled in bulk.
     - [ ] Consider storing ractions in hashmap.
+    - [ ] Reaction use stored in global hashmap and handled in bulk.
