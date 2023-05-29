@@ -1,8 +1,6 @@
 #include "generation.h"
 
-#include "core/typedefs.h"
 #include "grid.h"
-#include <cstdint>
 
 void Generation::_bind_methods() {
 	ClassDB::bind_static_method(
@@ -20,22 +18,22 @@ void Generation::cavern_pass(
 		Ref<Curve> horizontal_gradient,
 		Ref<Curve> vertical_gradient,
 		Ref<FastNoiseLite> cavern,
-		float cavern_x_scale,
-		uint32_t surface_top) {
+		f32 cavern_x_scale,
+		i32 surface_top) {
 	ERR_FAIL_COND_MSG(Grid::cells == nullptr, "Grid is not initialized");
 
-	surface_top = MAX(0u, surface_top);
+	surface_top = MAX(0, surface_top);
 
 	horizontal_gradient->bake();
 	vertical_gradient->bake();
 
-	for (uint32_t y = surface_top; y < Grid::height; y++) {
-		float vg = vertical_gradient->sample_baked((float)y / (float)Grid::height);
+	for (i32 y = surface_top; y < Grid::height; y++) {
+		f32 vg = vertical_gradient->sample_baked((f32)y / (f32)Grid::height);
 
-		for (uint32_t x = 0; x < Grid::width; x++) {
-			float hg = horizontal_gradient->sample_baked((float)x / (float)Grid::width);
+		for (i32 x = 0; x < Grid::width; x++) {
+			f32 hg = horizontal_gradient->sample_baked((f32)x / (f32)Grid::width);
 
-			float value = cavern->get_noise_2d((float)x * cavern_x_scale, (float)y) * vg * hg;
+			f32 value = cavern->get_noise_2d((f32)x * cavern_x_scale, (f32)y) * vg * hg;
 
 			if (value > 0.5) {
 				Grid::cells[x + y * Grid::width] = 0;

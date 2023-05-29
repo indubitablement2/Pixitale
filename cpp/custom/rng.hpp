@@ -1,28 +1,27 @@
 #ifndef RNG_HPP
 #define RNG_HPP
 
-#include "godot/core/typedefs.h"
-#include <assert.h>
+#include "preludes.h"
 
 namespace Rng {
 
-inline void next(uint64_t &rng) {
+inline void next(u64 &rng) {
 	rng = rng * 2862933555777941757uLL + 3037000493uLL;
 }
 
-inline uint32_t gen_32bit(uint64_t &rng) {
+inline u32 gen_32bit(u64 &rng) {
 	next(rng);
 	return rng >> 32;
 }
 
-inline uint32_t gen_range_32bit(uint64_t &rng, uint32_t min, uint32_t max) {
+inline u32 gen_range_32bit(u64 &rng, u32 min, u32 max) {
 	assert(min < max);
 	assert(max > 0);
 
 	return (gen_32bit(rng) % (max - min)) + min;
 }
 
-inline bool gen_bool(uint64_t &rng) {
+inline bool gen_bool(u64 &rng) {
 	return gen_32bit(rng) & 1;
 }
 

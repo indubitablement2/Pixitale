@@ -1,13 +1,11 @@
 #include "grid_character_body.h"
 
-#include <assert.h>
-
 #include "cell.hpp"
 #include "grid.h"
 
-bool is_blocking(int x, int y) {
-	auto cell = Grid::get_cell_checked(x, y);
-	auto mat_idx = Cell::material_idx(cell);
+bool is_blocking(i32 x, i32 y) {
+	u32 cell = Grid::get_cell_checked(x, y);
+	u32 mat_idx = Cell::material_idx(cell);
 
 	if (mat_idx == 0) {
 		// Empty cell.
@@ -23,10 +21,10 @@ bool is_blocking(int x, int y) {
 }
 
 bool is_row_blocked(
-		int left,
-		int right,
-		int y) {
-	for (int x = left; x <= right; x++) {
+		i32 left,
+		i32 right,
+		i32 y) {
+	for (i32 x = left; x <= right; x++) {
 		if (is_blocking(x, y)) {
 			return true;
 		}
@@ -36,24 +34,24 @@ bool is_row_blocked(
 }
 
 bool block_or_step_left(
-		int &left,
-		int &right,
-		int &top,
-		int &bot,
+		i32 &left,
+		i32 &right,
+		i32 &top,
+		i32 &bot,
 		Vector2 &new_position,
-		float &step_offset,
-		int max_steps_height) {
+		f32 &step_offset,
+		i32 max_steps_height) {
 	bool blocked = false;
 
-	int floor = (bot - top) + 1;
-	for (int y = top; y <= bot; y++) {
+	i32 floor = (bot - top) + 1;
+	for (i32 y = top; y <= bot; y++) {
 		floor--;
 
 		if (is_blocking(left, y)) {
 			if (floor <= max_steps_height) {
 				// Try to step up.
-				for (int y_step = 1; y_step <= floor; y_step++) {
-					for (int x = left; x < right; x++) {
+				for (i32 y_step = 1; y_step <= floor; y_step++) {
+					for (i32 x = left; x < right; x++) {
 						if (is_blocking(x, top - y_step)) {
 							blocked = true;
 							break;
@@ -67,8 +65,8 @@ bool block_or_step_left(
 				if (!blocked) {
 					top -= floor;
 					bot -= floor;
-					float pre_step_y = new_position.y;
-					new_position.y = std::floor(new_position.y - float(floor)) - 0.02f;
+					f32 pre_step_y = new_position.y;
+					new_position.y = std::floor(new_position.y - f32(floor)) - 0.02f;
 
 					step_offset -= new_position.y - pre_step_y;
 				}
@@ -84,24 +82,24 @@ bool block_or_step_left(
 }
 
 bool block_or_step_right(
-		int &left,
-		int &right,
-		int &top,
-		int &bot,
+		i32 &left,
+		i32 &right,
+		i32 &top,
+		i32 &bot,
 		Vector2 &new_position,
-		float &step_offset,
-		int max_steps_height) {
+		f32 &step_offset,
+		i32 max_steps_height) {
 	bool blocked = false;
 
-	int floor = (bot - top) + 1;
-	for (int y = top; y <= bot; y++) {
+	i32 floor = (bot - top) + 1;
+	for (i32 y = top; y <= bot; y++) {
 		floor--;
 
 		if (is_blocking(right, y)) {
 			if (floor <= max_steps_height) {
 				// Try to step up.
-				for (int y_step = 1; y_step <= floor; y_step++) {
-					for (int x = left + 1; x <= right; x++) {
+				for (i32 y_step = 1; y_step <= floor; y_step++) {
+					for (i32 x = left + 1; x <= right; x++) {
 						if (is_blocking(x, top - y_step)) {
 							blocked = true;
 							break;
@@ -115,8 +113,8 @@ bool block_or_step_right(
 				if (!blocked) {
 					top -= floor;
 					bot -= floor;
-					float pre_step_y = new_position.y;
-					new_position.y = std::floor(new_position.y - float(floor)) - 0.02f;
+					f32 pre_step_y = new_position.y;
+					new_position.y = std::floor(new_position.y - f32(floor)) - 0.02f;
 
 					step_offset -= new_position.y - pre_step_y;
 				}
@@ -131,7 +129,7 @@ bool block_or_step_right(
 	return blocked;
 }
 
-void GridCharacterBody::_notification(int p_what) {
+void GridCharacterBody::_notification(i32 p_what) {
 	switch (p_what) {
 		case NOTIFICATION_DRAW: {
 			if (Engine::get_singleton()->is_editor_hint()) {
@@ -176,7 +174,7 @@ void GridCharacterBody::_bind_methods() {
 			D_METHOD("get_max_steps_height"),
 			&GridCharacterBody::get_max_steps_height);
 	ADD_PROPERTY(
-			PropertyInfo(Variant::INT,
+			PropertyInfo(Variant::FLOAT,
 					"max_steps_height"),
 			"set_max_steps_height",
 			"get_max_steps_height");
@@ -206,11 +204,11 @@ Vector2 GridCharacterBody::get_velocity() const {
 	return velocity;
 }
 
-void GridCharacterBody::set_max_steps_height(int value) {
+void GridCharacterBody::set_max_steps_height(i32 value) {
 	max_steps_height = value;
 }
 
-int GridCharacterBody::get_max_steps_height() const {
+i32 GridCharacterBody::get_max_steps_height() const {
 	return max_steps_height;
 }
 
@@ -232,10 +230,10 @@ void GridCharacterBody::move() {
 
 	auto new_position = previous_position;
 
-	int top = previous_position.y - size.y * 0.5f;
-	int bot = previous_position.y + size.y * 0.5f;
-	int left = previous_position.x - size.x * 0.5f;
-	int right = previous_position.x + size.x * 0.5f;
+	i32 top = previous_position.y - size.y * 0.5f;
+	i32 bot = previous_position.y + size.y * 0.5f;
+	i32 left = previous_position.x - size.x * 0.5f;
+	i32 right = previous_position.x + size.x * 0.5f;
 
 	hit_left_wall = false;
 	hit_right_wall = false;
@@ -244,8 +242,8 @@ void GridCharacterBody::move() {
 	bool was_on_floor = is_on_floor;
 	is_on_floor = false;
 
-	int steps = 0;
-	float wish_horizontal_position = previous_position.x + velocity.x;
+	i32 steps = 0;
+	f32 wish_horizontal_position = previous_position.x + velocity.x;
 
 	// Horizontal movement.
 	if (velocity.x < -0.01f) {
@@ -338,12 +336,12 @@ void GridCharacterBody::move() {
 		new_position.x = std::min(new_position.x, wish_horizontal_position);
 	}
 
-	top = int(new_position.y - size.y * 0.5f) - 1;
-	bot = int(new_position.y + size.y * 0.5f) + 1;
-	left = int(new_position.x - size.x * 0.5f) + 1;
-	right = int(new_position.x + size.x * 0.5f) - 1;
+	top = i32(new_position.y - size.y * 0.5f) - 1;
+	bot = i32(new_position.y + size.y * 0.5f) + 1;
+	left = i32(new_position.x - size.x * 0.5f) + 1;
+	right = i32(new_position.x + size.x * 0.5f) - 1;
 
-	float wish_vertical_position = new_position.y + velocity.y;
+	f32 wish_vertical_position = new_position.y + velocity.y;
 
 	// Vertical movement.
 	if (velocity.y < -0.01f) {
@@ -385,16 +383,16 @@ void GridCharacterBody::move() {
 	}
 
 	if (!is_on_floor && was_on_floor && stick_to_floor && velocity.y > 0.02f) {
-		bot = int(new_position.y + size.y * 0.5f) + 1;
+		bot = i32(new_position.y + size.y * 0.5f) + 1;
 
 		// Move down until we hit a floor.
-		for (int i = 0; i <= max_steps_height; i++) {
+		for (i32 i = 0; i <= max_steps_height; i++) {
 			if (is_row_blocked(
 						left,
 						right,
 						bot)) {
 				velocity.y = 0.0f;
-				float pre_step_y = new_position.y;
+				f32 pre_step_y = new_position.y;
 				new_position.y = std::floor(new_position.y + 1.0f) - 0.02f;
 				step_offset -= new_position.y - pre_step_y;
 				is_on_floor = true;
@@ -407,8 +405,8 @@ void GridCharacterBody::move() {
 		}
 
 		if (!is_on_floor) {
-			new_position.y -= float(max_steps_height);
-			step_offset += float(max_steps_height);
+			new_position.y -= f32(max_steps_height);
+			step_offset += f32(max_steps_height);
 		}
 	}
 

@@ -1,7 +1,8 @@
 #ifndef CELL_HPP
 #define CELL_HPP
 
-#include "godot/core/typedefs.h"
+#include "preludes.h"
+
 #include "grid.h"
 
 namespace Cell {
@@ -34,28 +35,28 @@ enum Masks {
 	MASK_COLOR = 0xFF << Shifts::SHIFT_COLOR,
 };
 
-inline uint32_t material_idx(const uint32_t &cell) {
+inline u32 material_idx(const u32 &cell) {
 	return cell & Masks::MASK_MATERIAL;
 }
 
-inline void set_material_idx(uint32_t &cell, const uint32_t material_idx) {
+inline void set_material_idx(u32 &cell, const u32 material_idx) {
 	cell = (cell & ~Masks::MASK_MATERIAL) | material_idx;
 }
 
-inline bool is_updated(const uint32_t &cell) {
+inline bool is_updated(const u32 &cell) {
 	return (cell & Masks::MASK_UPDATED) == Grid::updated_bit;
 }
 
-inline void set_updated(uint32_t &cell) {
+inline void set_updated(u32 &cell) {
 	cell = (cell & ~Masks::MASK_UPDATED) | Grid::updated_bit;
 }
 
-inline bool is_active(const uint32_t &cell) {
+inline bool is_active(const u32 &cell) {
 	return cell & Masks::MASK_ACTIVE;
 }
 
 // When inactive, set updated bit to 0 (never skip when it return to active).
-inline void set_active(uint32_t &cell, const bool active) {
+inline void set_active(u32 &cell, const bool active) {
 	if (active) {
 		cell |= Masks::MASK_ACTIVE;
 	} else {
@@ -64,11 +65,11 @@ inline void set_active(uint32_t &cell, const bool active) {
 	}
 }
 
-inline int32_t value(const uint32_t &cell) {
+inline int32_t value(const u32 &cell) {
 	return (cell & Masks::MASK_VALUE) >> Shifts::SHIFT_VALUE;
 }
 
-inline void set_value(uint32_t &cell, int32_t value, bool saturate) {
+inline void set_value(u32 &cell, int32_t value, bool saturate) {
 	if (saturate) {
 		if (value > 0xFF) {
 			value = 0xFF;
@@ -77,7 +78,7 @@ inline void set_value(uint32_t &cell, int32_t value, bool saturate) {
 		}
 	}
 
-	cell = (cell & ~Masks::MASK_VALUE) | ((uint32_t)value << Shifts::SHIFT_VALUE);
+	cell = (cell & ~Masks::MASK_VALUE) | ((u32)value << Shifts::SHIFT_VALUE);
 }
 
 } // namespace Cell

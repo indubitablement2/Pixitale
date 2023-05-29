@@ -1,12 +1,13 @@
+#include "preludes.h"
+
 #include "core/object/class_db.h"
-#include "godot/core/typedefs.h"
 #include "scene/2d/node_2d.h"
 
 class GridCharacterBody : public Node2D {
 	GDCLASS(GridCharacterBody, Node2D);
 
 private:
-	float step_offset = 0.0f;
+	f32 step_offset = 0.0f;
 
 protected:
 	void _notification(int p_what);
@@ -27,14 +28,15 @@ public:
 	bool hit_left_wall = false;
 	bool hit_right_wall = false;
 
-	int max_steps_height = 4;
-	void set_max_steps_height(int value);
-	int get_max_steps_height() const;
+	i32 max_steps_height = 4;
+	void set_max_steps_height(i32 value);
+	i32 get_max_steps_height() const;
 
 	bool stick_to_floor = true;
 
 	bool collision = true;
 
+	// TODO: Rename to move_and_slide.
 	void move();
 
 	GridCharacterBody(){};

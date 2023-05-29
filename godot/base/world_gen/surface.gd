@@ -42,7 +42,7 @@ func generate() -> void:
 	var yf : float
 	
 	Grid.set_cell_rect(Rect2i(0, surface_bot, size.x, size.y), rock)
-	return
+#	return
 	
 	# Hills
 	while y < surface_bot:
