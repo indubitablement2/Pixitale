@@ -35,44 +35,49 @@ func generate() -> void:
 	surface_top = int(hills_top_relative * float(size.y))
 	surface_bot = surface_top + hills_height
 	
-	var x := 0
-	var y := surface_top
+	var ipos := Vector2i(0, surface_bot)
+	var fpos := Vector2.ZERO
 	
-	var xf : float
-	var yf : float
+	# Fill under surface layer with rock.
+	while ipos.y < size.y:
+		ipos.x = 0
+		
+		while ipos.x < size.x:
+			Grid.set_cell_generation(ipos, rock)
+			
+			ipos.x += 1
+		
+		ipos.y += 1
 	
-	Grid.set_cell_rect(Rect2i(0, surface_bot, size.x, size.y), rock)
-#	return
+	ipos = Vector2i(0, surface_top)
 	
 	# Hills
-	while y < surface_bot:
-		x = 0
-		yf = float(y)
+	while ipos.y < surface_bot:
+		ipos.x = 0
+		fpos.y = ipos.y
 		
-		var hill_gradient := (float(y - surface_top) / float(hills_height)) * hills_gradient_strenght
+		var hill_gradient := (float(ipos.y - surface_top) / float(hills_height)) * hills_gradient_strenght
 #		hill_gradient *= hill_gradient
-		while x < size.x:
-			xf = float(x)
+		while ipos.x < size.x:
+			fpos.x = ipos.x
 			
-			var detail := hills_detail.get_noise_2d(xf, yf)
+			var detail := hills_detail.get_noise_2dv(fpos)
 			
-			var value := hill_gradient + (hills.get_noise_2d(xf, yf) * hills_strenght + detail * hills_detail_strenght + hills_large.get_noise_2d(xf, yf) * hills_large_strenght)
+			var value := hill_gradient + (hills.get_noise_2dv(fpos) * hills_strenght + detail * hills_detail_strenght + hills_large.get_noise_2dv(fpos) * hills_large_strenght)
 			
-			var pos := Vector2i(x, y)
-			if value + hills.get_noise_2d(xf * first_rock_frequency, yf) * hills_strenght + detail * first_rock_detail_strenght > first_rock_threshold:
+			if value + hills.get_noise_2d(fpos.x * first_rock_frequency, fpos.y) * hills_strenght + detail * first_rock_detail_strenght > first_rock_threshold:
 				if detail / (hill_gradient * first_rock_as_dirt_falloff) > first_rock_as_dirt_threshold:
-					Grid.set_cell(pos, dirt)
+					Grid.set_cell_generation(ipos, dirt)
 				else:
-					Grid.set_cell(pos, rock)
+					Grid.set_cell_generation(ipos, rock)
 			elif value > 1.0:
-				Grid.set_cell(pos, dirt)
+				Grid.set_cell_generation(ipos, dirt)
 			
-			x += 1
+			ipos.x += 1
 		
-		y += 1
+		ipos.y += 1
 	
-	var ipos := Vector2i(0, surface_top)
-	var fpos := Vector2.ZERO
+	ipos = Vector2i(0, surface_top)
 	
 	while ipos.y < surface_bot:
 		fpos.y = ipos.y
