@@ -1,7 +1,6 @@
 #ifndef CELL_HPP
 #define CELL_HPP
 
-#include "core/variant/binder_common.h"
 #include "preludes.h"
 
 namespace Cell {
@@ -12,7 +11,6 @@ enum Movement {
 	MOVEMENT_LIQUID,
 	MOVEMENT_GAS,
 };
-// VARIANT_ENUM_CAST(Movement);
 
 enum Collision {
 	COLLISION_NONE,
@@ -20,34 +18,28 @@ enum Collision {
 	COLLISION_PLATFORM,
 	COLLISION_LIQUID,
 };
-// VARIANT_ENUM_CAST(Collision);
 
 enum Shifts {
 	SHIFT_UPDATED = 12,
 	SHIFT_ACTIVE = 14,
-	SHIFT_MOVING = 15,
-	SHIFT_DIRECTION = 16,
-	SHIFT_UNUSED = 17,
-	SHIFT_MOVEMENT = 18,
-	SHIFT_VALUE = 20,
-	SHIFT_COLOR = 24,
+	SHIFT_HUE = 24,
+	SHIFT_VALUE = 28,
 };
 
+// MASK_MATERIAL = 0..12
+// MASK_UPDATED = 12..14
+// MASK_ACTIVE = 14..15
+// unused = 15..24
+// MASK_HUE = 24..28
+// MASK_VALUE = 28..32
 enum Masks {
 	MASK_MATERIAL = 0xFFF,
 	// Alternate between 1, 2 and 3.
 	// 0 used for inactive/new cell. eg. always update.
 	MASK_UPDATED = 0b11 << Shifts::SHIFT_UPDATED,
 	MASK_ACTIVE = 1 << Shifts::SHIFT_ACTIVE,
-	MASK_MOVING = 1 << Shifts::SHIFT_MOVING,
-	// Horizontal direction for moving cells.
-	MASK_DIRECTION = 1 << Shifts::SHIFT_DIRECTION,
-	// Free real estate!
-	MASK_UNUSED = 1 << Shifts::SHIFT_UNUSED,
-	// state: solid/powder/liquid/gas
-	MASK_MOVEMENT = 0b11 << Shifts::SHIFT_MOVEMENT,
+	MASK_HUE = 0xF << Shifts::SHIFT_HUE,
 	MASK_VALUE = 0xF << Shifts::SHIFT_VALUE,
-	MASK_COLOR = 0xFF << Shifts::SHIFT_COLOR,
 };
 
 static u32 updated_bit = 0;

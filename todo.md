@@ -6,17 +6,16 @@
     	- [x] Cell have a base color.
 		- [x] Take base colors from cell material and compile into a color palette texture.
 		- [x] Add base cell color (from cell resource) palette to shader.
-    - [ ] Color value 16
+    - [x] Color value 16
 		- [x] Define gamma correct value palette.
-		- [ ] Add 4 bits modulate to cell data.
-		- [ ] Add value palette to cell shader.
-		- [ ] Add booleant to ignore color value in cell material.
-    - [ ] Color modulate 16
+		- [x] Add 4 bits modulate to cell data.
+		- [x] Add value palette to cell shader.
+    - [x] Color modulate 16
         - [x] Define color palette.
-        - [ ] Add 4 bits modulate to cell data.
-        - [ ] Apply modulate on cell shader.
-        - [ ] Add booleant to ignore color modulate in cell material.
-    - [ ] Color generation (noise/sudoku)
+        - [x] Add 4 bits modulate to cell data.
+        - [x] Apply modulate on cell shader.
+    - [ ] Add booleant to not apply color in cell material.
+    - [ ] Color generation (noise/sudoku/texture)
         - [ ] Generation type can be set on cell material data.
 - [ ] World gen.
     - [x] Can configure infinite border cells material.

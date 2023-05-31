@@ -1,27 +1,45 @@
 shader_type canvas_item;
 
-const uint MATERIAL_IDX_MASK = 4095u;
+const uint MASK_MATERIAL_IDX = 4095u;
+
+const uint MASK_COLOR = 15u;
+const uint SHIFT_HUE = 24u;
+const uint SHIFT_VALUE = 28u;
 
 uniform sampler2D cell_materials_data;
+uniform sampler2D hue_palette;
+uniform sampler2D value_palette;
 
 void fragment() {
-	
+	// Unpack cell data
 	ivec2 coords = ivec2((UV * vec2(textureSize(TEXTURE, 0))));
 	uint data = floatBitsToUint(texelFetch(TEXTURE, coords, 0).x);
-
-	uint material_idx = data & MATERIAL_IDX_MASK;
+//	uint data = floatBitsToUint(texture(TEXTURE, UV).x);
 	
-	vec4 base_color = texelFetch(
+	uint material_idx = data & MASK_MATERIAL_IDX;
+	uint hue_idx = (data >> SHIFT_HUE) & MASK_COLOR;
+	uint value_idx = (data >> SHIFT_VALUE) & MASK_COLOR;
+	
+	// Get base color
+	vec4 col = texelFetch(
 		cell_materials_data,
 		ivec2(int(material_idx), 0),
 		0
 	);
 	
-	float r = float((material_idx * 3u + 1u) % 11u) / 11.0;
-	float g = float((material_idx * 5u + 3u) % 13u) / 13.0;
-	float b = float((material_idx * 7u + 5u) % 17u) / 17.0;
+	// Apply hue
+	col *= texelFetch(
+		hue_palette,
+		ivec2(int(hue_idx), 0),
+		0
+	);
 	
-	vec4 col = vec4(r, g, b, 1.0);
+	// Apply value
+	col *= texelFetch(
+		value_palette,
+		ivec2(int(value_idx), 0),
+		0
+	);
 	
-	COLOR = base_color;
+	COLOR = col;
 }

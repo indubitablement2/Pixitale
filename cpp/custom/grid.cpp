@@ -1,14 +1,12 @@
 #include "grid.h"
 
 #include "core/object/class_db.h"
-#include "core/typedefs.h"
 #include "preludes.h"
 
 #include "cell.hpp"
 #include "cell_material.h"
 #include "chunk.hpp"
 #include "rng.hpp"
-#include <vector>
 
 namespace Step {
 
