@@ -41,7 +41,7 @@
     - [ ] Post generation
         - [x] Add set_cell_generation(x, y, mat) to gdscript which can set border cells and skip activation
         - [x] Take border cell from cells's border.
-        - [ ] Activate all
+        - [x] Activate all
         - [ ] Paint all
         - [ ] Simulate for 3k-10k ticks for cells to settle 
 - [ ] Border cells.

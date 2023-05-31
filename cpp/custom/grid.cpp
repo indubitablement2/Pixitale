@@ -438,6 +438,10 @@ void Grid::_bind_methods() {
 			"Grid",
 			D_METHOD("set_cell_generation", "position", "cell_material_idx"),
 			&Grid::set_cell_generation);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("post_generation_pass"),
+			&Grid::post_generation_pass);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -709,6 +713,20 @@ void Grid::set_cell_generation(Vector2i position, u32 cell_material_idx) {
 	}
 
 	*(cells + position.y * width + position.x) = cell_material_idx;
+}
+
+void Grid::post_generation_pass() {
+	// Set everything to active.
+	for (i32 i = 0; i < width * height; i++) {
+		Cell::set_active(cells[i], true);
+	}
+	for (i32 i = 0; i < chunks_width * chunks_height; i++) {
+		chunks[i] = MAX_U64;
+	}
+
+	// TODO: Paint all
+
+	take_border_cells();
 }
 
 void Grid::step_manual() {

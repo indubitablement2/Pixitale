@@ -52,6 +52,7 @@ public:
 
 	static void take_border_cells();
 	static void set_cell_generation(Vector2i position, u32 cell_material_idx);
+	static void post_generation_pass();
 
 	static void step_manual();
 

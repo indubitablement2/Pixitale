@@ -69,6 +69,17 @@ func _generate() -> void:
 		print(p.pass_name() , " in ", end - start, "ms.")
 		start = end
 	
+	call_deferred("_generation_pass_changed", "Finishing touches")
+	Grid.post_generation_pass()
+	end = Time.get_ticks_msec()
+	print("Post generation in ", end - start, "ms.")
+	
+	start = end
+	call_deferred("_generation_pass_changed", "Settling things down")
+	# TODO: Step simulation ~4k times.
+	end = Time.get_ticks_msec()
+	print("Simulation in ", end - start, "ms.")
+	
 	print("Generation done in ", end - start_start, "ms.")
 	
 	call_deferred("_generation_finished")
