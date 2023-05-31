@@ -429,6 +429,16 @@ void Grid::_bind_methods() {
 					"hue_palette_idx",
 					"value_palette_idx"),
 			&Grid::set_cell_color);
+
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("take_border_cells"),
+			&Grid::take_border_cells);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("set_cell_generation", "position", "cell_material_idx"),
+			&Grid::set_cell_generation);
+
 	ClassDB::bind_static_method(
 			"Grid",
 			D_METHOD("step_manual"),
@@ -621,8 +631,6 @@ void Grid::activate_neighbors(i32 x, i32 y, u32 *cell_ptr) {
 }
 
 void Grid::set_cell_rect(Rect2i rect, u32 cell_material_idx) {
-	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");
-
 	rect = rect.intersection(Rect2i(32, 32, width - 64, height - 64));
 	if (rect.size.x <= 0 || rect.size.y <= 0) {
 		// Empty rect.
@@ -654,9 +662,7 @@ void Grid::set_cell_rect(Rect2i rect, u32 cell_material_idx) {
 }
 
 void Grid::set_cell(Vector2i position, u32 cell_material_idx) {
-	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");
-
-	if (position.x < 32 || position.x >= width - 64 || position.y < 32 || position.y >= height - 64) {
+	if (position.x < 32 || position.x >= width - 32 || position.y < 32 || position.y >= height - 32) {
 		return;
 	}
 
@@ -668,19 +674,8 @@ void Grid::set_cell(Vector2i position, u32 cell_material_idx) {
 	activate_neighbors(position.x, position.y, cell_ptr);
 }
 
-void Grid::set_border_cell(Vector2i position, u32 cell_material_idx) {
-	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");
-
-	if (position.x < 0 || position.x >= 32 || position.y < 0 || position.y >= height) {
-		return;
-	}
-
-	border_cells[position.y * 32 + position.x] = cell_material_idx;
-}
-
 void Grid::set_cell_color(Vector2i position, u32 hue_palette_idx, u32 value_palette_idx) {
-	// TODO: Add function that check this to avoid copy paste.
-	if (position.x < 32 || position.x >= width - 64 || position.y < 32 || position.y >= height - 64) {
+	if (position.x < 32 || position.x >= width - 32 || position.y < 32 || position.y >= height - 32) {
 		return;
 	}
 
@@ -698,6 +693,22 @@ void Grid::set_cell_color(Vector2i position, u32 hue_palette_idx, u32 value_pale
 	Cell::set_value(cell, value_palette_idx);
 
 	*cell_ptr = cell;
+}
+
+void Grid::take_border_cells() {
+	for (i32 y = 0; y < height; y++) {
+		for (i32 x = 0; x < 32; x++) {
+			border_cells[y * 32 + x] = cells[y * width + x];
+		}
+	}
+}
+
+void Grid::set_cell_generation(Vector2i position, u32 cell_material_idx) {
+	if (position.x < 0 || position.x >= width || position.y < 0 || position.y >= height) {
+		return;
+	}
+
+	*(cells + position.y * width + position.x) = cell_material_idx;
 }
 
 void Grid::step_manual() {

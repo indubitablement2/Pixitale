@@ -39,11 +39,11 @@
         - [ ] Surface plateau
         - [ ] Mountain
     - [ ] Post generation
-        - [ ] Add set_cell_generation(x, y, mat) to gdscript which can set border cells and skip activation
-        - [ ] Take border cell for cells's border.
+        - [x] Add set_cell_generation(x, y, mat) to gdscript which can set border cells and skip activation
+        - [x] Take border cell from cells's border.
         - [ ] Activate all
         - [ ] Paint all
-        - [ ] Simulate for 3k-10k ticks to for cells to settle 
+        - [ ] Simulate for 3k-10k ticks for cells to settle 
 - [ ] Border cells.
     - [x] Looping infinite border.
     - [ ] Reapply border cell when border is modified.
