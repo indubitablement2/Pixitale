@@ -27,6 +27,10 @@ WorldGeneration="*res://core/singleton/world_generation.gd"
 
 enabled=PackedStringArray()
 
+[filesystem]
+
+import/blender/enabled=false
+
 [input]
 
 left={

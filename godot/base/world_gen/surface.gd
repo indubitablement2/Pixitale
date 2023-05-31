@@ -70,3 +70,25 @@ func generate() -> void:
 			x += 1
 		
 		y += 1
+	
+	var ipos := Vector2i(0, surface_top)
+	var fpos := Vector2.ZERO
+	
+	while ipos.y < surface_bot:
+		fpos.y = ipos.y
+		ipos.x = 0
+		
+		while ipos.x < size.x:
+			fpos.x = ipos.x
+			
+			var v := hills_large.get_noise_2dv(fpos)
+			var hue_palette_idx := int(v * float(Grid.PALETTE_IDX_MAX))
+			
+			v = hills_large.get_noise_2dv(fpos + Vector2(size))
+			var value_palette_idx := int(v * float(Grid.PALETTE_IDX_MAX))
+			
+			Grid.set_cell_color(ipos, hue_palette_idx, value_palette_idx)
+			
+			ipos.x += 1
+		
+		ipos.y += 1

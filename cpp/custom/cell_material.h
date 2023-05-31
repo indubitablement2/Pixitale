@@ -3,7 +3,6 @@
 
 #include "cell.hpp"
 #include "preludes.h"
-#include <vector>
 
 struct CellReaction {
 	f32 probability;
@@ -32,6 +31,8 @@ public:
 	Cell::Collision collision;
 	f32 friction;
 
+	bool can_color;
+
 	// on_destroyed: ();
 
 	// higher_reactions is all reactions with material that have idx > this material's idx.
@@ -42,6 +43,7 @@ public:
 			const f32 durability,
 			const Cell::Collision collision,
 			const f32 friction,
+			const bool can_color,
 			const std::vector<std::vector<CellReaction>> higher_reactions);
 	static void free_memory();
 

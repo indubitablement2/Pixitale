@@ -7,6 +7,8 @@ class_name CellMaterialData
 @export var tags: PackedStringArray
 
 @export var base_color := Color.TRANSPARENT
+## If this cell can have hue/value modifier.
+@export var can_color := false
 
 @export_category("Movement")
 @export var movement_type := Grid.MOVEMENT_SOLID

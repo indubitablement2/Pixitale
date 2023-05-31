@@ -81,20 +81,12 @@ inline void set_active(u32 &cell, const bool active) {
 	}
 }
 
-inline int32_t value(const u32 &cell) {
-	return (cell & Masks::MASK_VALUE) >> Shifts::SHIFT_VALUE;
+inline void set_hue(u32 &cell, const u32 hue_palette_idx) {
+	cell = (cell & ~Masks::MASK_HUE) | (hue_palette_idx << Shifts::SHIFT_HUE);
 }
 
-inline void set_value(u32 &cell, int32_t value, bool saturate) {
-	if (saturate) {
-		if (value > 0xFF) {
-			value = 0xFF;
-		} else if (value < 0) {
-			value = 0;
-		}
-	}
-
-	cell = (cell & ~Masks::MASK_VALUE) | ((u32)value << Shifts::SHIFT_VALUE);
+inline void set_value(u32 &cell, const u32 value_palette_idx) {
+	cell = (cell & ~Masks::MASK_VALUE) | (value_palette_idx << Shifts::SHIFT_VALUE);
 }
 
 } // namespace Cell

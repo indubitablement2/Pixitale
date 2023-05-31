@@ -12,6 +12,7 @@ void CellMaterial::add(
 		const f32 durability,
 		const Cell::Collision collision,
 		const f32 friction,
+		const bool can_color,
 		const std::vector<std::vector<CellReaction>> higher_reactions) {
 	CellMaterial cell_material = CellMaterial();
 	cell_material.movement = cell_movement;
@@ -19,6 +20,7 @@ void CellMaterial::add(
 	cell_material.durability = durability;
 	cell_material.collision = collision;
 	cell_material.friction = friction;
+	cell_material.can_color = can_color;
 
 	cell_material.reaction_ranges = nullptr;
 	cell_material.reaction_ranges_len = 0;
@@ -133,6 +135,7 @@ void CellMaterial::print(u32 material_idx) {
 	print_line("durability ", durability);
 	print_line("cell_collision ", collision);
 	print_line("friction ", friction);
+	print_line("can_color ", can_color);
 
 	print_line("reaction_ranges_len: ", reaction_ranges_len);
 

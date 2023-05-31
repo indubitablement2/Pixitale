@@ -33,6 +33,7 @@ func load_cell_materials() -> void:
 			m.durability,
 			m.collision_type,
 			m.friction,
+			m.can_color,
 			m.reactions
 		)
 	

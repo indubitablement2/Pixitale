@@ -423,8 +423,12 @@ void Grid::_bind_methods() {
 			&Grid::set_cell);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("set_border_cell", "position", "cell_material_idx"),
-			&Grid::set_border_cell);
+			D_METHOD(
+					"set_cell_color",
+					"position",
+					"hue_palette_idx",
+					"value_palette_idx"),
+			&Grid::set_cell_color);
 	ClassDB::bind_static_method(
 			"Grid",
 			D_METHOD("step_manual"),
@@ -448,6 +452,7 @@ void Grid::_bind_methods() {
 					"durability",
 					"cell_collision",
 					"friction",
+					"can_color",
 					"reactions"),
 			&Grid::add_material);
 
@@ -479,6 +484,8 @@ void Grid::_bind_methods() {
 
 	// ADD_GROUP("Test group", "group_");
 	// ADD_SUBGROUP("Test subgroup", "group_subgroup_");
+
+	ClassDB::bind_integer_constant("Grid", "", "PALETTE_IDX_MAX", 16);
 
 	using namespace Cell;
 
@@ -649,9 +656,11 @@ void Grid::set_cell_rect(Rect2i rect, u32 cell_material_idx) {
 void Grid::set_cell(Vector2i position, u32 cell_material_idx) {
 	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");
 
-	if (position.x < 32 || position.x >= width - 32 || position.y < 32 || position.y >= height - 32) {
+	if (position.x < 32 || position.x >= width - 64 || position.y < 32 || position.y >= height - 64) {
 		return;
 	}
+
+	// TODO: Check that mat idx is valid. Otherwise set to empty.
 
 	auto cell_ptr = cells + position.y * width + position.x;
 	*cell_ptr = cell_material_idx;
@@ -667,6 +676,28 @@ void Grid::set_border_cell(Vector2i position, u32 cell_material_idx) {
 	}
 
 	border_cells[position.y * 32 + position.x] = cell_material_idx;
+}
+
+void Grid::set_cell_color(Vector2i position, u32 hue_palette_idx, u32 value_palette_idx) {
+	// TODO: Add function that check this to avoid copy paste.
+	if (position.x < 32 || position.x >= width - 64 || position.y < 32 || position.y >= height - 64) {
+		return;
+	}
+
+	u32 *cell_ptr = cells + position.y * width + position.x;
+	u32 cell = *cell_ptr;
+
+	u32 material_idx = Cell::material_idx(cell);
+
+	if (!CellMaterial::materials[material_idx].can_color) {
+		hue_palette_idx = 0;
+		value_palette_idx = 0;
+	}
+
+	Cell::set_hue(cell, hue_palette_idx);
+	Cell::set_value(cell, value_palette_idx);
+
+	*cell_ptr = cell;
 }
 
 void Grid::step_manual() {
@@ -685,6 +716,7 @@ void Grid::add_material(
 		f32 durability,
 		i32 collision,
 		f32 friction,
+		bool can_color,
 		// [[float probability, int out1, int out2]]
 		// Inner array can be empty (no reactions with this material).
 		Array reactions) {
@@ -718,6 +750,7 @@ void Grid::add_material(
 			durability,
 			static_cast<Cell::Collision>(collision),
 			friction,
+			can_color,
 			higher_reactions);
 }
 

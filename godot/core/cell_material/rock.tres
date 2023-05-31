@@ -8,6 +8,7 @@ display_name = &"rock"
 id = "rock"
 tags = PackedStringArray()
 base_color = Color(0.529412, 0.501961, 0.462745, 1)
+can_color = true
 movement_type = 0
 density = 10
 durability = 0

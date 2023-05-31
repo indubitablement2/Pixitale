@@ -14,7 +14,12 @@
         - [x] Define color palette.
         - [x] Add 4 bits modulate to cell data.
         - [x] Apply modulate on cell shader.
-    - [ ] Add booleant to not apply color in cell material.
+    - [x] Add booleant to not apply color in cell material.
+    - [ ] Check that cell can have color when changing material.
+        - [x] set color (gdscript)
+        - [ ] reaction
+        - [ ] set cell (gdscript)
+        - [ ] cpp
     - [ ] Color generation (noise/sudoku/texture)
         - [ ] Generation type can be set on cell material data.
 - [ ] World gen.

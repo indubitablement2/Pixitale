@@ -8,6 +8,7 @@ display_name = &"Dirt"
 id = "dirt"
 tags = PackedStringArray()
 base_color = Color(0.568627, 0.290196, 0.141176, 1)
+can_color = true
 movement_type = 0
 density = 0
 durability = 0

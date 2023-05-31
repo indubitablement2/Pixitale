@@ -48,7 +48,9 @@ public:
 
 	static void set_cell_rect(Rect2i rect, u32 cell_material_idx);
 	static void set_cell(Vector2i position, u32 cell_material_idx);
+	// TODO: Remove this.
 	static void set_border_cell(Vector2i position, u32 cell_material_idx);
+	static void set_cell_color(Vector2i position, u32 hue_palette_idx, u32 value_palette_idx);
 
 	static void step_manual();
 
@@ -58,6 +60,7 @@ public:
 			f32 durability,
 			i32 collision,
 			f32 friction,
+			bool can_color,
 			Array reactions);
 
 	static i64 get_tick();
