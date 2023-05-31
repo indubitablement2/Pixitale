@@ -12,7 +12,11 @@ class_name CellReactionData
 
 @export_category("Conditions")
 
-@export_range(0.000001, 1.0, 0.000001) var probability: float = 1.0
+## Chance for the reaction to trigger per tick.
+## Also, if cell A react with cell B and there are 2 cell B
+## near cell A, probability will be ~2x.
+## A tick is 1/60 seconds.
+@export_range(0.000001, 1.1, 0.000001) var probability: float = 1.0
 #@export_flags("NW", "N", "NE", "W", "E", "SW", "S", "SE")
 #var material2_offset := 0xff
 #@export_group("Custom Value 1")

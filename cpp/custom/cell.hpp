@@ -1,11 +1,26 @@
 #ifndef CELL_HPP
 #define CELL_HPP
 
+#include "core/variant/binder_common.h"
 #include "preludes.h"
 
-#include "grid.h"
-
 namespace Cell {
+
+enum Movement {
+	MOVEMENT_SOLID,
+	MOVEMENT_POWDER,
+	MOVEMENT_LIQUID,
+	MOVEMENT_GAS,
+};
+// VARIANT_ENUM_CAST(Movement);
+
+enum Collision {
+	COLLISION_NONE,
+	COLLISION_SOLID,
+	COLLISION_PLATFORM,
+	COLLISION_LIQUID,
+};
+// VARIANT_ENUM_CAST(Collision);
 
 enum Shifts {
 	SHIFT_UPDATED = 12,
@@ -35,20 +50,29 @@ enum Masks {
 	MASK_COLOR = 0xFF << Shifts::SHIFT_COLOR,
 };
 
+static u32 updated_bit = 0;
+inline void update_updated_bit(u64 tick) {
+	updated_bit = ((tick % 3) + 1) << Shifts::SHIFT_UPDATED;
+}
+
 inline u32 material_idx(const u32 &cell) {
 	return cell & Masks::MASK_MATERIAL;
 }
 
 inline void set_material_idx(u32 &cell, const u32 material_idx) {
-	cell = (cell & ~Masks::MASK_MATERIAL) | material_idx;
+	cell = (cell & ~Masks::MASK_MATERIAL) | material_idx | Masks::MASK_ACTIVE;
+
+	// TODO: Do that during cell update.
+	// Handle color.
+	// Update flags.
 }
 
 inline bool is_updated(const u32 &cell) {
-	return (cell & Masks::MASK_UPDATED) == Grid::updated_bit;
+	return (cell & Masks::MASK_UPDATED) == updated_bit;
 }
 
 inline void set_updated(u32 &cell) {
-	cell = (cell & ~Masks::MASK_UPDATED) | Grid::updated_bit;
+	cell = (cell & ~Masks::MASK_UPDATED) | updated_bit;
 }
 
 inline bool is_active(const u32 &cell) {

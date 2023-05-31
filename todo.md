@@ -34,6 +34,12 @@
         - [ ] Sky islands
         - [ ] Surface plateau
         - [ ] Mountain
+    - [ ] Post generation
+        - [ ] Add set_cell_generation(x, y, mat) to gdscript which can set border cells and skip activation
+        - [ ] Take border cell for cells's border.
+        - [ ] Activate all
+        - [ ] Paint all
+        - [ ] Simulate for 3k-10k ticks to for cells to settle 
 - [ ] Border cells.
     - [x] Looping infinite border.
     - [ ] Reapply border cell when border is modified.
@@ -45,6 +51,11 @@
 - [ ] Simulation
     - [ ] Run without blocking main thread.
     - [ ] Run using multiple thread.
-    - [ ] Slow reaction are handled in bulk.
+    - [ ] Reaction are handled in bulk.
+        - [ ] Keep track if the number of active reaction
+        - [ ] keep a simple add-only array with all the active reactions (idx a, idx b)
+        - [ ] if reaction array is much bigger than the number of active reactions, verify all reations in array
+        - [ ] react in bulk using swap remove
+        - [ ] If reation array capacity is much larger than size, resize array.
     - [ ] Consider storing ractions in hashmap.
     - [ ] Reaction use stored in global hashmap and handled in bulk.

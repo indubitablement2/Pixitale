@@ -1,88 +1,16 @@
 #include "grid.h"
 
+#include "core/object/class_db.h"
 #include "core/typedefs.h"
 #include "preludes.h"
 
 #include "cell.hpp"
+#include "cell_material.h"
 #include "chunk.hpp"
 #include "rng.hpp"
+#include <vector>
 
 namespace Step {
-
-void step_reaction(
-		u32 &cell_material_idx,
-		bool &active,
-		bool &changed,
-		u64 *chunk_ptr,
-		i32 local_x,
-		i32 local_y,
-		u32 *other_ptr,
-		i32 other_offset_x,
-		i32 other_offset_y,
-		u64 &rng) {
-	u32 other_material_idx = Cell::material_idx(*other_ptr);
-
-	bool swap;
-	CellMaterial *mat;
-	i32 reaction_range_idx;
-	if (cell_material_idx > other_material_idx) {
-		swap = true;
-		mat = Grid::cell_materials + other_material_idx;
-		reaction_range_idx = cell_material_idx - other_material_idx;
-	} else {
-		swap = false;
-		mat = Grid::cell_materials + cell_material_idx;
-		reaction_range_idx = other_material_idx - cell_material_idx;
-	}
-
-	if (reaction_range_idx >= mat->reaction_ranges_len) {
-		return;
-	}
-
-	u64 reaction_range = *(mat->reaction_ranges + reaction_range_idx);
-	u64 reaction_start = reaction_range & 0xffffffff;
-	u64 reaction_end = reaction_range >> 32;
-
-	if (reaction_start >= reaction_end) {
-		return;
-	}
-
-	active = true;
-
-	// TODO: Bulk reactions
-	// for (u64 i = reaction_start; i < reaction_end; i++) {
-	// 	CellReaction reaction = *(mat->reactions + i);
-
-	// 	if (reaction.probability >= Rng::gen_32bit(rng)) {
-	// 		u32 out1, out2;
-	// 		if (swap) {
-	// 			out1 = reaction.mat_idx_out2;
-	// 			out2 = reaction.mat_idx_out1;
-	// 		} else {
-	// 			out1 = reaction.mat_idx_out1;
-	// 			out2 = reaction.mat_idx_out2;
-	// 		}
-
-	// 		if (out1 != cell_material_idx) {
-	// 			cell_material_idx = out1;
-	// 			changed = true;
-	// 		}
-
-	// 		if (out2 != other_material_idx) {
-	// 			Cell::set_material_idx(*other_ptr, out2);
-	// 			Chunk::activate_neighbors_offset(
-	// 					chunk_ptr,
-	// 					local_x,
-	// 					local_y,
-	// 					other_offset_x,
-	// 					other_offset_y,
-	// 					other_ptr);
-	// 		}
-
-	// 		return;
-	// 	}
-	// }
-}
 
 void swap_cells(
 		u32 cell,
@@ -459,10 +387,7 @@ void step_row(i32 row_idx) {
 }
 
 void pre_step() {
-	Grid::updated_bit >>= Cell::Shifts::SHIFT_UPDATED;
-	Grid::updated_bit %= 3;
-	Grid::updated_bit += 1;
-	Grid::updated_bit <<= Cell::Shifts::SHIFT_UPDATED;
+	Cell::update_updated_bit((u64)Grid::tick);
 
 	Grid::tick++;
 }
@@ -518,10 +443,6 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("init_materials", "num_materials"),
-			&Grid::init_materials);
-	ClassDB::bind_static_method(
-			"Grid",
 			D_METHOD(
 					"add_material",
 					"cell_movement",
@@ -529,8 +450,7 @@ void Grid::_bind_methods() {
 					"durability",
 					"cell_collision",
 					"friction",
-					"reactions",
-					"idx"),
+					"reactions"),
 			&Grid::add_material);
 
 	ClassDB::bind_static_method(
@@ -562,15 +482,17 @@ void Grid::_bind_methods() {
 	// ADD_GROUP("Test group", "group_");
 	// ADD_SUBGROUP("Test subgroup", "group_subgroup_");
 
-	BIND_ENUM_CONSTANT(CELL_COLLISION_SOLID);
-	BIND_ENUM_CONSTANT(CELL_COLLISION_PLATFORM);
-	BIND_ENUM_CONSTANT(CELL_COLLISION_LIQUID);
-	BIND_ENUM_CONSTANT(CELL_COLLISION_NONE);
+	using namespace Cell;
 
-	BIND_ENUM_CONSTANT(CELL_MOVEMENT_SOLID);
-	BIND_ENUM_CONSTANT(CELL_MOVEMENT_POWDER);
-	BIND_ENUM_CONSTANT(CELL_MOVEMENT_LIQUID);
-	BIND_ENUM_CONSTANT(CELL_MOVEMENT_GAS);
+	BIND_ENUM_CONSTANT(COLLISION_NONE);
+	BIND_ENUM_CONSTANT(COLLISION_SOLID);
+	BIND_ENUM_CONSTANT(COLLISION_PLATFORM);
+	BIND_ENUM_CONSTANT(COLLISION_LIQUID);
+
+	BIND_ENUM_CONSTANT(MOVEMENT_SOLID);
+	BIND_ENUM_CONSTANT(MOVEMENT_POWDER);
+	BIND_ENUM_CONSTANT(MOVEMENT_LIQUID);
+	BIND_ENUM_CONSTANT(MOVEMENT_GAS);
 }
 
 void Grid::delete_grid() {
@@ -685,7 +607,7 @@ void Grid::activate_neighbors(i32 x, i32 y, u32 *cell_ptr) {
 	cell_ptr[-width + 1] |= Cell::Masks::MASK_ACTIVE;
 
 	cell_ptr[-1] |= Cell::Masks::MASK_ACTIVE;
-	cell_ptr[0] |= Cell::Masks::MASK_ACTIVE;
+	// cell_ptr[0] |= Cell::Masks::MASK_ACTIVE;
 	cell_ptr[1] |= Cell::Masks::MASK_ACTIVE;
 
 	cell_ptr[width - 1] |= Cell::Masks::MASK_ACTIVE;
@@ -759,101 +681,46 @@ void Grid::step_manual() {
 	}
 }
 
-void delete_materials() {
-	if (Grid::cell_materials != nullptr) {
-		print_line("Deleting materials");
-
-		for (i32 i = 0; i < Grid::cell_materials_len; i++) {
-			CellMaterial *mat = Grid::cell_materials + i;
-			if (mat->reaction_ranges_len > 0) {
-				delete[] mat->reaction_ranges;
-				delete[] mat->reactions;
-			}
-		}
-
-		delete[] Grid::cell_materials;
-		Grid::cell_materials = nullptr;
-		Grid::cell_materials_len = 0;
-	}
-}
-
-void Grid::init_materials(i32 num_materials) {
-	delete_materials();
-
-	if (num_materials > 0) {
-		cell_materials = new CellMaterial[num_materials];
-		cell_materials_len = num_materials;
-	}
-}
-
 void Grid::add_material(
-		int cell_movement,
-		int density,
-		int durability,
-		int cell_collision,
-		float friction,
-		// probability, out1, out2
-		Array reactions,
-		i32 idx) {
-	ERR_FAIL_COND_MSG(cell_materials == nullptr, "Materials not initialized");
-
-	CellMaterial mat = CellMaterial();
-	mat.cell_movement = cell_movement;
-	mat.density = density;
-	mat.durability = durability;
-	mat.cell_collision = cell_collision;
-	mat.friction = friction;
-
-	int num_reaction = 0;
-	for (int i = 0; i < reactions.size(); i++) {
+		i32 movement,
+		i32 density,
+		f32 durability,
+		i32 collision,
+		f32 friction,
+		// [[float probability, int out1, int out2]]
+		// Inner array can be empty (no reactions with this material).
+		Array reactions) {
+	std::vector<std::vector<CellReaction>> higher_reactions = {};
+	for (i32 i = 0; i < reactions.size(); i++) {
+		// Reactions with offset material idx.
 		Array r = reactions[i];
-		if (!r.is_empty()) {
-			mat.reaction_ranges_len = i + 1;
-			num_reaction += r.size();
-		}
-	}
-	if (mat.reaction_ranges_len != 0) {
-		assert(num_reaction > 0);
 
-		mat.reaction_ranges = new u64[mat.reaction_ranges_len];
-		mat.reactions = new CellReaction[num_reaction];
+		std::vector<CellReaction> inner = {};
 
-		u64 next_reaction_idx = 0;
+		for (int j = 0; j < r.size(); j++) {
+			// Reaction data.
+			Array rr = r[j];
 
-		assert(mat.reaction_ranges_len <= reactions.size());
-		for (int i = 0; i < mat.reaction_ranges_len; i++) {
-			u64 reactions_start = next_reaction_idx;
+			CellReaction reaction = CellReaction{
+				rr[0],
+				rr[1],
+				rr[2]
+			};
 
-			assert(reactions.size() >= i);
-			Array reactions_with = reactions[i];
-			for (int j = 0; j < reactions_with.size(); j++) {
-				Array reaction_data = reactions_with[j];
-				assert(reaction_data.size() == 3);
-				CellReaction reaction = {
-					reaction_data[0],
-					reaction_data[1],
-					reaction_data[2]
-				};
-				assert(next_reaction_idx < num_reaction);
-				mat.reactions[next_reaction_idx] = reaction;
-
-				next_reaction_idx++;
-			}
-
-			assert(i < mat.reaction_ranges_len);
-			u64 reactions_end = next_reaction_idx;
-			if (reactions_start == reactions_end) {
-				mat.reaction_ranges[i] = 0;
-			} else {
-				mat.reaction_ranges[i] = reactions_start | (reactions_end << 32);
-			}
+			inner.push_back(reaction);
 		}
 
-		assert(next_reaction_idx == num_reaction);
+		higher_reactions.push_back(inner);
 	}
 
-	assert(idx < cell_materials_len);
-	cell_materials[idx] = mat;
+	// TODO: Check that enums are valid.
+	CellMaterial::add(
+			static_cast<Cell::Movement>(movement),
+			density,
+			durability,
+			static_cast<Cell::Collision>(collision),
+			friction,
+			higher_reactions);
 }
 
 bool Grid::is_chunk_active(Vector2i position) {
@@ -873,7 +740,7 @@ i64 Grid::get_seed() {
 }
 
 void Grid::free_memory() {
-	delete_materials();
+	CellMaterial::free_memory();
 	delete_grid();
 }
 
@@ -886,35 +753,10 @@ u32 Grid::get_cell_material_idx(Vector2i position) {
 }
 
 void Grid::print_materials() {
-	print_line("num materials: ", cell_materials_len);
+	print_line("num materials: ", CellMaterial::materials.size());
 
-	for (i32 i = 0; i < cell_materials_len; i++) {
-		CellMaterial &mat = cell_materials[i];
-		print_line("-----------", i, "-----------");
-		print_line("cell_movement ", mat.cell_movement);
-		print_line("density ", mat.density);
-		print_line("durability ", mat.durability);
-		print_line("cell_collision ", mat.cell_collision);
-		print_line("friction ", mat.friction);
-
-		print_line("reaction_ranges_len ", mat.reaction_ranges_len);
-		for (i32 j = 0; j < mat.reaction_ranges_len; j++) {
-			print_line("   reaction_range ", j);
-			u64 reaction_range = *(mat.reaction_ranges + j);
-			u64 reaction_start = reaction_range & 0xffffffff;
-			u64 reaction_end = reaction_range >> 32;
-			print_line("       reaction_start ", reaction_start);
-			print_line("       reaction_end ", reaction_end);
-			for (i32 k = reaction_start; k < reaction_end; k++) {
-				CellReaction reaction = *(mat.reactions + k);
-				print_line("          reaction ", k);
-				print_line("          in1 ", i);
-				print_line("          in2 ", i + j);
-				print_line("          probability ", reaction.probability);
-				print_line("          out1 ", reaction.mat_idx_out1);
-				print_line("          out2 ", reaction.mat_idx_out2);
-			}
-		}
+	for (u32 material_idx = 0; material_idx < CellMaterial::materials.size(); material_idx++) {
+		CellMaterial::materials[material_idx].print(material_idx);
 	}
 }
 
@@ -932,10 +774,10 @@ void test_activate_rect() {
 	for (i32 i = 0; i < 1000; i++) {
 		*chunk = 0;
 
-		u32 x_offset = Rng::gen_range_32bit(rng, 0, 32);
-		u32 y_offset = Rng::gen_range_32bit(rng, 0, 32);
-		u64 width = Rng::gen_range_32bit(rng, 0, 32 - x_offset) + 1;
-		u64 height = Rng::gen_range_32bit(rng, 0, 32 - y_offset) + 1;
+		u32 x_offset = Rng::gen_range_u32(rng, 0, 32);
+		u32 y_offset = Rng::gen_range_u32(rng, 0, 32);
+		u64 width = Rng::gen_range_u32(rng, 0, 32 - x_offset) + 1;
+		u64 height = Rng::gen_range_u32(rng, 0, 32 - y_offset) + 1;
 
 		Chunk::unsafe_activate_rect(*chunk, x_offset, y_offset, width, height);
 

@@ -23,10 +23,10 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	if WorldGeneration.is_generating() && !_sps.is_empty():
 		_i = (_i + 1) % _sps.size()
-		var sp = _sps[_i]
+		var sp := _sps[_i]
 		_update_sp(sp)
 	elif _update_all < _sps.size():
-		var sp = _sps[_update_all]
+		var sp := _sps[_update_all]
 		_update_all += 1
 		_update_sp(sp)
 

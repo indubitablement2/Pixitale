@@ -1,6 +1,7 @@
 #include "grid_character_body.h"
 
 #include "cell.hpp"
+#include "cell_material.h"
 #include "grid.h"
 
 bool is_blocking(i32 x, i32 y) {
@@ -12,8 +13,8 @@ bool is_blocking(i32 x, i32 y) {
 		return false;
 	}
 
-	auto mat_ptr = Grid::cell_materials + mat_idx;
-	if (mat_ptr->cell_collision == Grid::CELL_COLLISION_SOLID) {
+	auto mat_ptr = CellMaterial::materials[mat_idx];
+	if (mat_ptr.collision == Cell::Collision::COLLISION_SOLID) {
 		return true;
 	}
 

@@ -3,49 +3,11 @@
 
 #include "preludes.h"
 
+#include "cell_material.h"
 #include "core/io/image.h"
 #include "core/object/class_db.h"
 #include "core/object/object.h"
-
-struct CellReaction {
-	// chance/2^32 - 1.
-	u32 probability;
-	// If eq in1 does not change material.
-	u32 mat_idx_out1;
-	// If eq in2 does not change material.
-	u32 mat_idx_out2;
-};
-
-class CellMaterial {
-public:
-	// StringName display_name;
-	// color: ();
-
-	int cell_movement;
-	int density;
-
-	float durability;
-
-	int cell_collision;
-	float friction;
-
-	int reaction_ranges_len;
-	// Has all reactions with material that have idx >= this material's idx.
-	uint64_t *reaction_ranges;
-	CellReaction *reactions;
-
-	// on_destroyed: ();
-
-	CellMaterial() :
-			cell_movement(0),
-			density(0),
-			durability(0),
-			cell_collision(0),
-			friction(0),
-			reaction_ranges_len(0),
-			reaction_ranges(nullptr),
-			reactions(nullptr){};
-};
+#include <cell.hpp>
 
 class Grid : public Object {
 	GDCLASS(Grid, Object);
@@ -65,27 +27,13 @@ public:
 	inline static i32 chunks_width = 0;
 	inline static i32 chunks_height = 0;
 
-	inline static i64 tick = 0;
-	inline static u32 updated_bit = 0;
+	inline static u64 tick = 0;
 
-	inline static CellMaterial *cell_materials = nullptr;
-	inline static i32 cell_materials_len = 0;
+	inline static std::vector<CellMaterial> m = {};
+
+	// inline static
 
 	inline static u64 seed = 0;
-
-	enum CellMovement {
-		CELL_MOVEMENT_SOLID,
-		CELL_MOVEMENT_POWDER,
-		CELL_MOVEMENT_LIQUID,
-		CELL_MOVEMENT_GAS,
-	};
-
-	enum CellCollision {
-		CELL_COLLISION_NONE,
-		CELL_COLLISION_SOLID,
-		CELL_COLLISION_PLATFORM,
-		CELL_COLLISION_LIQUID,
-	};
 
 	static void delete_grid();
 	static void new_empty(i32 wish_width, i32 wish_height);
@@ -97,22 +45,20 @@ public:
 	static u32 get_cell_checked(i32 x, i32 y);
 
 	static void activate_neighbors(i32 x, i32 y, u32 *cell_ptr);
+
 	static void set_cell_rect(Rect2i rect, u32 cell_material_idx);
 	static void set_cell(Vector2i position, u32 cell_material_idx);
 	static void set_border_cell(Vector2i position, u32 cell_material_idx);
 
 	static void step_manual();
 
-	static void init_materials(i32 num_materials);
 	static void add_material(
-			int cell_movement,
-			int density,
-			int durability,
-			int cell_collision,
-			float friction,
-			// probability, out1, out2
-			Array reactions,
-			int idx);
+			i32 movement,
+			i32 density,
+			f32 durability,
+			i32 collision,
+			f32 friction,
+			Array reactions);
 
 	static i64 get_tick();
 	static u32 get_cell_material_idx(Vector2i position);
@@ -126,7 +72,10 @@ public:
 	static void run_tests();
 };
 
-VARIANT_ENUM_CAST(Grid::CellMovement);
-VARIANT_ENUM_CAST(Grid::CellCollision);
+// VARIANT_ENUM_CAST(Grid::CellMovement);
+// VARIANT_ENUM_CAST(Grid::CellCollision);
+
+VARIANT_ENUM_CAST(Cell::Movement);
+VARIANT_ENUM_CAST(Cell::Collision);
 
 #endif

@@ -5,11 +5,11 @@ var cell_materials : Array[CellMaterialData]
 func _ready() -> void:
 	load_cell_materials()
 	
-#	if OS.is_debug_build():
-#		Grid.run_tests()
-#		Grid.print_materials()
+	if OS.is_debug_build():
+		Grid.run_tests()
+		Grid.print_materials()
 
-# Return -1 if cell material not found.
+# Return 0 if cell material not found.
 func get_cell_materials_idx(id: StringName) -> int:
 	var idx := 0
 	for m in cell_materials:
@@ -26,21 +26,15 @@ func get_cell_materials_idx(id: StringName) -> int:
 func load_cell_materials() -> void:
 	cell_materials = _get_materials()
 	
-	Grid.init_materials(cell_materials.size())
-	var idx := 0
 	for m in cell_materials:
-		
 		Grid.add_material(
 			m.movement_type,
 			m.density,
 			m.durability,
 			m.collision_type,
 			m.friction,
-			m.reactions,
-			idx
+			m.reactions
 		)
-		
-		idx += 1
 	
 	_make_cell_materials_texture()
 
@@ -217,16 +211,14 @@ func _demangle_reactions(
 		materials_idx[m.id] = i
 		i += 1
 	for r in reactions:
-		var probability := int(r.probability * float(0xffffffff))
-		
 		var in1: int = materials_idx[r.in1]
 		var in2: int = materials_idx[r.in2]
 		var out1: int = materials_idx[r.out1]
 		var out2: int = materials_idx[r.out2]
 		
 		if in1 > in2:
-			materials[in2].reactions[in1].push_back([probability, out2, out1])
+			materials[in2].reactions[in1].push_back([r.probability, out2, out1])
 		else:
-			materials[in1].reactions[in2].push_back([probability, out1, out2])
+			materials[in1].reactions[in2].push_back([r.probability, out1, out2])
 
 

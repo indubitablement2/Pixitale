@@ -9,7 +9,7 @@ class_name CellMaterialData
 @export var base_color := Color.TRANSPARENT
 
 @export_category("Movement")
-@export var movement_type := Grid.CELL_MOVEMENT_SOLID
+@export var movement_type := Grid.MOVEMENT_SOLID
 #@export_range(0.1, 1.0) var movement_speed := 1.0
 @export var density := 0
 
@@ -17,7 +17,7 @@ class_name CellMaterialData
 @export var durability := 0
 
 @export_category("Collision")
-@export var collision_type := Grid.CELL_COLLISION_NONE
+@export var collision_type := Grid.COLLISION_NONE
 ## Less than 1 is slippery, more than 1 is sticky.
 @export_range(0.0, 2.0, 0.01, "or_greater") var friction := 1.0
 #@export_range(0.0, 0.9, 0.01) var bounciness := 0.0
