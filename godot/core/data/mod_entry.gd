@@ -1,9 +1,6 @@
 extends Resource
 class_name ModEntry
 
-@export var cells : Array[CellMaterialData] = []
-@export var reactions : Array[CellReactionData] = []
-
 @export var passes : Array[GenerationPass] = []
 
 static func entry_path(mod_name: String) -> String:

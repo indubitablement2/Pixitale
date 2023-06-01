@@ -1,7 +1,7 @@
 extends Node
 
 func _ready() -> void:
-	# TODO: Load mod as specified project setting.
+	# TODO: Load mod as specified in project setting.
 	
 	call_deferred("_mod_entry")
 
