@@ -1,13 +1,10 @@
-extends Resource
+extends GenerationPass
 
 @export var horizontal_gradient : Curve
 @export var vertical_gradient : Curve
 
 @export var caverns : FastNoiseLite
 @export var caverns_x_warp := 0.5
-
-func pass_name() -> String:
-	return "Creating caverns"
 
 func generate() -> void:
 	caverns.seed = Grid.get_seed() + 11

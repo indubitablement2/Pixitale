@@ -1,4 +1,4 @@
-extends Resource
+extends GenerationPass
 
 @export var hills_top_relative := 0.2
 @export var hills_height := 1000
@@ -18,9 +18,6 @@ extends Resource
 
 var surface_top : int
 var surface_bot : int
-
-func pass_name() -> String:
-	return "Creating surface"
 
 func generate() -> void:
 	hills.seed = Grid.get_seed() + 1
@@ -76,6 +73,8 @@ func generate() -> void:
 			ipos.x += 1
 		
 		ipos.y += 1
+	
+	return # color test
 	
 	ipos = Vector2i(0, surface_top)
 	

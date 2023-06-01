@@ -24,3 +24,5 @@ horizontal_gradient = SubResource("Curve_g2fw2")
 vertical_gradient = SubResource("Curve_q6gy3")
 caverns = SubResource("FastNoiseLite_6qsr6")
 caverns_x_warp = 0.5
+id = "cavern"
+description = "Creating caverns!"

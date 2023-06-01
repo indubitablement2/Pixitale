@@ -26,7 +26,7 @@
     - [x] Can configure infinite border cells material.
     - [x] Figure out gdscript interface.
     - [ ] Generation passes
-        - [x] Carvern
+        - [ ] Carvern
         - [ ] Ocean
         - [ ] Desert
         - [ ] Pyramid
