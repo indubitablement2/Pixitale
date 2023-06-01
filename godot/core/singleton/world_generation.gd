@@ -28,9 +28,6 @@ func cancel_generation() -> void:
 	if is_generating():
 		_is_canceled = true
 
-# Each passes should have at lease these 2 functions:
-# `func generate() -> void`
-# `func pass_name -> String`
 func get_passes() -> Array[GenerationPass]:
 	if is_generating():
 		push_error("can not modify passes while generating")
@@ -61,17 +58,6 @@ func _generate() -> void:
 		end = Time.get_ticks_msec()
 		print(p.id , " in ", end - start, "ms.")
 		start = end
-	
-	call_deferred("_generation_pass_changed", "Finishing touches")
-	Grid.post_generation_pass()
-	end = Time.get_ticks_msec()
-	print("Post generation in ", end - start, "ms.")
-	
-	start = end
-	call_deferred("_generation_pass_changed", "Settling things down")
-	# TODO: Step simulation ~4k times.
-	end = Time.get_ticks_msec()
-	print("Simulation in ", end - start, "ms.")
 	
 	print("Generation done in ", end - start_start, "ms.")
 	

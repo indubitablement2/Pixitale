@@ -1,8 +1,6 @@
 extends Node
 
 func _ready() -> void:
-	# TODO: Load mod as specified in project setting.
-	
 	call_deferred("_mod_entry")
 
 func get_mod_order() -> PackedStringArray:
@@ -20,3 +18,8 @@ func _mod_entry() -> void:
 		if FileAccess.file_exists(entry_path):
 			var entry := load(entry_path)
 			entry.entry()
+	
+	# Add core generation passes.
+	var passes := WorldGeneration.get_passes()
+	passes.push_back(preload("res://core/world_gen/post_generation.tres"))
+	passes.push_back(preload("res://core/world_gen/simulation.tres"))

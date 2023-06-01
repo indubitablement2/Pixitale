@@ -1,0 +1,8 @@
+[gd_resource type="Resource" load_steps=2 format=3 uid="uid://lyrmsm6ffx88"]
+
+[ext_resource type="Script" path="res://core/world_gen/post_generation.gd" id="1_eicjh"]
+
+[resource]
+script = ExtResource("1_eicjh")
+id = "post_gen"
+description = "Finishing touches"

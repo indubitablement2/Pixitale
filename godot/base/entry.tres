@@ -6,6 +6,4 @@
 
 [resource]
 script = ExtResource("1_608ll")
-cells = Array[Resource("res://core/data/cell_material_data.gd")]([])
-reactions = Array[Resource("res://core/data/cell_reaction_data.gd")]([])
 passes = Array[Resource("res://core/data/generation_pass.gd")]([ExtResource("1_8iyxf"), ExtResource("2_ngaf6")])
