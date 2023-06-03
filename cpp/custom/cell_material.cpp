@@ -14,7 +14,6 @@ void CellMaterial::add(
 		const Cell::Collision collision,
 		const f32 friction,
 		const bool can_color,
-		const u32 min_value_noise,
 		const u32 max_value_noise,
 		const Ref<Image> values,
 		const std::vector<std::vector<CellReaction>> higher_reactions) {
@@ -27,13 +26,11 @@ void CellMaterial::add(
 	cell_material.can_color = can_color;
 
 	// Add values noise.
-	cell_material.min_value_noise = min_value_noise;
-	cell_material.max_value_noise = max_value_noise;
-	cell_material.max_value_noise = CLAMP(cell_material.max_value_noise, 0u, 16u);
-	cell_material.min_value_noise = CLAMP(
-			cell_material.min_value_noise,
-			0u,
-			cell_material.max_value_noise);
+	cell_material.max_value_noise = max_value_noise + 1;
+	cell_material.max_value_noise = CLAMP(cell_material.max_value_noise, 1u, 16u);
+	if (cell_material.max_value_noise == 1) {
+		cell_material.max_value_noise = 0;
+	}
 
 	// Add values image.
 	if (values.is_valid()) {
@@ -170,12 +167,12 @@ void CellMaterial::try_react_between(
 u32 CellMaterial::get_value_idx_at(const i32 x, const i32 y, u64 &rng) {
 	u32 value = 0;
 
-	if (max_value_noise) {
-		value = Rng::gen_range_u32(rng, min_value_noise, max_value_noise);
+	if (values != nullptr) {
+		value = (u32)values[((u32)x % values_width) + ((u32)y % values_height) * values_width];
 	}
 
-	if (values != nullptr) {
-		value += (u32)values[((u32)x % values_width) + ((u32)y % values_height) * values_width];
+	if (max_value_noise) {
+		value += Rng::gen_range_u32(rng, 0, max_value_noise);
 		value = MIN(value, 15u);
 	}
 
@@ -196,7 +193,6 @@ void CellMaterial::print(u32 material_idx) {
 	print_line("values_width ", values_width);
 	print_line("values_height ", values_height);
 
-	print_line("min_value_noise ", min_value_noise);
 	print_line("max_value_noise ", max_value_noise);
 
 	print_line("reaction_ranges_len: ", reaction_ranges_len);

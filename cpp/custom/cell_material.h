@@ -36,7 +36,6 @@ public:
 	Cell::Collision collision;
 	f32 friction;
 
-	u32 min_value_noise;
 	// If 0, then no noise.
 	u32 max_value_noise;
 
@@ -51,7 +50,6 @@ public:
 			const Cell::Collision collision,
 			const f32 friction,
 			const bool can_color,
-			const u32 min_value_noise,
 			const u32 max_value_noise,
 			const Ref<Image> values,
 			const std::vector<std::vector<CellReaction>> higher_reactions);

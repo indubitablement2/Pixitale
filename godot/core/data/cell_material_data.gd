@@ -11,10 +11,9 @@ class_name CellMaterialData
 ## If this cell can have hue/value modifier.
 @export var can_color := false
 
-@export_range(0, 15) var noise_min := 0
-## 0/1 == no noise.
-## Generate noise from min to max (excluding max)
-@export_range(0, 16) var noise_max := 0
+## 0 == no noise.
+## Generate noise from min to max (including max)
+@export_range(0, 15) var noise_max := 0
 ## Only use red channel. 
 ## Compressed to 4bits [0..15]
 ## Can be null, if not needed.

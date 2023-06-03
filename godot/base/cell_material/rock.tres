@@ -10,7 +10,6 @@ id = "rock"
 tags = PackedStringArray()
 base_color = Color(0.470588, 0.4, 0.313726, 1)
 can_color = true
-noise_min = 0
 noise_max = 0
 values = ExtResource("2_l22vb")
 movement_type = 0

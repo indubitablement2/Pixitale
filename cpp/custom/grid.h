@@ -64,7 +64,6 @@ public:
 			i32 collision,
 			f32 friction,
 			bool can_color,
-			u32 min_value_noise,
 			u32 max_value_noise,
 			Ref<Image> values,
 			Array reactions);

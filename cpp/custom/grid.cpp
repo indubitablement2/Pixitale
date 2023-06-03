@@ -467,7 +467,6 @@ void Grid::_bind_methods() {
 					"cell_collision",
 					"friction",
 					"can_color",
-					"min_value_noise",
 					"max_value_noise",
 					"values",
 					"reactions"),
@@ -759,8 +758,7 @@ void Grid::add_material(
 		i32 collision,
 		f32 friction,
 		bool can_color,
-		const u32 min_value_noise,
-		// If <= 0 then no noise.
+		// If 0 then no noise. [0..15]
 		const u32 max_value_noise,
 		// Can be null.
 		const Ref<Image> values,
@@ -798,7 +796,6 @@ void Grid::add_material(
 			static_cast<Cell::Collision>(collision),
 			friction,
 			can_color,
-			min_value_noise,
 			max_value_noise,
 			values,
 			higher_reactions);
