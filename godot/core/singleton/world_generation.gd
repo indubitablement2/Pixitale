@@ -28,6 +28,14 @@ func cancel_generation() -> void:
 	if is_generating():
 		_is_canceled = true
 
+func get_pass(pass_id: String) -> GenerationPass:
+	for p in _passes:
+		if p.id == pass_id:
+			return p
+	
+	push_error(pass_id, "does not exist")
+	return null
+
 func get_passes() -> Array[GenerationPass]:
 	if is_generating():
 		push_error("can not modify passes while generating")

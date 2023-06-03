@@ -6,14 +6,16 @@ const uint MASK_COLOR = 15u;
 const uint SHIFT_HUE = 24u;
 const uint SHIFT_VALUE = 28u;
 
+uniform ivec2 offset;
+
 uniform sampler2D cell_materials_data;
 uniform sampler2D hue_palette;
 uniform sampler2D value_palette;
 
 void fragment() {
 	// Unpack cell data
-	ivec2 coords = ivec2((UV * vec2(textureSize(TEXTURE, 0))));
-	uint data = floatBitsToUint(texelFetch(TEXTURE, coords, 0).x);
+	ivec2 local_coords = ivec2((UV * vec2(textureSize(TEXTURE, 0))));
+	uint data = floatBitsToUint(texelFetch(TEXTURE, local_coords, 0).x);
 //	uint data = floatBitsToUint(texture(TEXTURE, UV).x);
 	
 	uint material_idx = data & MASK_MATERIAL_IDX;
@@ -40,6 +42,16 @@ void fragment() {
 		ivec2(int(value_idx), 0),
 		0
 	);
+	
+	ivec2 global_coords = offset + local_coords;
+	
+//	// Test texture
+//	ivec2 tex_local_coords = global_coords % textureSize(tex, 0);
+//	col *= texelFetch(
+//		tex,
+//		tex_local_coords,
+//		0
+//	);
 	
 	COLOR = col;
 }

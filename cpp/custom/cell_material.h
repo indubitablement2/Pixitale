@@ -2,6 +2,7 @@
 #define CELL_MATERIAL_H
 
 #include "cell.hpp"
+#include "core/io/image.h"
 #include "preludes.h"
 
 struct CellReaction {
@@ -20,6 +21,10 @@ class CellMaterial {
 	u32 *reaction_ranges;
 	u32 reaction_ranges_len;
 
+	u8 *values;
+	u32 values_height;
+	u32 values_width;
+
 public:
 	static std::vector<CellMaterial> materials;
 
@@ -31,9 +36,11 @@ public:
 	Cell::Collision collision;
 	f32 friction;
 
-	bool can_color;
+	u32 min_value_noise;
+	// If 0, then no noise.
+	u32 max_value_noise;
 
-	// on_destroyed: ();
+	bool can_color;
 
 	// higher_reactions is all reactions with material that have idx > this material's idx.
 	// Inner vector can be empty (no reactions with this material).
@@ -44,6 +51,9 @@ public:
 			const Cell::Collision collision,
 			const f32 friction,
 			const bool can_color,
+			const u32 min_value_noise,
+			const u32 max_value_noise,
+			const Ref<Image> values,
 			const std::vector<std::vector<CellReaction>> higher_reactions);
 	static void free_memory();
 
@@ -57,6 +67,8 @@ public:
 			const i32 other_x,
 			const i32 other_y,
 			u64 &rng);
+
+	u32 get_value_idx_at(const i32 x, const i32 y, u64 &rng);
 
 	void print(u32 material_idx);
 };

@@ -27,6 +27,10 @@ func load_cell_materials() -> void:
 	cell_materials = _get_materials()
 	
 	for m in cell_materials:
+		var values : Image = null
+		if m.values:
+			values = m.values.get_image()
+		
 		Grid.add_material(
 			m.movement_type,
 			m.density,
@@ -34,6 +38,9 @@ func load_cell_materials() -> void:
 			m.collision_type,
 			m.friction,
 			m.can_color,
+			m.noise_min,
+			m.noise_max,
+			values,
 			m.reactions
 		)
 	

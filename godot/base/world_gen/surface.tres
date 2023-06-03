@@ -32,5 +32,5 @@ first_rock_frequency = 5.0
 first_rock_detail_strenght = 0.25
 first_rock_as_dirt_threshold = 0.08
 first_rock_as_dirt_falloff = 1.5
-id = ""
+id = "surface"
 description = "Creating surface"

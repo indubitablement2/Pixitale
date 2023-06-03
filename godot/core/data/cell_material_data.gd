@@ -10,7 +10,15 @@ class_name CellMaterialData
 @export var base_color := Color.TRANSPARENT
 ## If this cell can have hue/value modifier.
 @export var can_color := false
-#@export var asd := TileMap
+
+@export_range(0, 15) var noise_min := 0
+## 0/1 == no noise.
+## Generate noise from min to max (excluding max)
+@export_range(0, 16) var noise_max := 0
+## Only use red channel. 
+## Compressed to 4bits [0..15]
+## Can be null, if not needed.
+@export var values :Texture2D = null
 
 @export_category("Movement")
 @export var movement_type := Grid.MOVEMENT_SOLID

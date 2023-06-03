@@ -467,6 +467,9 @@ void Grid::_bind_methods() {
 					"cell_collision",
 					"friction",
 					"can_color",
+					"min_value_noise",
+					"max_value_noise",
+					"values",
 					"reactions"),
 			&Grid::add_material);
 
@@ -724,7 +727,17 @@ void Grid::post_generation_pass() {
 		chunks[i] = MAX_U64;
 	}
 
-	// TODO: Paint all
+	u64 rng = seed;
+
+	for (i32 y = 0; y < height; y++) {
+		for (i32 x = 0; x < width; x++) {
+			u32 cell = cells[y * width + x];
+			u32 material_idx = Cell::material_idx(cell);
+			u32 value_idx = CellMaterial::materials[material_idx].get_value_idx_at(x, y, rng);
+			Cell::set_value(cell, value_idx);
+			cells[y * width + x] = cell;
+		}
+	}
 
 	take_border_cells();
 }
@@ -746,6 +759,11 @@ void Grid::add_material(
 		i32 collision,
 		f32 friction,
 		bool can_color,
+		const u32 min_value_noise,
+		// If <= 0 then no noise.
+		const u32 max_value_noise,
+		// Can be null.
+		const Ref<Image> values,
 		// [[float probability, int out1, int out2]]
 		// Inner array can be empty (no reactions with this material).
 		Array reactions) {
@@ -780,6 +798,9 @@ void Grid::add_material(
 			static_cast<Cell::Collision>(collision),
 			friction,
 			can_color,
+			min_value_noise,
+			max_value_noise,
+			values,
 			higher_reactions);
 }
 

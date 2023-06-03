@@ -54,6 +54,7 @@ public:
 	static void set_cell_generation(Vector2i position, u32 cell_material_idx);
 	static void post_generation_pass();
 
+	// TODO: Rename to step as no other step exists.
 	static void step_manual();
 
 	static void add_material(
@@ -63,6 +64,9 @@ public:
 			i32 collision,
 			f32 friction,
 			bool can_color,
+			u32 min_value_noise,
+			u32 max_value_noise,
+			Ref<Image> values,
 			Array reactions);
 
 	static i64 get_tick();

@@ -9,7 +9,7 @@ extends GenerationPass
 func generate() -> void:
 	caverns.seed = Grid.get_seed() + 11
 	
-	var surface_pass : int = WorldGeneration.get_pass("Creating surface").surface_top
+	var surface_pass : int = WorldGeneration.get_pass("surface").surface_top
 	
 	Generation.cavern_pass(
 		horizontal_gradient,

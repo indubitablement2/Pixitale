@@ -1,6 +1,7 @@
 #include "cell_material.h"
 
 #include "cell.hpp"
+#include "core/typedefs.h"
 #include "grid.h"
 #include "rng.hpp"
 
@@ -13,6 +14,9 @@ void CellMaterial::add(
 		const Cell::Collision collision,
 		const f32 friction,
 		const bool can_color,
+		const u32 min_value_noise,
+		const u32 max_value_noise,
+		const Ref<Image> values,
 		const std::vector<std::vector<CellReaction>> higher_reactions) {
 	CellMaterial cell_material = CellMaterial();
 	cell_material.movement = cell_movement;
@@ -21,6 +25,39 @@ void CellMaterial::add(
 	cell_material.collision = collision;
 	cell_material.friction = friction;
 	cell_material.can_color = can_color;
+
+	// Add values noise.
+	cell_material.min_value_noise = min_value_noise;
+	cell_material.max_value_noise = max_value_noise;
+	cell_material.max_value_noise = CLAMP(cell_material.max_value_noise, 0u, 16u);
+	cell_material.min_value_noise = CLAMP(
+			cell_material.min_value_noise,
+			0u,
+			cell_material.max_value_noise);
+
+	// Add values image.
+	if (values.is_valid()) {
+		cell_material.values_width = values->get_width();
+		cell_material.values_height = values->get_height();
+		cell_material.values = new u8[cell_material.values_width * cell_material.values_height];
+		for (u32 y = 0; y < cell_material.values_height; y++) {
+			for (u32 x = 0; x < cell_material.values_width; x++) {
+				f32 v = values->get_pixel(x, y).r;
+
+				// Reverse value. 0 is brightest, 15 is darkest.
+				v = 1.0f - v;
+
+				v *= 16.0f;
+				v = CLAMP(v, 0.0f, 15.0f);
+
+				cell_material.values[y * cell_material.values_width + x] = u8(v);
+			}
+		}
+	} else {
+		cell_material.values_width = 0;
+		cell_material.values_height = 0;
+		cell_material.values = nullptr;
+	}
 
 	cell_material.reaction_ranges = nullptr;
 	cell_material.reaction_ranges_len = 0;
@@ -55,6 +92,9 @@ void CellMaterial::free_memory() {
 	for (u32 i = 0; i < materials.size(); i++) {
 		if (materials[i].reaction_ranges != nullptr) {
 			delete[] materials[i].reaction_ranges;
+		}
+		if (materials[i].values != nullptr) {
+			delete[] materials[i].values;
 		}
 	}
 	materials = {};
@@ -127,6 +167,21 @@ void CellMaterial::try_react_between(
 	}
 }
 
+u32 CellMaterial::get_value_idx_at(const i32 x, const i32 y, u64 &rng) {
+	u32 value = 0;
+
+	if (max_value_noise) {
+		value = Rng::gen_range_u32(rng, min_value_noise, max_value_noise);
+	}
+
+	if (values != nullptr) {
+		value += (u32)values[((u32)x % values_width) + ((u32)y % values_height) * values_width];
+		value = MIN(value, 15u);
+	}
+
+	return value;
+}
+
 void CellMaterial::print(u32 material_idx) {
 	print_line("-----------", material_idx, "-----------");
 
@@ -135,7 +190,14 @@ void CellMaterial::print(u32 material_idx) {
 	print_line("durability ", durability);
 	print_line("cell_collision ", collision);
 	print_line("friction ", friction);
-	print_line("can_color ", can_color);
+
+	print_line("can_change_hue ", can_color);
+
+	print_line("values_width ", values_width);
+	print_line("values_height ", values_height);
+
+	print_line("min_value_noise ", min_value_noise);
+	print_line("max_value_noise ", max_value_noise);
 
 	print_line("reaction_ranges_len: ", reaction_ranges_len);
 
