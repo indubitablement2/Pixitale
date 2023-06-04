@@ -1,8 +1,9 @@
-[gd_scene load_steps=5 format=3 uid="uid://d1p5dq5fwm6v2"]
+[gd_scene load_steps=6 format=3 uid="uid://d1p5dq5fwm6v2"]
 
 [ext_resource type="Script" path="res://core/scene/game/game.gd" id="1_tksre"]
 [ext_resource type="Material" uid="uid://btwoiop8xxp15" path="res://core/shader/cell.material" id="2_pe8pj"]
 [ext_resource type="Script" path="res://core/scene/game/grid_sprite.gd" id="3_tsdm6"]
+[ext_resource type="Texture2D" uid="uid://dsdj0ubywrj5u" path="res://core/shader/cell_palette/cell_modulate_palette.tres" id="5_qnum8"]
 [ext_resource type="PackedScene" uid="uid://dgnqog1dj4nuq" path="res://base/test collider/grid_body.tscn" id="5_r2jck"]
 
 [node name="Game" type="Node2D"]
@@ -14,7 +15,16 @@ material = ExtResource("2_pe8pj")
 centered = false
 script = ExtResource("3_tsdm6")
 
+[node name="SubViewport" type="SubViewport" parent="GridSprite"]
+render_target_update_mode = 4
+
+[node name="Sprite2D" type="Sprite2D" parent="GridSprite/SubViewport"]
+
 [node name="GridBody" parent="." instance=ExtResource("5_r2jck")]
 
 [node name="Camera2D2" type="Camera2D" parent="GridBody"]
 zoom = Vector2(4, 4)
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(126, 153)
+texture = ExtResource("5_qnum8")

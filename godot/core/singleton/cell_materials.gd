@@ -3,6 +3,8 @@ extends Node
 var cell_materials : Array[CellMaterialData]
 
 func _ready() -> void:
+	call_deferred("_make_cell_modulate_palette")
+	
 	load_cell_materials()
 	
 	if OS.is_debug_build():
@@ -61,6 +63,24 @@ func _make_cell_materials_texture() -> void:
 #	img.save_png("user://cell_data.png")
 	
 	preload("res://core/shader/cell_materials_data.tres").set_image(img)
+
+func _make_cell_modulate_palette() -> void:
+	var value := preload("res://core/shader/cell_palette/value_palette.tres").get_image()
+	var hue := preload("res://core/shader/cell_palette/hue_palette.tres").get_image()
+	
+	var img := Image.create(
+		Grid.PALETTE_IDX_MAX,
+		Grid.PALETTE_IDX_MAX,
+		false,
+		Image.FORMAT_RGBA8
+	)
+	
+	for y in Grid.PALETTE_IDX_MAX:
+		for x in Grid.PALETTE_IDX_MAX:
+			img.set_pixel(x, y, hue.get_pixel(x, 0) * value.get_pixel(y, 0))
+	
+	var modulate := preload("res://core/shader/cell_palette/cell_modulate_palette.tres")
+	modulate.set_image(img)
 
 func _get_materials() -> Array[CellMaterialData]:
 	var materials: Array[CellMaterialData] = []
