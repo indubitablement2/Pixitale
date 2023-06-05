@@ -1,7 +1,11 @@
-[gd_scene load_steps=3 format=3 uid="uid://ca1ifxu63elb6"]
+[gd_scene load_steps=5 format=3 uid="uid://ca1ifxu63elb6"]
 
 [ext_resource type="Script" path="res://core/scene/Main.gd" id="1_c4ry3"]
 [ext_resource type="PackedScene" uid="uid://d1p5dq5fwm6v2" path="res://core/scene/game/game.tscn" id="2_3xn8j"]
+[ext_resource type="Texture2D" uid="uid://dy0de8bqdo0cn" path="res://base/texture DELETE/spaceship3.png" id="3_efogp"]
+
+[sub_resource type="OccluderPolygon2D" id="OccluderPolygon2D_mhpc1"]
+polygon = PackedVector2Array(97.1004, -70.8557, -57.0208, -77.4637, -110.808, 60.6521, 34.1357, 86.254)
 
 [node name="Main" type="Control"]
 layout_mode = 3
@@ -71,3 +75,16 @@ grow_vertical = 0
 text = "asdasdasa"
 
 [node name="Game" parent="." instance=ExtResource("2_3xn8j")]
+
+[node name="DirectionalLight2D" type="DirectionalLight2D" parent="."]
+visible = false
+position = Vector2(311, -6)
+shadow_enabled = true
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+position = Vector2(353, 273)
+texture = ExtResource("3_efogp")
+
+[node name="LightOccluder2D" type="LightOccluder2D" parent="Sprite2D"]
+rotation = -0.998671
+occluder = SubResource("OccluderPolygon2D_mhpc1")

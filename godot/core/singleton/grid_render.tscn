@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://b833h7iwtj2dr"]
+
+[ext_resource type="Script" path="res://core/singleton/grid_render.gd" id="1_bekdw"]
+[ext_resource type="Material" uid="uid://btwoiop8xxp15" path="res://core/shader/cell.material" id="2_w20ut"]
+
+[node name="grid_render" type="Sprite2D"]
+centered = false
+script = ExtResource("1_bekdw")
+
+[node name="ColorPass" type="SubViewport" parent="."]
+transparent_bg = true
+
+[node name="Sprite2D" type="Sprite2D" parent="ColorPass"]
+material = ExtResource("2_w20ut")
+centered = false

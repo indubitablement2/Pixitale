@@ -10,6 +10,8 @@ var _sps : Array[Sprite2D] = []
 var _update_all := 999999
 
 func _ready() -> void:
+	GridRender.set_enabled(false)
+	
 	randomize()
 	WorldGeneration.generation_started.connect(_on_generation_started)
 	WorldGeneration.generation_finished.connect(_on_generation_finished, 1)

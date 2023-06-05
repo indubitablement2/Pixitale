@@ -8,8 +8,6 @@ const uint SHIFT_VALUE = 28u;
 
 global uniform sampler2D cell_materials_data;
 global uniform sampler2D cell_modulate_palette;
-//uniform sampler2D hue_palette;
-//uniform sampler2D value_palette;
 
 void fragment() {
 	ivec2 local_coords = ivec2((UV * vec2(textureSize(TEXTURE, 0))));
@@ -19,7 +17,7 @@ void fragment() {
 	// Unpack cell data
 	uint material_idx = data & MASK_MATERIAL_IDX;
 	uint hue_idx = (data >> SHIFT_HUE) & MASK_COLOR;
-	uint value_idx = (data >> SHIFT_VALUE) & MASK_COLOR;
+	uint value_idx = (data >> SHIFT_VALUE);
 	
 	// Get base color
 	vec4 col = texelFetch(

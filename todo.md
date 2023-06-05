@@ -20,8 +20,20 @@
         - [ ] reaction
         - [ ] set cell (gdscript)
         - [ ] cpp
-    - [ ] Color generation (noise/sudoku/texture)
-        - [ ] Generation type can be set on cell material data.
+    - [x] Color generation (noise/sudoku/texture)
+        - [x] Generation type can be set on cell material data.
+    - [ ] Bloom 80%+
+        - [ ] Add bloom to environment.
+    - [ ] Light
+        - [x] Take cell data that can be seen + padding
+        - [x] convert cell data to color
+        - [ ] raycast light
+            - [ ] Raycast toward global light origin
+            - [ ] Can disable (eg. when no sun/moon or too deep)
+        - [ ] global light
+            - [ ] Can set strenght
+            - [ ] Take color and add light if we can see bg
+            - [ ] Can disable (eg. when no sun/moon or too deep)
 - [ ] World gen.
     - [x] Can configure infinite border cells material.
     - [x] Figure out gdscript interface.
@@ -47,10 +59,6 @@
 - [ ] Border cells.
     - [x] Looping infinite border.
     - [ ] Reapply border cell when border is modified.
-- [ ] Bloom 80%+
-    - [ ] Add bloom to environment.
-- [ ] Light
-    - [x] Cell data and position is a global shader variable.
 - [x] Benchmark
 - [ ] Simulation
     - [ ] Run without blocking main thread.

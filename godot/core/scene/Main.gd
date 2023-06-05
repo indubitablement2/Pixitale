@@ -3,19 +3,12 @@ extends Control
 var t := 0
 
 func _ready() -> void:
-#	set_process(false)
-	WorldGeneration.generation_started.connect(_on_generation_started)
 	WorldGeneration.generation_finished.connect(_on_generation_finished, 1)
 	
 	randomize()
 	WorldGeneration.call_deferred("generate_world", 4096, 4096, randi())
 
-func _on_generation_started() -> void:
-	return
-	set_process(false)
-
 func _on_generation_finished(_canceled: bool) -> void:
-	set_process(true)
 	print("generation done")
 
 func _process(_delta: float) -> void:
