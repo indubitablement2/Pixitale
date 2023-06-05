@@ -1,7 +1,8 @@
-[gd_scene load_steps=3 format=3 uid="uid://btnim7n8wbij2"]
+[gd_scene load_steps=4 format=3 uid="uid://btnim7n8wbij2"]
 
 [ext_resource type="Script" path="res://core/scene/generation_preview/generation_preview.gd" id="1_jtgf8"]
 [ext_resource type="Script" path="res://core/scene/generation_preview/Camera2D.gd" id="2_3s34c"]
+[ext_resource type="Texture2D" uid="uid://dwat6i5koi1gy" path="res://base/texture DELETE/bg.png" id="3_dmgut"]
 
 [node name="GenerationPreview" type="Node2D"]
 script = ExtResource("1_jtgf8")
@@ -11,3 +12,10 @@ world_size = Vector2i(7500, 7500)
 position = Vector2(4000, 2000)
 zoom = Vector2(0.1, 0.1)
 script = ExtResource("2_3s34c")
+
+[node name="Bg" type="Sprite2D" parent="."]
+scale = Vector2(4, 10)
+texture = ExtResource("3_dmgut")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 1920, 760)
