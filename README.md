@@ -1,5 +1,5 @@
 # Pixitale
-![Project Logo](image.jpeg)
+![Project Logo](image.jpg)
 
 
 ## Build
