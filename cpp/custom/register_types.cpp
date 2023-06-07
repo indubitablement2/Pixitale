@@ -2,6 +2,7 @@
 
 #include "core/object/class_db.h"
 
+#include "biome.h"
 #include "generation.h"
 #include "grid.h"
 #include "grid_character_body.h"
@@ -15,6 +16,7 @@ void initialize_custom_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_abstract_class<Generation>();
 
 	ClassDB::register_class<GridCharacterBody>();
+	ClassDB::register_class<GridBiomeScanner>();
 }
 
 void uninitialize_custom_module(ModuleInitializationLevel p_level) {

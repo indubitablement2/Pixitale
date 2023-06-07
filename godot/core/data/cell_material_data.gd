@@ -26,6 +26,9 @@ class_name CellMaterialData
 
 @export_category("Interaction")
 @export var durability := 0
+## Which biome this cell count toward.
+## Leave to an empty String for none.
+@export var biome_id := ""
 
 @export_category("Collision")
 @export var collision_type := Grid.COLLISION_NONE
@@ -52,16 +55,8 @@ var num_reaction := 0
 ## [[probability: int, out1: int, out2: int]]
 var reactions := []
 
-# TODO:
-# spawn texture
-# mine item
-# damage
-# grow vegetation
-# electricity
-# ai?
-# audio
-# explosion?
-# stain
+# Converted biome id to biome idx.
+var biome_idx := 0
 
 func _to_string() -> String:
 	return id + " - " + display_name

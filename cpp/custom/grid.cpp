@@ -1,12 +1,15 @@
 #include "grid.h"
 
 #include "core/object/class_db.h"
+#include "core/variant/array.h"
 #include "preludes.h"
 
+#include "biome.h"
 #include "cell.hpp"
 #include "cell_material.h"
 #include "chunk.hpp"
 #include "rng.hpp"
+#include <cassert>
 
 namespace Step {
 
@@ -469,8 +472,14 @@ void Grid::_bind_methods() {
 					"can_color",
 					"max_value_noise",
 					"values",
-					"reactions"),
+					"reactions",
+					"cell_biome"),
 			&Grid::add_material);
+
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("set_biomes", "biomes"),
+			&Grid::set_biomes);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -764,7 +773,8 @@ void Grid::add_material(
 		const Ref<Image> values,
 		// [[float probability, int out1, int out2]]
 		// Inner array can be empty (no reactions with this material).
-		Array reactions) {
+		Array reactions,
+		u32 cell_biome) {
 	std::vector<std::vector<CellReaction>> higher_reactions = {};
 	for (i32 i = 0; i < reactions.size(); i++) {
 		// Reactions with offset material idx.
@@ -798,7 +808,30 @@ void Grid::add_material(
 			can_color,
 			max_value_noise,
 			values,
-			higher_reactions);
+			higher_reactions,
+			cell_biome);
+}
+
+// int min_cell_coverage;
+// float min_depth;
+// float min_distance_from_center;
+void Grid::set_biomes(Array biomes) {
+	ERR_FAIL_COND_MSG(biomes.size() == 0, "Biomes array is empty");
+
+	std::vector<Biome> new_biomes = {};
+
+	for (i32 i = 0; i < biomes.size(); i++) {
+		Array a = biomes[i];
+
+		assert(a.size() == 3);
+
+		new_biomes.push_back(Biome{
+				a[0],
+				a[1],
+				a[2] });
+	}
+
+	GridBiomeScanner::set_biomes(new_biomes);
 }
 
 bool Grid::is_chunk_active(Vector2i position) {

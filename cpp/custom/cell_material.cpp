@@ -16,7 +16,8 @@ void CellMaterial::add(
 		const bool can_color,
 		const u32 max_value_noise,
 		const Ref<Image> values,
-		const std::vector<std::vector<CellReaction>> higher_reactions) {
+		const std::vector<std::vector<CellReaction>> higher_reactions,
+		const u32 cell_biome) {
 	CellMaterial cell_material = CellMaterial();
 	cell_material.movement = cell_movement;
 	cell_material.density = density;
@@ -24,6 +25,7 @@ void CellMaterial::add(
 	cell_material.collision = collision;
 	cell_material.friction = friction;
 	cell_material.can_color = can_color;
+	cell_material.cell_biome = cell_biome;
 
 	// Add values noise.
 	cell_material.max_value_noise = max_value_noise + 1;

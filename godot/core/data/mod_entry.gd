@@ -3,6 +3,9 @@ class_name ModEntry
 
 @export var passes : Array[GenerationPass] = []
 
+## Ordered is priority.
+@export var biomes : Array[BiomeData] = []
+
 static func entry_path(mod_name: String) -> String:
 	return "res://" + mod_name + "/entry.tres"
 

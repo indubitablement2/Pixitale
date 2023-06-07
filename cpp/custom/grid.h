@@ -66,7 +66,10 @@ public:
 			bool can_color,
 			u32 max_value_noise,
 			Ref<Image> values,
-			Array reactions);
+			Array reactions,
+			u32 cell_biome);
+
+	static void set_biomes(Array biomes);
 
 	static i64 get_tick();
 	static u32 get_cell_material_idx(Vector2i position);
@@ -79,9 +82,6 @@ public:
 	static void print_materials();
 	static void run_tests();
 };
-
-// VARIANT_ENUM_CAST(Grid::CellMovement);
-// VARIANT_ENUM_CAST(Grid::CellCollision);
 
 VARIANT_ENUM_CAST(Cell::Movement);
 VARIANT_ENUM_CAST(Cell::Collision);

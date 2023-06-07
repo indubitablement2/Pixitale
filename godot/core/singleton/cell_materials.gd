@@ -42,7 +42,8 @@ func load_cell_materials() -> void:
 			m.can_color,
 			m.noise_max,
 			values,
-			m.reactions
+			m.reactions,
+			m.biome_idx
 		)
 	
 	_make_cell_materials_texture()
@@ -113,6 +114,7 @@ func _get_materials() -> Array[CellMaterialData]:
 					reactions.push_back(res)
 	
 	_demangle_reactions(materials, reactions)
+	_parse_biome_id(materials)
 	
 	return materials
 
@@ -248,4 +250,13 @@ func _demangle_reactions(
 		else:
 			materials[in1].reactions[in2].push_back([r.probability, out1, out2])
 
-
+# Convert biome id to biome idx.
+func _parse_biome_id(materials: Array[CellMaterialData]) -> void:
+	for m in materials:
+		var biome_idx := 0
+		for b in Mod.biomes_data:
+			if m.biome_id == Mod.biomes_data[biome_idx].id:
+				break
+			biome_idx += 1
+		
+		m.biome_idx = biome_idx

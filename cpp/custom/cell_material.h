@@ -16,14 +16,14 @@ struct CellReaction {
 class CellMaterial {
 	inline static std::vector<CellReaction> reactions = {};
 
+	u8 *values;
+	u32 values_height;
+	u32 values_width;
+
 	// Has all reactions with material that have idx >= this material's idx.
 	// packed as: start idx(0..20) + len (20..32)
 	u32 *reaction_ranges;
 	u32 reaction_ranges_len;
-
-	u8 *values;
-	u32 values_height;
-	u32 values_width;
 
 public:
 	static std::vector<CellMaterial> materials;
@@ -35,6 +35,8 @@ public:
 
 	Cell::Collision collision;
 	f32 friction;
+
+	u32 cell_biome;
 
 	// If 0, then no noise.
 	u32 max_value_noise;
@@ -52,7 +54,8 @@ public:
 			const bool can_color,
 			const u32 max_value_noise,
 			const Ref<Image> values,
-			const std::vector<std::vector<CellReaction>> higher_reactions);
+			const std::vector<std::vector<CellReaction>> higher_reactions,
+			const u32 cell_biome);
 	static void free_memory();
 
 	static void try_react_between(

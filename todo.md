@@ -32,7 +32,7 @@
             - [ ] Raycast toward global light origin
             - [ ] Can disable (eg. when no sun/moon or too deep)
         - [ ] raycast light
-            - [ ] only update if affected chunks changed
+            - [ ] only update if affected chunks changed or light moved.
         - [ ] global light
             - [ ] Can set strenght
             - [x] Take color and add light if we can see bg
@@ -70,11 +70,24 @@
 - [ ] Simulation
     - [ ] Run without blocking main thread.
     - [ ] Run using multiple thread.
-    - [ ] Reaction are handled in bulk.
-        - [ ] Keep track if the number of active reaction
-        - [ ] keep a simple add-only array with all the active reactions (idx a, idx b)
-        - [ ] if reaction array is much bigger than the number of active reactions, verify all reations in array
-        - [ ] react in bulk using swap remove
-        - [ ] If reation array capacity is much larger than size, resize array.
-    - [ ] Consider storing ractions in hashmap.
-    - [ ] Reaction use stored in global hashmap and handled in bulk.
+    - [x] Consider storing ractions in hashmap.
+    - [ ] Refactor cell movement.
+- [ ] Character
+    - [ ] Fix character going slightly down just before going up for some reason.
+- [ ] Biome
+    - [x] Biome condition
+        - [x] Min cell coverage needed.
+        - [x] Min distance from center.
+        - [x] Min depth.
+        - [x] Priority over other biome
+    - [x] Add biome to cell material.
+    - [x] New biome scan node
+        - [x] Continuously scan nearby cells. Keep a moving average
+        - [x] Emit signal on biome change.
+    - [ ] Add bg to biomes data
+- [ ] Background
+    - [ ] Not affected by light
+    - [ ] Infinite loop
+    - [ ] Change based on current biome
+        - [ ] Seamless transition
+- [ ] Prefix all new godot object with Grid

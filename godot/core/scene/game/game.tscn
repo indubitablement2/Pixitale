@@ -1,6 +1,7 @@
-[gd_scene load_steps=3 format=3 uid="uid://d1p5dq5fwm6v2"]
+[gd_scene load_steps=4 format=3 uid="uid://d1p5dq5fwm6v2"]
 
 [ext_resource type="Script" path="res://core/scene/game/game.gd" id="1_tksre"]
+[ext_resource type="Script" path="res://core/scene/game/GridBiomeScanner.gd" id="3_drlm8"]
 [ext_resource type="PackedScene" uid="uid://dgnqog1dj4nuq" path="res://base/test collider/grid_body.tscn" id="5_r2jck"]
 
 [node name="Game" type="Node2D"]
@@ -10,3 +11,6 @@ script = ExtResource("1_tksre")
 
 [node name="Camera2D2" type="Camera2D" parent="GridBody"]
 zoom = Vector2(4, 4)
+
+[node name="GridBiomeScanner" type="GridBiomeScanner" parent="GridBody"]
+script = ExtResource("3_drlm8")
