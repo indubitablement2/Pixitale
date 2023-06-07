@@ -2,7 +2,11 @@ extends Node2D
 
 const MAX_RENDER_SIZE = 2048
 
-# Add some border cells beyond what the screen can see.
+# Render light beyong what the screen can see, so that
+# light does not pop-in.
+var render_padding := Vector2i(50, 50) : set = set_render_padding
+
+# Add some border cells beyond what is rendered.
 # Used for light raycast calculation.
 var data_padding := Vector2i(64, 64) : set = set_data_padding
 
@@ -35,8 +39,8 @@ func _process(_delta: float) -> void:
 	var view_origin := -ctrans.get_origin() / ctrans.get_scale()
 	var view_size := get_viewport_rect().size / ctrans.get_scale()
 	
-	render_origin = Vector2i(view_origin.floor())
-	render_size = Vector2i(view_size.floor()) + Vector2i(2, 2)
+	render_origin = Vector2i(view_origin.floor()) - render_padding
+	render_size = Vector2i(view_size.floor()) + render_padding * 2
 	
 	if render_size.x > MAX_RENDER_SIZE:
 		push_error("Render size too high", render_size)
@@ -72,7 +76,6 @@ func _process(_delta: float) -> void:
 	
 	position = render_origin
 	
-	
 	light_color_sprite.material.set_shader_parameter(
 		&"global_origin",
 		position
@@ -82,6 +85,9 @@ func set_enabled(enabled: bool) -> void:
 	set_process(enabled)
 	set_visible(enabled)
 
+func set_render_padding(value: Vector2i) -> void:
+	render_padding = value
+
 func set_data_padding(value: Vector2i) -> void:
 	data_padding = value
 	
@@ -90,4 +96,6 @@ func set_data_padding(value: Vector2i) -> void:
 		&"color_offset",
 		Vector2(data_padding)
 	)
+	
 	color_sprite.position = -data_padding
+

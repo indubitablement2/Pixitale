@@ -33,29 +33,5 @@ void fragment() {
 		0
 	);
 	
-//	// Apply hue
-//	col *= texelFetch(
-//		hue_palette,
-//		ivec2(int(hue_idx), 0),
-//		0
-//	);
-//
-//	// Apply value
-//	col *= texelFetch(
-//		value_palette,
-//		ivec2(int(value_idx), 0),
-//		0
-//	);
-	
-//	ivec2 global_coords = offset + local_coords;
-	
-//	// Test texture
-//	ivec2 tex_local_coords = global_coords % textureSize(tex, 0);
-//	col *= texelFetch(
-//		tex,
-//		tex_local_coords,
-//		0
-//	);
-	
 	COLOR = col;
 }

@@ -25,7 +25,7 @@
     - [x] Bloom 80%+
         - [x] Add bloom to environment.
     - [ ] Light
-        - [ ] Add padding to light viewport, so that light does not pop-in
+        - [x] Add padding to light viewport, so that light does not pop-in
         - [x] Take cell data that can be seen + padding
         - [x] convert cell data to color
         - [ ] raycast global light
