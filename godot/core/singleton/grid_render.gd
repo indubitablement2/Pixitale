@@ -1,10 +1,10 @@
-extends Sprite2D
+extends Node2D
 
-const MAX_DATA_SIZE = Vector2i(2048, 2048)
+const MAX_RENDER_SIZE = 2048
 
 # Add some border cells beyond what the screen can see.
 # Used for light raycast calculation.
-var data_padding := Vector2(64.0, 64.0)
+var data_padding := Vector2i(64, 64) : set = set_data_padding
 
 var data_origin := Vector2i.ZERO
 var data_size := Vector2i.ZERO
@@ -13,25 +13,37 @@ var data_size := Vector2i.ZERO
 # but are not updated.
 @onready var data_texture := ImageTexture.new()
 
-@onready var color_sprite : Sprite2D = $ColorPass/Sprite2D
+var render_origin := Vector2i.ZERO
+var render_size := Vector2i.ZERO
+
 @onready var color_viewport : SubViewport = $ColorPass
-@onready var color_texture := color_viewport.get_texture()
+@onready var color_data_sprite : Sprite2D = $ColorPass/Data
+
+@onready var light_viewport : SubViewport = $LightPass
+@onready var light_color_sprite : Sprite2D = $LightPass/Color
+
+@onready var color_sprite : Sprite2D = $Color
+@onready var light_spirte : Sprite2D = $Light
 
 func _ready() -> void:
-	color_sprite.texture = data_texture
-	texture = color_viewport.get_texture()
+	set_data_padding(data_padding)
+	
+	color_data_sprite.texture = data_texture
 
 func _process(_delta: float) -> void:
 	var ctrans := get_canvas_transform()
 	var view_origin := -ctrans.get_origin() / ctrans.get_scale()
 	var view_size := get_viewport_rect().size / ctrans.get_scale()
 	
-#	render_size = Vector2i(view_size.floor()) + Vector2i.ONE
-#	render_origin = Vector2i(view_origin.floor())
+	render_origin = Vector2i(view_origin.floor())
+	render_size = Vector2i(view_size.floor()) + Vector2i(2, 2)
 	
-	data_origin = Vector2i((view_origin - data_padding).floor())
-	data_size = Vector2i((view_size + data_padding * 2.0).floor()) + Vector2i.ONE
-	data_size = data_size.clamp(Vector2i(2, 2), MAX_DATA_SIZE)
+	if render_size.x > MAX_RENDER_SIZE:
+		push_error("Render size too high", render_size)
+		return
+	
+	data_origin = render_origin - data_padding
+	data_size = render_size + data_padding * 2
 	
 	var resized := false
 	var data_texture_size := Vector2i(data_texture.get_size())
@@ -55,12 +67,27 @@ func _process(_delta: float) -> void:
 	else:
 		data_texture.update(data_img)
 	
-	# TODO: Hysteresis
 	color_viewport.size = data_size
+	light_viewport.size = render_size
 	
-	position = data_origin
+	position = render_origin
+	
+	
+	light_color_sprite.material.set_shader_parameter(
+		&"global_origin",
+		position
+	)
 
 func set_enabled(enabled: bool) -> void:
 	set_process(enabled)
 	set_visible(enabled)
 
+func set_data_padding(value: Vector2i) -> void:
+	data_padding = value
+	
+	light_color_sprite.position = -data_padding
+	light_color_sprite.material.set_shader_parameter(
+		&"color_offset",
+		Vector2(data_padding)
+	)
+	color_sprite.position = -data_padding

@@ -1,0 +1,6 @@
+[gd_resource type="Environment" format=3 uid="uid://baj0v348cbc3u"]
+
+[resource]
+background_color = Color(1, 0, 0, 1)
+adjustment_enabled = true
+adjustment_brightness = 2.6

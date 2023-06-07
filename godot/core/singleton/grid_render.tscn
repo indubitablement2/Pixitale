@@ -1,15 +1,69 @@
-[gd_scene load_steps=3 format=3 uid="uid://b833h7iwtj2dr"]
+[gd_scene load_steps=11 format=3 uid="uid://b833h7iwtj2dr"]
 
 [ext_resource type="Script" path="res://core/singleton/grid_render.gd" id="1_bekdw"]
 [ext_resource type="Material" uid="uid://btwoiop8xxp15" path="res://core/shader/cell.material" id="2_w20ut"]
+[ext_resource type="Shader" path="res://core/shader/global_light.gdshader" id="3_use85"]
 
-[node name="grid_render" type="Sprite2D"]
-centered = false
+[sub_resource type="Environment" id="Environment_bap7c"]
+background_mode = 3
+background_color = Color(1, 0, 0, 1)
+glow_enabled = true
+glow_levels/2 = 1.0
+glow_levels/5 = 0.0
+glow_intensity = 3.0
+glow_strength = 1.5
+glow_bloom = 1.0
+glow_blend_mode = 3
+
+[sub_resource type="World3D" id="World3D_54s67"]
+environment = SubResource("Environment_bap7c")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sxpjy"]
+shader = ExtResource("3_use85")
+shader_parameter/global_origin = null
+shader_parameter/color_offset = null
+shader_parameter/no_light_start = null
+shader_parameter/no_light_end = null
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_4w76d"]
+viewport_path = NodePath("ColorPass")
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_erj3w"]
+viewport_path = NodePath("ColorPass")
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_f00lt"]
+blend_mode = 3
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_jq6io"]
+viewport_path = NodePath("LightPass")
+
+[node name="GridRender" type="Node2D"]
 script = ExtResource("1_bekdw")
 
 [node name="ColorPass" type="SubViewport" parent="."]
+editor_description = "Covert cell data to color."
 transparent_bg = true
 
-[node name="Sprite2D" type="Sprite2D" parent="ColorPass"]
+[node name="Data" type="Sprite2D" parent="ColorPass"]
 material = ExtResource("2_w20ut")
+centered = false
+
+[node name="LightPass" type="SubViewport" parent="."]
+editor_description = "Raycast global light, add background light, isolate light emitting cells. 
+
+This is the place to add light so that they are properly blurred."
+world_3d = SubResource("World3D_54s67")
+
+[node name="Color" type="Sprite2D" parent="LightPass"]
+material = SubResource("ShaderMaterial_sxpjy")
+texture = SubResource("ViewportTexture_4w76d")
+centered = false
+
+[node name="Color" type="Sprite2D" parent="."]
+texture = SubResource("ViewportTexture_erj3w")
+centered = false
+
+[node name="Light" type="Sprite2D" parent="."]
+material = SubResource("CanvasItemMaterial_f00lt")
+texture = SubResource("ViewportTexture_jq6io")
 centered = false

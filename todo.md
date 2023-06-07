@@ -22,18 +22,25 @@
         - [ ] cpp
     - [x] Color generation (noise/sudoku/texture)
         - [x] Generation type can be set on cell material data.
-    - [ ] Bloom 80%+
-        - [ ] Add bloom to environment.
+    - [x] Bloom 80%+
+        - [x] Add bloom to environment.
     - [ ] Light
+        - [ ] Add padding to light viewport, so that light does not pop-in
         - [x] Take cell data that can be seen + padding
         - [x] convert cell data to color
-        - [ ] raycast light
+        - [ ] raycast global light
             - [ ] Raycast toward global light origin
             - [ ] Can disable (eg. when no sun/moon or too deep)
+        - [ ] raycast light
+            - [ ] only update if affected chunks changed
         - [ ] global light
             - [ ] Can set strenght
-            - [ ] Take color and add light if we can see bg
-            - [ ] Can disable (eg. when no sun/moon or too deep)
+            - [x] Take color and add light if we can see bg
+            - [x] Can disable (eg. when no sun/moon or too deep)
+    - [ ] Backgroud cells
+        - [ ] data: 8 bg color, 3 wire, 1 actuator, 12 actuated tile, 8 actuated tile color
+        - [ ] only alocate a chunk if there is any
+        - [ ] last color bit is transparency (20%)
 - [ ] World gen.
     - [x] Can configure infinite border cells material.
     - [x] Figure out gdscript interface.

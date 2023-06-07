@@ -24,7 +24,7 @@ func generate() -> void:
 	hills_detail.seed = Grid.get_seed() + 2
 	hills_large.seed = Grid.get_seed() + 3
 	
-	var dirt := CellMaterials.get_cell_materials_idx("glass")
+	var dirt := CellMaterials.get_cell_materials_idx("dirt")
 	var rock := CellMaterials.get_cell_materials_idx("rock")
 	
 	var size := Grid.get_size()
