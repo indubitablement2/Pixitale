@@ -63,6 +63,7 @@
         - [x] Activate all
         - [ ] Paint all
         - [ ] Simulate for 3k-10k ticks for cells to settle 
+    - [ ] Add layer height to grid.
 - [ ] Border cells.
     - [x] Looping infinite border.
     - [ ] Reapply border cell when border is modified.
@@ -87,7 +88,8 @@
     - [ ] Add bg to biomes data
 - [ ] Background
     - [ ] Not affected by light
-    - [ ] Infinite loop
+    - [x] Infinite loop
     - [ ] Change based on current biome
         - [ ] Seamless transition
+    - [ ] Add biome background node to biome data. 
 - [ ] Prefix all new godot object with Grid

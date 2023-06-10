@@ -114,6 +114,7 @@ func _get_materials() -> Array[CellMaterialData]:
 					reactions.push_back(res)
 	
 	_demangle_reactions(materials, reactions)
+	
 	_parse_biome_id(materials)
 	
 	return materials
@@ -253,10 +254,10 @@ func _demangle_reactions(
 # Convert biome id to biome idx.
 func _parse_biome_id(materials: Array[CellMaterialData]) -> void:
 	for m in materials:
-		var biome_idx := 0
+		var biome_idx := -1
 		for b in Mod.biomes_data:
-			if m.biome_id == Mod.biomes_data[biome_idx].id:
-				break
 			biome_idx += 1
+			if m.biome_id == b.id:
+				break
 		
 		m.biome_idx = biome_idx

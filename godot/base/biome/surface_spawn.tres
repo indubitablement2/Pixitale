@@ -1,10 +1,12 @@
-[gd_resource type="Resource" script_class="BiomeData" load_steps=2 format=3 uid="uid://b325cm1dm7w1y"]
+[gd_resource type="Resource" script_class="BiomeData" load_steps=3 format=3 uid="uid://b325cm1dm7w1y"]
 
 [ext_resource type="Script" path="res://core/data/biome_data.gd" id="1_8fui1"]
+[ext_resource type="Texture2D" uid="uid://cohkmmuriclai" path="res://base/texture/bg/bg_lac_1.png" id="1_lv3rh"]
 
 [resource]
 script = ExtResource("1_8fui1")
 id = "surface_spawn"
+backgrounds = Array[Texture2D]([ExtResource("1_lv3rh")])
 min_cell_count = 0
 min_depth = 0.2
 min_distance_from_center = 0.0

@@ -4,6 +4,9 @@ class_name BiomeData
 ## An unique identifier. Used on cell data.
 @export var id := ""
 
+@export_category("Background")
+@export var backgrounds : Array[Texture2D] = []
+
 @export_category("Condition")
 ## This biome requite that this many cells nearby are tagged as this biome.
 @export var min_cell_count := 0

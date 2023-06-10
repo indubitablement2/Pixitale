@@ -2,6 +2,7 @@
 
 #include "cell.hpp"
 #include "cell_material.h"
+#include "core/error/error_macros.h"
 #include "core/object/class_db.h"
 #include "grid.h"
 #include "preludes.h"
@@ -72,11 +73,8 @@ u32 GridBiomeScanner::get_current_biome() {
 }
 
 void GridBiomeScanner::set_biomes(std::vector<Biome> new_biomes) {
+	ERR_FAIL_COND_MSG(new_biomes.empty(), "Biomes must not be empty.");
+
 	biomes = new_biomes;
 	cell_biome_counts.resize(biomes.size());
-}
-
-GridBiomeScanner::GridBiomeScanner() {
-	// We start with fallback biome.
-	current_biome_idx = biomes.size() - 1;
 }

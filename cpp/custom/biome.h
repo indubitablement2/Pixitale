@@ -31,7 +31,7 @@ public:
 
 	static void set_biomes(std::vector<Biome> new_biomes);
 
-	GridBiomeScanner();
+	GridBiomeScanner(){};
 	~GridBiomeScanner(){};
 };
 

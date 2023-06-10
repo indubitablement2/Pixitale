@@ -1,6 +1,9 @@
 extends GridBiomeScanner
 
-@onready var last_biome_idx = get_current_biome()
+@onready var last_biome_idx := 0
+
+func _ready() -> void:
+	last_biome_idx = maxi(Mod.biomes_data.size() - 1, 0)
 
 func _process(_delta: float) -> void:
 	if scan():

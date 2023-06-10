@@ -1,13 +1,47 @@
-[gd_scene load_steps=4 format=3 uid="uid://d1p5dq5fwm6v2"]
+[gd_scene load_steps=7 format=3 uid="uid://d1p5dq5fwm6v2"]
 
 [ext_resource type="Script" path="res://core/scene/game/game.gd" id="1_tksre"]
+[ext_resource type="Texture2D" uid="uid://444t30f16g16" path="res://base/texture/bg/surface_4.png" id="3_butex"]
 [ext_resource type="Script" path="res://core/scene/game/GridBiomeScanner.gd" id="3_drlm8"]
+[ext_resource type="Texture2D" uid="uid://5sl60e3xxpuq" path="res://base/texture/bg/surface_3.png" id="4_ab248"]
+[ext_resource type="Texture2D" uid="uid://d14y45vt3obhy" path="res://base/texture/bg/surface_2.png" id="5_ir5hu"]
 [ext_resource type="PackedScene" uid="uid://dgnqog1dj4nuq" path="res://base/test collider/grid_body.tscn" id="5_r2jck"]
 
 [node name="Game" type="Node2D"]
 script = ExtResource("1_tksre")
 
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+scale = Vector2(0.25, 0.25)
+transform = Transform2D(0.25, 0, 0, 0.25, 0, 0)
+scroll_base_offset = Vector2(0, 3000)
+scroll_limit_begin = Vector2(-2.14748e+09, -2.14748e+09)
+scroll_limit_end = Vector2(2.14748e+09, 2000)
+
+[node name="ParallaxLayer" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(0.25, 0.25)
+motion_mirroring = Vector2(4096, 0)
+
+[node name="Surface4" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer"]
+texture = ExtResource("3_butex")
+centered = false
+
+[node name="ParallaxLayer2" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_scale = Vector2(0.5, 0.5)
+motion_mirroring = Vector2(4096, 0)
+
+[node name="Surface3" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer2"]
+texture = ExtResource("4_ab248")
+centered = false
+
+[node name="ParallaxLayer3" type="ParallaxLayer" parent="ParallaxBackground"]
+motion_mirroring = Vector2(4096, 0)
+
+[node name="Surface2" type="Sprite2D" parent="ParallaxBackground/ParallaxLayer3"]
+texture = ExtResource("5_ir5hu")
+centered = false
+
 [node name="GridBody" parent="." instance=ExtResource("5_r2jck")]
+position = Vector2(145, 0)
 
 [node name="Camera2D2" type="Camera2D" parent="GridBody"]
 zoom = Vector2(4, 4)
