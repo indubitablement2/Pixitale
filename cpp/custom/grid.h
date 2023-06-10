@@ -29,10 +29,6 @@ public:
 
 	inline static u64 tick = 0;
 
-	inline static std::vector<CellMaterial> m = {};
-
-	// inline static
-
 	inline static u64 seed = 0;
 
 	static void delete_grid();
