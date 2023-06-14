@@ -8,6 +8,7 @@ script = ExtResource("1_7ejt1")
 id = "space"
 backgrounds = Array[Texture2D]([ExtResource("1_b7xi5")])
 min_cell_count = 0
+min_depth_preset = "anywhere"
 min_depth = -999999.0
 min_distance_from_center = 0.0
 priority_more_than = ""

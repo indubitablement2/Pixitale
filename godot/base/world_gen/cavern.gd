@@ -5,16 +5,16 @@ extends GenerationPass
 
 @export var caverns : FastNoiseLite
 @export var caverns_x_warp := 0.5
+@export var caverns_threshold := 0.5
 
 func generate() -> void:
 	caverns.seed = Grid.get_seed() + 11
-	
-	var surface_pass : int = WorldGeneration.get_pass("surface").surface_top
 	
 	Generation.cavern_pass(
 		horizontal_gradient,
 		vertical_gradient,
 		caverns,
 		caverns_x_warp,
-		surface_pass
+		GameGlobals.layer_surface_start,
+		caverns_threshold
 	)

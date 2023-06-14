@@ -6,12 +6,39 @@ void Generation::_bind_methods() {
 	ClassDB::bind_static_method(
 			"Generation",
 			D_METHOD(
+					"surface_pass",
+					"rock",
+					"dirt",
+					"surface_top",
+					"surface_bot"),
+			&Generation::surface_pass);
+
+	ClassDB::bind_static_method(
+			"Generation",
+			D_METHOD(
 					"cavern_pass",
 					"horizontal_gradient",
 					"vertical_gradient",
 					"cavern",
-					"cavern_x_scale"),
+					"cavern_x_scale",
+					"surface_top",
+					"cavern_threshold"),
 			&Generation::cavern_pass);
+}
+
+void Generation::surface_pass(
+		u32 rock,
+		u32 dirt,
+		i32 surface_top,
+		i32 surface_bot
+
+) {
+	// Fill under surface layer with rock.
+	for (i32 y = surface_bot; y < Grid::height; y++) {
+		for (i32 x = 0; x < Grid::width; x++) {
+			Grid::cells[x + y * Grid::width] = rock;
+		}
+	}
 }
 
 void Generation::cavern_pass(
@@ -19,7 +46,8 @@ void Generation::cavern_pass(
 		Ref<Curve> vertical_gradient,
 		Ref<FastNoiseLite> cavern,
 		f32 cavern_x_scale,
-		i32 surface_top) {
+		i32 surface_top,
+		f32 cavern_threshold) {
 	ERR_FAIL_COND_MSG(Grid::cells == nullptr, "Grid is not initialized");
 
 	surface_top = MAX(0, surface_top);
@@ -35,7 +63,7 @@ void Generation::cavern_pass(
 
 			f32 value = cavern->get_noise_2d((f32)x * cavern_x_scale, (f32)y) * vg * hg;
 
-			if (value > 0.5) {
+			if (value > cavern_threshold) {
 				Grid::cells[x + y * Grid::width] = 0;
 			}
 		}

@@ -1,4 +1,4 @@
-[gd_resource type="Resource" load_steps=5 format=3 uid="uid://do3sn4vwbdk37"]
+[gd_resource type="Resource" load_steps=6 format=3 uid="uid://do3sn4vwbdk37"]
 
 [ext_resource type="Script" path="res://base/world_gen/surface.gd" id="1_udkep"]
 
@@ -9,6 +9,8 @@ domain_warp_type = 2
 domain_warp_frequency = 0.006
 domain_warp_fractal_octaves = 3
 
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_72rxt"]
+
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_ck6sv"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_4rkal"]
@@ -18,19 +20,21 @@ fractal_type = 0
 
 [resource]
 script = ExtResource("1_udkep")
-hills_top_relative = 0.2
-hills_height = 600
-hills_gradient_strenght = 5.0
+hills_height = 30.0
+hills_start_height = 600
 hills = SubResource("FastNoiseLite_j66pf")
+hills_added_noise_max = 5.0
+hills_added_noise = SubResource("FastNoiseLite_72rxt")
+hills_gradient_max = 6.0
 hills_strenght = 0.2
 hills_detail = SubResource("FastNoiseLite_ck6sv")
 hills_detail_strenght = 0.025
 hills_large = SubResource("FastNoiseLite_4rkal")
 hills_large_strenght = 0.3
-first_rock_threshold = 1.4
+first_rock_threshold = 2.0
 first_rock_frequency = 5.0
-first_rock_detail_strenght = 0.25
-first_rock_as_dirt_threshold = 0.08
-first_rock_as_dirt_falloff = 1.5
+first_rock_detail_strenght = 0.1
+first_rock_as_dirt_threshold = 0.01
+first_rock_as_dirt_falloff = 1.4
 id = "surface"
 description = "Creating surface"

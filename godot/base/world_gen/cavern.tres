@@ -10,19 +10,19 @@ fractal_lacunarity = 2.87
 fractal_gain = 0.288
 
 [sub_resource type="Curve" id="Curve_g2fw2"]
-_data = [Vector2(0.05, 0), 0.0, 0.0, 0, 0, Vector2(0.2, 1), 0.0, 0.0, 0, 0, Vector2(0.8, 1), 0.0, 0.0, 0, 0, Vector2(0.95, 0), 0.0, 0.0, 0, 0]
+_data = [Vector2(0, 0), 0.0, 20.0, 0, 1, Vector2(0.05, 1), 20.0, 0.0, 1, 1, Vector2(0.95, 1), 0.0, -20.0, 1, 1, Vector2(1, 0), -20.0, 0.0, 1, 0]
 point_count = 4
 
 [sub_resource type="Curve" id="Curve_q6gy3"]
-max_value = 8.0
-_data = [Vector2(0.0952381, 0), 0.0, 5.70566, 0, 0, Vector2(0.268398, 2.25455), 33.2182, 33.2182, 0, 0, Vector2(0.917749, 8), 1.52728, 0.0, 0, 0]
-point_count = 3
+_data = [Vector2(0.2, 0), 0.0, 4.01739, 0, 0, Vector2(1, 1), 0.0700001, 0.0, 0, 0]
+point_count = 2
 
 [resource]
 script = ExtResource("1_ospt8")
 horizontal_gradient = SubResource("Curve_g2fw2")
 vertical_gradient = SubResource("Curve_q6gy3")
 caverns = SubResource("FastNoiseLite_6qsr6")
-caverns_x_warp = 0.5
+caverns_x_warp = 0.4
+caverns_threshold = 0.32
 id = "cavern"
 description = "Creating caverns!"

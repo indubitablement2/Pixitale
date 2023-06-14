@@ -5370,6 +5370,12 @@
         "output": "platform/register_platform_apis.gen.linuxbsd.editor.x86_64.o"
     },
     {
+        "command": "g++ -o /home/username/Dev/Pixitale/cpp/custom/biome.linuxbsd.editor.x86_64.o -c -std=gnu++17 -std=c++20 -pipe -O2 -Wall -Wshadow -Wno-misleading-indentation -Wno-return-type -isystem thirdparty/glad -DTOOLS_ENABLED -DDEBUG_ENABLED -DNDEBUG -DNO_EDITOR_SPLASH -DSOWRAP_ENABLED -DTOUCH_ENABLED -DFONTCONFIG_ENABLED -DALSA_ENABLED -DALSAMIDI_ENABLED -DPULSEAUDIO_ENABLED -D_REENTRANT -DDBUS_ENABLED -DSPEECHD_ENABLED -DXKB_ENABLED -DJOYDEV_ENABLED -DUDEV_ENABLED -DLINUXBSD_ENABLED -DUNIX_ENABLED -D_FILE_OFFSET_BITS=64 -DX11_ENABLED -DVULKAN_ENABLED -DGLES3_ENABLED -DMINIZIP_ENABLED -DZSTD_STATIC_LINKING_ONLY -DUSE_VOLK -DVK_USE_PLATFORM_XLIB_KHR -DGLAD_ENABLED -DGLES_OVER_GL -Ithirdparty/libpng -Ithirdparty/volk -Ithirdparty/vulkan -Ithirdparty/vulkan/include -Ithirdparty/zstd -Ithirdparty/zlib -Ithirdparty/linuxbsd_headers -Iplatform/linuxbsd -I. -I/home/username/Dev/Pixitale/cpp/custom -I/home/username/Dev/Pixitale/cpp /home/username/Dev/Pixitale/cpp/custom/biome.cpp",
+        "directory": "/home/username/Dev/Pixitale/cpp/godot",
+        "file": "/home/username/Dev/Pixitale/cpp/custom/biome.cpp",
+        "output": "/home/username/Dev/Pixitale/cpp/custom/biome.linuxbsd.editor.x86_64.o"
+    },
+    {
         "command": "g++ -o /home/username/Dev/Pixitale/cpp/custom/cell_material.linuxbsd.editor.x86_64.o -c -std=gnu++17 -std=c++20 -pipe -O2 -Wall -Wshadow -Wno-misleading-indentation -Wno-return-type -isystem thirdparty/glad -DTOOLS_ENABLED -DDEBUG_ENABLED -DNDEBUG -DNO_EDITOR_SPLASH -DSOWRAP_ENABLED -DTOUCH_ENABLED -DFONTCONFIG_ENABLED -DALSA_ENABLED -DALSAMIDI_ENABLED -DPULSEAUDIO_ENABLED -D_REENTRANT -DDBUS_ENABLED -DSPEECHD_ENABLED -DXKB_ENABLED -DJOYDEV_ENABLED -DUDEV_ENABLED -DLINUXBSD_ENABLED -DUNIX_ENABLED -D_FILE_OFFSET_BITS=64 -DX11_ENABLED -DVULKAN_ENABLED -DGLES3_ENABLED -DMINIZIP_ENABLED -DZSTD_STATIC_LINKING_ONLY -DUSE_VOLK -DVK_USE_PLATFORM_XLIB_KHR -DGLAD_ENABLED -DGLES_OVER_GL -Ithirdparty/libpng -Ithirdparty/volk -Ithirdparty/vulkan -Ithirdparty/vulkan/include -Ithirdparty/zstd -Ithirdparty/zlib -Ithirdparty/linuxbsd_headers -Iplatform/linuxbsd -I. -I/home/username/Dev/Pixitale/cpp/custom -I/home/username/Dev/Pixitale/cpp /home/username/Dev/Pixitale/cpp/custom/cell_material.cpp",
         "directory": "/home/username/Dev/Pixitale/cpp/godot",
         "file": "/home/username/Dev/Pixitale/cpp/custom/cell_material.cpp",

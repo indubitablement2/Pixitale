@@ -20,6 +20,8 @@ func generate_world(wish_width: int, wish_height: int, base_seed: int) -> void:
 	Grid.set_seed(base_seed)
 	seed(base_seed)
 	
+	GameGlobals.compute_layers_starts()
+	
 	_thread.start(_generate)
 	
 	generation_started.emit()
