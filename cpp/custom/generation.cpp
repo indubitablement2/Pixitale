@@ -6,12 +6,17 @@ void Generation::_bind_methods() {
 	ClassDB::bind_static_method(
 			"Generation",
 			D_METHOD(
-					"surface_pass",
-					"rock",
-					"dirt",
-					"surface_top",
-					"surface_bot"),
-			&Generation::surface_pass);
+					"set_cell",
+					"position",
+					"cell_material_idx"),
+			&Generation::set_cell);
+	ClassDB::bind_static_method(
+			"Generation",
+			D_METHOD(
+					"set_cell_rect",
+					"rect",
+					"cell_material_idx"),
+			&Generation::set_cell_rect);
 
 	ClassDB::bind_static_method(
 			"Generation",
@@ -26,17 +31,20 @@ void Generation::_bind_methods() {
 			&Generation::cavern_pass);
 }
 
-void Generation::surface_pass(
-		u32 rock,
-		u32 dirt,
-		i32 surface_top,
-		i32 surface_bot
+void Generation::set_cell(Vector2i position, u32 cell_material_idx) {
+	if (position.x < 0 || position.x >= Grid::width || position.y < 0 || position.y >= Grid::height) {
+		return;
+	}
 
-) {
-	// Fill under surface layer with rock.
-	for (i32 y = surface_bot; y < Grid::height; y++) {
-		for (i32 x = 0; x < Grid::width; x++) {
-			Grid::cells[x + y * Grid::width] = rock;
+	*(Grid::cells + position.y * Grid::width + position.x) = cell_material_idx;
+}
+
+void Generation::set_cell_rect(Rect2i rect, u32 cell_material_idx) {
+	rect = rect.intersection(Rect2i(0, 0, Grid::width, Grid::height));
+
+	for (i32 y = rect.position.y; y < rect.get_end().y; y++) {
+		for (i32 x = rect.position.x; x < rect.get_end().x; x++) {
+			*(Grid::cells + y * Grid::width + x) = cell_material_idx;
 		}
 	}
 }

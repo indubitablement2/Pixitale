@@ -47,7 +47,6 @@ public:
 	static void set_cell_color(Vector2i position, u32 hue_palette_idx, u32 value_palette_idx);
 
 	static void take_border_cells();
-	static void set_cell_generation(Vector2i position, u32 cell_material_idx);
 	static void post_generation_pass();
 
 	// TODO: Rename to step as no other step exists.

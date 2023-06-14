@@ -439,10 +439,6 @@ void Grid::_bind_methods() {
 			&Grid::take_border_cells);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("set_cell_generation", "position", "cell_material_idx"),
-			&Grid::set_cell_generation);
-	ClassDB::bind_static_method(
-			"Grid",
 			D_METHOD("post_generation_pass"),
 			&Grid::post_generation_pass);
 
@@ -716,14 +712,6 @@ void Grid::take_border_cells() {
 			border_cells[y * 32 + x] = cells[y * width + x];
 		}
 	}
-}
-
-void Grid::set_cell_generation(Vector2i position, u32 cell_material_idx) {
-	if (position.x < 0 || position.x >= width || position.y < 0 || position.y >= height) {
-		return;
-	}
-
-	*(cells + position.y * width + position.x) = cell_material_idx;
 }
 
 void Grid::post_generation_pass() {

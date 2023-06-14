@@ -24,13 +24,6 @@ func generate() -> void:
 	var dirt := CellMaterials.get_cell_materials_idx("dirt")
 	var rock := CellMaterials.get_cell_materials_idx("rock")
 	
-	Generation.surface_pass(
-		rock,
-		dirt,
-		GameGlobals.layer_surface_start,
-		GameGlobals.layer_cavern_start
-	)
-	
 	hills.seed = Grid.get_seed() + 1
 	hills_detail.seed = Grid.get_seed() + 2
 	hills_large.seed = Grid.get_seed() + 3
@@ -38,6 +31,9 @@ func generate() -> void:
 	var size := Grid.get_size()
 	
 	var surface_bot := GameGlobals.layer_cavern_start
+	
+	# Fill cavern with rock.
+	Generation.set_cell_rect(Rect2i(0, surface_bot, size.x, size.y), rock)
 	
 	var ipos := Vector2i.ZERO
 	var fpos := Vector2.ZERO
@@ -52,7 +48,7 @@ func generate() -> void:
 		while ipos.y < surface_bot:
 			fpos.y = ipos.y
 			
-			Grid.set_cell_generation(ipos, dirt)
+			Generation.set_cell(ipos, dirt)
 			
 			ipos.y += 1
 		
