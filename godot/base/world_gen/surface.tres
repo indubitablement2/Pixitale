@@ -1,40 +1,33 @@
-[gd_resource type="Resource" load_steps=6 format=3 uid="uid://do3sn4vwbdk37"]
+[gd_resource type="Resource" load_steps=5 format=3 uid="uid://do3sn4vwbdk37"]
 
 [ext_resource type="Script" path="res://base/world_gen/surface.gd" id="1_udkep"]
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_j66pf"]
 frequency = 0.001
-fractal_type = 0
+fractal_octaves = 4
+fractal_lacunarity = 3.673
+fractal_gain = 0.326
+fractal_weighted_strength = 0.42
 domain_warp_type = 2
 domain_warp_frequency = 0.006
 domain_warp_fractal_octaves = 3
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_72rxt"]
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_b3wlh"]
+noise_type = 0
+frequency = 0.0064
+fractal_gain = 0.647
 
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_ck6sv"]
-
-[sub_resource type="FastNoiseLite" id="FastNoiseLite_4rkal"]
-noise_type = 5
-frequency = 0.001
-fractal_type = 0
+[sub_resource type="Curve" id="Curve_wd0cq"]
+min_value = -1.0
+_data = [Vector2(0, 0.563636), 0.0, -1.29231, 0, 0, Vector2(1, -1), -4.05517, 0.0, 0, 0]
+point_count = 2
 
 [resource]
 script = ExtResource("1_udkep")
 hills_height = 30.0
-hills_start_height = 600
+hills_start_height = 0.1
 hills = SubResource("FastNoiseLite_j66pf")
-hills_added_noise_max = 5.0
-hills_added_noise = SubResource("FastNoiseLite_72rxt")
-hills_gradient_max = 6.0
-hills_strenght = 0.2
-hills_detail = SubResource("FastNoiseLite_ck6sv")
-hills_detail_strenght = 0.025
-hills_large = SubResource("FastNoiseLite_4rkal")
-hills_large_strenght = 0.3
-first_rock_threshold = 2.0
-first_rock_frequency = 5.0
-first_rock_detail_strenght = 0.1
-first_rock_as_dirt_threshold = 0.01
-first_rock_as_dirt_falloff = 1.4
+rock_patches_threshold = SubResource("Curve_wd0cq")
+rock_patches = SubResource("FastNoiseLite_b3wlh")
 id = "surface"
 description = "Creating surface"

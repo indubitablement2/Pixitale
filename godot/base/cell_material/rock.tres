@@ -15,6 +15,7 @@ values = ExtResource("2_l22vb")
 movement_type = 0
 density = 10
 durability = 0
+biome_id = ""
 collision_type = 1
 friction = 1.0
 use_fire_preset = false
