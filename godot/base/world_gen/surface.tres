@@ -31,3 +31,4 @@ rock_patches_threshold = SubResource("Curve_wd0cq")
 rock_patches = SubResource("FastNoiseLite_b3wlh")
 id = "surface"
 description = "Creating surface"
+skip = false

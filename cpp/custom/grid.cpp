@@ -1,6 +1,7 @@
 #include "grid.h"
 
 #include "core/object/class_db.h"
+#include "core/typedefs.h"
 #include "core/variant/array.h"
 #include "preludes.h"
 
@@ -543,9 +544,14 @@ void Grid::delete_grid() {
 void Grid::new_empty(i32 wish_width, i32 wish_height) {
 	delete_grid();
 
-	// Make sure that the height is a multiple of 64/8.
+	chunks_width = CLAMP(wish_width / 32, 8, 2048);
+	// Make sure that width is a multiple of 64/8.
 	// This is to avoid mutably sharing cache lines between threads.
-	chunks_width = CLAMP(wish_width / 32 + 7, 8, 2048) & ~8;
+	// Chunks are only 8 bytes.
+	while (chunks_width % 8 != 0) {
+		chunks_width++;
+	}
+
 	chunks_height = CLAMP(wish_height / 32, 3, 2048);
 	chunks = new u64[chunks_width * chunks_height];
 	// Set all chunk to active.

@@ -4,6 +4,7 @@
 
 [resource]
 script = ExtResource("1_qtuy0")
-ocean_size = Vector2(0, 0)
+ocean_size = Vector2(0.2, 0.1)
 id = "ocean"
 description = "Making oceans!"
+skip = false
