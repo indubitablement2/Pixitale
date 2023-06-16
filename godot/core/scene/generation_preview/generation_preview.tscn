@@ -1,8 +1,7 @@
-[gd_scene load_steps=6 format=3 uid="uid://btnim7n8wbij2"]
+[gd_scene load_steps=5 format=3 uid="uid://btnim7n8wbij2"]
 
 [ext_resource type="Script" path="res://core/scene/generation_preview/generation_preview.gd" id="1_jtgf8"]
 [ext_resource type="Script" path="res://core/scene/generation_preview/Camera2D.gd" id="2_3s34c"]
-[ext_resource type="Texture2D" uid="uid://dwat6i5koi1gy" path="res://base/texture DELETE/bg.png" id="3_dmgut"]
 
 [sub_resource type="Gradient" id="Gradient_rc8nh"]
 colors = PackedColorArray(0.156863, 0.501961, 0.921569, 1, 0.84, 0.42, 0.777, 1)
@@ -20,18 +19,10 @@ position = Vector2(4000, 2000)
 zoom = Vector2(0.1, 0.1)
 script = ExtResource("2_3s34c")
 
-[node name="Bg" type="Sprite2D" parent="."]
-visible = false
-scale = Vector2(4, 10)
-texture = ExtResource("3_dmgut")
-centered = false
-region_enabled = true
-region_rect = Rect2(0, 0, 1920, 760)
-
 [node name="Gradient" type="Sprite2D" parent="."]
 show_behind_parent = true
-position = Vector2(20549, -1903)
+position = Vector2(4000, 0)
 rotation = 1.5708
-scale = Vector2(42.83, 19115.7)
+scale = Vector2(8.962, 4000)
 texture = SubResource("GradientTexture1D_7emca")
 centered = false
