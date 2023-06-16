@@ -61,6 +61,10 @@ func _generate() -> void:
 		if _is_canceled:
 			break
 		
+		if p.skip:
+			print(p.id, " skipped.")
+			continue
+		
 		call_deferred("_generation_pass_changed", p)
 		
 		p.generate()

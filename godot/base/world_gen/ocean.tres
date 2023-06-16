@@ -1,0 +1,9 @@
+[gd_resource type="Resource" load_steps=2 format=3 uid="uid://yq8osgyo5knk"]
+
+[ext_resource type="Script" path="res://base/world_gen/ocean.gd" id="1_qtuy0"]
+
+[resource]
+script = ExtResource("1_qtuy0")
+ocean_size = Vector2(0, 0)
+id = "ocean"
+description = "Making oceans!"
