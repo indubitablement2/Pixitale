@@ -1,4 +1,4 @@
-[gd_resource type="Resource" script_class="ModEntry" load_steps=9 format=3 uid="uid://be1jsyjbqh6rt"]
+[gd_resource type="Resource" script_class="ModEntry" load_steps=10 format=3 uid="uid://be1jsyjbqh6rt"]
 
 [ext_resource type="Resource" uid="uid://do3sn4vwbdk37" path="res://base/world_gen/surface.tres" id="1_8iyxf"]
 [ext_resource type="Script" path="res://core/data/mod_entry.gd" id="1_608ll"]
@@ -8,8 +8,9 @@
 [ext_resource type="Resource" uid="uid://b325cm1dm7w1y" path="res://base/biome/surface_spawn.tres" id="2_u7aes"]
 [ext_resource type="Resource" uid="uid://cp0b7emxbbc60" path="res://base/biome/space.tres" id="3_x4mtl"]
 [ext_resource type="Resource" uid="uid://yq8osgyo5knk" path="res://base/world_gen/ocean.tres" id="7_lvj22"]
+[ext_resource type="Resource" uid="uid://vvhe4xxnfknv" path="res://base/world_gen/fill_ocean.tres" id="8_272vp"]
 
 [resource]
 script = ExtResource("1_608ll")
-passes = Array[Resource("res://core/data/generation_pass.gd")]([ExtResource("1_8iyxf"), ExtResource("2_ngaf6"), ExtResource("7_lvj22")])
+passes = Array[Resource("res://core/data/generation_pass.gd")]([ExtResource("1_8iyxf"), ExtResource("2_ngaf6"), ExtResource("7_lvj22"), ExtResource("8_272vp")])
 biomes = Array[Resource("res://core/data/biome_data.gd")]([ExtResource("1_pfpdy"), ExtResource("2_sqpeh"), ExtResource("2_u7aes"), ExtResource("3_x4mtl")])

@@ -1,0 +1,11 @@
+[gd_resource type="Resource" load_steps=2 format=3 uid="uid://vvhe4xxnfknv"]
+
+[ext_resource type="Script" path="res://base/world_gen/fill_ocean.gd" id="1_imqqh"]
+
+[resource]
+script = ExtResource("1_imqqh")
+width = 0.15
+y_stop = 0.75
+id = "fill_ocean"
+description = "Filling ocean!"
+skip = false

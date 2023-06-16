@@ -26,4 +26,4 @@ caverns_x_warp = 0.4
 caverns_threshold = 0.31
 id = "cavern"
 description = "Creating caverns!"
-skip = true
+skip = false
