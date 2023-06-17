@@ -2,17 +2,9 @@ extends Node2D
 
 const IMG_SIZE = 1024
 
-# 2.1gb
-const LARGE_SIZE := Vector2i(32768, 16384)
-# 0.9gb
-const MEDIUM_SIZE := Vector2i(21504, 10240)
-# 0.5gb
-const SMALL_SIZE := Vector2i(16384, 8192)
-# 0.2gb
-const TINY_SIZE := Vector2i(10240, 5120)
-@export_enum("custom", "tiny", "small", "medium", "large") var preset_size := "custom"
+@export var preset_size := GameGlobals.WORLD_SIZE_PRESET.TINY
+@export var custom_size := GameGlobals.WORLD_SIZE_TINY
 
-@export var custom_size := TINY_SIZE
 @export var show_border := Vector2i(IMG_SIZE, IMG_SIZE)
 
 var _i := 0
@@ -26,12 +18,12 @@ func _ready() -> void:
 	WorldGeneration.generation_started.connect(_on_generation_started)
 	WorldGeneration.generation_finished.connect(_on_generation_finished, 1)
 	
-	var s = _get_gen_size()
+	var s := GameGlobals.get_world_size_from_preset(preset_size, custom_size)
 	WorldGeneration.call_deferred("generate_world", s.x, s.y, randi())
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("up"):
-		var s = _get_gen_size()
+		var s := GameGlobals.get_world_size_from_preset(preset_size, custom_size)
 		WorldGeneration.call_deferred("generate_world", s.x, s.y, randi())
 
 func _process(_delta: float) -> void:
@@ -85,19 +77,6 @@ func _on_generation_started() -> void:
 			pos.x += IMG_SIZE
 		
 		pos.y += IMG_SIZE
-
-func _get_gen_size() -> Vector2i:
-	match preset_size:
-		"tiny":
-			return TINY_SIZE
-		"small":
-			return SMALL_SIZE
-		"medium":
-			return MEDIUM_SIZE
-		"large":
-			return LARGE_SIZE
-		_:
-			return custom_size
 
 func _on_generation_finished(_canceled: bool) -> void:
 	_update_all = 0

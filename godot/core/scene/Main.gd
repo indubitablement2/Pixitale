@@ -2,11 +2,13 @@ extends Control
 
 var t := 0
 
+var wish_size := GameGlobals.WORLD_SIZE_TINY
+
 func _ready() -> void:
 	WorldGeneration.generation_finished.connect(_on_generation_finished, 1)
 	
 	randomize()
-	WorldGeneration.call_deferred("generate_world", 4096, 4096, randi())
+	WorldGeneration.call_deferred("generate_world", wish_size.x, wish_size.y, randi())
 
 func _on_generation_finished(_canceled: bool) -> void:
 	print("generation done")
