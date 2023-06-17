@@ -38,32 +38,35 @@
             - [x] Take color and add light if we can see bg
             - [x] Can disable (eg. when no sun/moon or too deep)
     - [ ] Backgroud cells
-        - [ ] data: 8 bg color, 3 wire, 1 actuator, 12 actuated tile, 8 actuated tile color
+        - [ ] data: 8 bg color, 3 wire, 1 actuator, 12 actuated tile, 8 actuated tile color/value
         - [ ] only alocate a chunk if there is any
-        - [ ] last color bit is transparency (20%)
+    - [ ] last color bit is transparency (20%)
 - [ ] World gen.
     - [x] Can configure infinite border cells material.
     - [x] Figure out gdscript interface.
     - [ ] Generation passes
         - [ ] Carvern
-        - [ ] Ocean
+            - [x] Large cave
+            - [ ] Snaking tunnel
+        - [x] Ocean
         - [ ] Desert
         - [ ] Pyramid
         - [ ] Ice
-        - [ ] Ice ocean
         - [ ] Bedrock
         - [ ] Hell
         - [ ] Tower
         - [ ] Sky islands
         - [ ] Surface plateau
         - [ ] Mountain
+        - [ ] Slime pit
+        - [ ] Mushroom cavern
     - [ ] Post generation
         - [x] Add set_cell_generation(x, y, mat) to gdscript which can set border cells and skip activation
         - [x] Take border cell from cells's border.
         - [x] Activate all
-        - [ ] Paint all
-        - [ ] Simulate for 3k-10k ticks for cells to settle 
-    - [ ] Add layer height to grid.
+        - [x] Paint all
+        - [x] Simulate for 3k-10k ticks for cells to settle 
+    - [x] Add layer height to some global state.
 - [ ] Border cells.
     - [x] Looping infinite border.
     - [ ] Reapply border cell when border is modified.
@@ -75,6 +78,28 @@
     - [ ] Refactor cell movement.
 - [ ] Character
     - [ ] Fix character going slightly down just before going up for some reason.
+    - [ ] Animation template
+    - [ ] Player
+        - [ ] Hands
+            - [ ] Show current item.
+            - [ ] Look where the player is aiming
+            - [ ] Item use animations.
+                - [ ] Melee attack
+                - [ ] Mining
+                - [ ] Consume item
+    - [ ] Enemies
+        - [ ] Spawn based on player biome.
+        - [ ] Ai templates
+    - [ ] Bosses
+- [ ] Items
+    - [ ] Player inventory
+        - [ ] Chest
+        - [ ] Equiped armor/accessories
+            - [ ] Change sprite
+    - [ ] Dropped item
+        - [ ] Picked-up if enough space & nearby
+        - [ ] Merge same item nearby
+        - [ ] Delete if > than a configurable amount
 - [ ] Biome
     - [x] Biome condition
         - [x] Min cell coverage needed.
@@ -86,10 +111,11 @@
         - [x] Continuously scan nearby cells. Keep a moving average
         - [x] Emit signal on biome change.
     - [ ] Add bg to biomes data
-- [ ] Background
-    - [ ] Not affected by light
-    - [x] Infinite loop
-    - [ ] Change based on current biome
-        - [ ] Seamless transition
-    - [ ] Add biome background node to biome data. 
-- [ ] Prefix all new godot object with Grid
+        - [ ] Background
+            - [ ] Use layer height to clamp biomes bg position
+            - [ ] Not affected by light
+            - [x] Infinite loop
+            - [ ] Change based on current biome
+                - [ ] Seamless transition
+            - [ ] Add biome background node to biome data. 
+        - [ ] Prefix all new godot object with Grid
