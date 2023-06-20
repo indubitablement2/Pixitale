@@ -1,4 +1,4 @@
-[gd_scene load_steps=3 format=3 uid="uid://ceu6osxto7kx3"]
+[gd_scene load_steps=3 format=3 uid="uid://behwnf56dui73"]
 
 [ext_resource type="Script" path="res://core/data/biome_background.gd" id="1_vixhf"]
 [ext_resource type="Texture2D" uid="uid://dtd2c027i6e6p" path="res://icon.svg" id="1_wgfix"]
