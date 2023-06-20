@@ -4,21 +4,29 @@ const BG_TRANSITION_SPEED := 1.0
 
 var current_biome : BiomeData = null
 var current_biome_bg : BiomeBackground = null
+@onready var current_biome_cavern : Sprite2D = $CanvasLayer/CurrentCavern
 
 var new_biome : BiomeData = null
 var new_biome_bg : BiomeBackground = null
+@onready var new_biome_cavern : Sprite2D = $CanvasLayer/NewCavern
 
 @onready var scanner : GridBiomeScanner = $GridBiomeScanner
 
 func _process(delta: float) -> void:
 	if new_biome:
-		if current_biome_bg.fade_out(delta * BG_TRANSITION_SPEED):
+		var a_Delta := delta * BG_TRANSITION_SPEED
+		current_biome_cavern.modulate.a -= a_Delta
+		if current_biome_bg.fade_out(a_Delta):
 			current_biome = new_biome
 			new_biome = null
 			
 			current_biome_bg = new_biome_bg
 			current_biome_bg.layer = -100
 			new_biome_bg = null
+			
+			current_biome_cavern.modulate.a = 1.0
+			current_biome_cavern.texture = new_biome_cavern.texture
+			new_biome_cavern.hide()
 			
 			print("Biome changed: ", current_biome.id)
 	else:
@@ -27,14 +35,19 @@ func _process(delta: float) -> void:
 			if current_biome:
 				new_biome = Mod.biomes_data[scanner.get_current_biome()]
 				new_biome_bg = _make_bg(new_biome)
+				new_biome_cavern.texture = new_biome.cavern_background
+				new_biome_cavern.show()
 			else:
 				current_biome = Mod.biomes_data[scanner.get_current_biome()]
 				current_biome_bg = _make_bg(current_biome)
 				current_biome_bg.layer = -100
+				current_biome_cavern.texture = current_biome.cavern_background
 
 func start() -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT
-	$CanvasLayer/Node2D.position.y = GameGlobals.layer_cavern_start
+	$CanvasLayer.offset.y = GameGlobals.layer_cavern_start
+#	current_biome_cavern.position.y = GameGlobals.layer_cavern_start
+#	new_biome_cavern.position.y = GameGlobals.layer_cavern_start
 
 func stop() -> void:
 	current_biome = null
@@ -62,4 +75,7 @@ func _make_bg(data: BiomeData) -> BiomeBackground:
 	
 	return bg
 
+func _set_transition_texture(transition: Sprite2D, texture: Texture2D) -> void:
+	transition.texture = texture
+	transition.region_rect.size.y = float(texture.get_height())
 

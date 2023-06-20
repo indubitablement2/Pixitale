@@ -1,10 +1,11 @@
 [gd_scene load_steps=3 format=3 uid="uid://ceu6osxto7kx3"]
 
-[ext_resource type="Script" path="res://base/biome/space_bg.gd" id="1_htvir"]
+[ext_resource type="Script" path="res://core/data/biome_background.gd" id="1_vixhf"]
 [ext_resource type="Texture2D" uid="uid://dtd2c027i6e6p" path="res://icon.svg" id="1_wgfix"]
 
 [node name="CanvasLayer" type="ParallaxBackground"]
-script = ExtResource("1_htvir")
+script = ExtResource("1_vixhf")
+fade = Array[NodePath]([NodePath("space_bg")])
 
 [node name="space_bg" type="Sprite2D" parent="."]
 position = Vector2(-256, -256)

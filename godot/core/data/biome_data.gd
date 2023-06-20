@@ -7,8 +7,7 @@ class_name BiomeData
 @export_category("Background")
 ## Root node should inherit from BiomeBackground.
 @export var background : PackedScene
-
-@export var panoramas : Array[PanoramaLayerData] = []
+@export var cavern_background : Texture2D
 
 @export_category("Condition")
 ## This biome requite that this many cells nearby are tagged as this biome.

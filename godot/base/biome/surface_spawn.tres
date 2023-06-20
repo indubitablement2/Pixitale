@@ -1,20 +1,13 @@
-[gd_resource type="Resource" script_class="BiomeData" load_steps=6 format=3 uid="uid://b325cm1dm7w1y"]
+[gd_resource type="Resource" script_class="BiomeData" load_steps=3 format=3 uid="uid://b325cm1dm7w1y"]
 
 [ext_resource type="Script" path="res://core/data/biome_data.gd" id="1_8fui1"]
 [ext_resource type="PackedScene" uid="uid://cc5ghbwyn23jy" path="res://base/biome/surface_spawn_bg.tscn" id="1_x6pjk"]
-[ext_resource type="Script" path="res://core/data/biome_background_data.gd" id="2_05amy"]
-[ext_resource type="Texture2D" uid="uid://d14y45vt3obhy" path="res://base/texture/bg/surface_2.png" id="3_i2bue"]
-
-[sub_resource type="Resource" id="Resource_8mak4"]
-script = ExtResource("2_05amy")
-texture = ExtResource("3_i2bue")
-movement_scale = Vector2(0, 0.01)
 
 [resource]
 script = ExtResource("1_8fui1")
 id = "surface_spawn"
 background = ExtResource("1_x6pjk")
-panoramas = Array[ExtResource("2_05amy")]([SubResource("Resource_8mak4")])
+panoramas = Array[null]([])
 min_cell_count = 0
 min_depth_preset = "surface_and_lower"
 min_depth = 0.0

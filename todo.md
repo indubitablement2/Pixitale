@@ -112,8 +112,8 @@
         - [x] Continuously scan nearby cells. Keep a moving average
         - [x] Emit signal on biome change.
     - [ ] Remove biome depth requirement
-    - [ ] Only cavern + surface layer  
-    - [ ] Add bg to biomes data
+    - [ ] Only cavern + surface layer
+    - [x] Add bg to biomes data
         - [x] Background
             - [x] Use layer height to clamp biomes bg position
             - [x] Not affected by light
@@ -121,6 +121,6 @@
             - [x] Change based on current biome
                 - [x] Seamless transition
             - [x] Add biome background node to biome data. 
-            - [ ] Add cavern fallback bg
-            - [ ] Add cavern start texture
-            - [ ] Add surface color gradient
+            - [x] Add cavern fallback bg
+            - [x] Add cavern start texture
+            - [x] Add surface color gradient

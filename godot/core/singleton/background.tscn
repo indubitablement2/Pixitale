@@ -1,8 +1,7 @@
-[gd_scene load_steps=4 format=3 uid="uid://bqr7qovuitxx4"]
+[gd_scene load_steps=3 format=3 uid="uid://bqr7qovuitxx4"]
 
 [ext_resource type="Script" path="res://core/singleton/background.gd" id="1_jdl2j"]
-[ext_resource type="Texture2D" uid="uid://dtd2c027i6e6p" path="res://icon.svg" id="2_1rgxq"]
-[ext_resource type="Texture2D" uid="uid://dxj7rqhpaogrj" path="res://base/texture/bg/bg_rock_1.png" id="2_b57va"]
+[ext_resource type="Texture2D" uid="uid://ck73ei3ddic5k" path="res://core/texture/util/pixel.png" id="2_v6v0b"]
 
 [node name="background" type="Node2D"]
 process_mode = 4
@@ -17,20 +16,25 @@ z_index = -100
 layer = -50
 follow_viewport_enabled = true
 
-[node name="Node2D" type="Node2D" parent="CanvasLayer"]
-
-[node name="Sprite2D" type="Sprite2D" parent="CanvasLayer/Node2D"]
+[node name="Transition" type="Sprite2D" parent="CanvasLayer"]
 texture_repeat = 2
 position = Vector2(-1e+06, 0)
-texture = ExtResource("2_b57va")
+texture = ExtResource("2_v6v0b")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 2e+06, 1)
+
+[node name="CurrentCavern" type="Sprite2D" parent="CanvasLayer"]
+texture_repeat = 2
+position = Vector2(-1e+06, 0)
 centered = false
 region_enabled = true
 region_rect = Rect2(0, 0, 2e+06, 1e+06)
 
-[node name="Sprite2D2" type="Sprite2D" parent="CanvasLayer/Node2D"]
+[node name="NewCavern" type="Sprite2D" parent="CanvasLayer"]
+visible = false
 texture_repeat = 2
 position = Vector2(-1e+06, 0)
-texture = ExtResource("2_1rgxq")
 centered = false
 region_enabled = true
-region_rect = Rect2(0, 0, 2e+06, 128)
+region_rect = Rect2(0, 0, 2e+06, 1e+06)
