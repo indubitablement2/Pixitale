@@ -33,7 +33,7 @@ func generate() -> void:
 		fpos.x = ipos.x
 		ipos.y = ocean_top
 		
-		var inner_end := int(float(sand_inner_curve.sample_baked(fpos.x / float(ocean_width))) * float(ocean_bot - ocean_top))
+		var inner_end := int(float(sand_inner_curve.sample(fpos.x / float(ocean_width))) * float(ocean_bot - ocean_top))
 		inner_end += ocean_top
 		
 		if ipos.x == 0:
@@ -66,7 +66,7 @@ func generate() -> void:
 		ipos.y = ocean_top - 100
 		fpos.x = ipos.x
 		
-		var inner_end := int(float(sand_outer_curve.sample_baked(fpos.x / float(beach_end_x))) * float(ocean_bot - ocean_top))
+		var inner_end := int(float(sand_outer_curve.sample(fpos.x / float(beach_end_x))) * float(ocean_bot - ocean_top))
 		inner_end += ocean_top
 		while ipos.y < inner_end:
 			fpos.y = ipos.y

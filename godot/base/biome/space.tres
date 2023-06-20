@@ -1,14 +1,14 @@
 [gd_resource type="Resource" script_class="BiomeData" load_steps=3 format=3 uid="uid://cp0b7emxbbc60"]
 
 [ext_resource type="Script" path="res://core/data/biome_data.gd" id="1_7ejt1"]
-[ext_resource type="Texture2D" uid="uid://ddgqsvcd2qn2o" path="res://base/texture/bg/bg_sky_1.png" id="1_b7xi5"]
+[ext_resource type="PackedScene" uid="uid://ceu6osxto7kx3" path="res://base/biome/space_bg.tscn" id="1_f143a"]
 
 [resource]
 script = ExtResource("1_7ejt1")
 id = "space"
-backgrounds = Array[Texture2D]([ExtResource("1_b7xi5")])
+background = ExtResource("1_f143a")
 min_cell_count = 0
 min_depth_preset = "anywhere"
-min_depth = -999999.0
+min_depth = 0.0
 min_distance_from_center = 0.0
 priority_more_than = ""

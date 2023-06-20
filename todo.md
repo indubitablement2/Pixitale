@@ -41,6 +41,7 @@
         - [ ] data: 8 bg color, 3 wire, 1 actuator, 12 actuated tile, 8 actuated tile color/value
         - [ ] only alocate a chunk if there is any
     - [ ] last color bit is transparency (20%)
+    - [ ] Draw cells & lights on layer 10. 
 - [ ] World gen.
     - [x] Can configure infinite border cells material.
     - [x] Figure out gdscript interface.
@@ -110,12 +111,16 @@
     - [x] New biome scan node
         - [x] Continuously scan nearby cells. Keep a moving average
         - [x] Emit signal on biome change.
+    - [ ] Remove biome depth requirement
+    - [ ] Only cavern + surface layer  
     - [ ] Add bg to biomes data
-        - [ ] Background
-            - [ ] Use layer height to clamp biomes bg position
-            - [ ] Not affected by light
+        - [x] Background
+            - [x] Use layer height to clamp biomes bg position
+            - [x] Not affected by light
             - [x] Infinite loop
-            - [ ] Change based on current biome
-                - [ ] Seamless transition
-            - [ ] Add biome background node to biome data. 
-        - [ ] Prefix all new godot object with Grid
+            - [x] Change based on current biome
+                - [x] Seamless transition
+            - [x] Add biome background node to biome data. 
+            - [ ] Add cavern fallback bg
+            - [ ] Add cavern start texture
+            - [ ] Add surface color gradient

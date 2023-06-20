@@ -38,6 +38,7 @@ blend_mode = 3
 viewport_path = NodePath("LightPass")
 
 [node name="GridRender" type="Node2D"]
+process_priority = 10
 script = ExtResource("1_bekdw")
 
 [node name="ColorPass" type="SubViewport" parent="."]

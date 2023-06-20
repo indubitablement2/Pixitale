@@ -2,8 +2,7 @@ extends Node2D
 
 const IMG_SIZE = 1024
 
-@export var preset_size := GameGlobals.WORLD_SIZE_PRESET.TINY
-@export var custom_size := GameGlobals.WORLD_SIZE_TINY
+@export var size := GameGlobals.WORLD_SIZE.TINY
 
 @export var show_border := Vector2i(IMG_SIZE, IMG_SIZE)
 
@@ -18,13 +17,11 @@ func _ready() -> void:
 	WorldGeneration.generation_started.connect(_on_generation_started)
 	WorldGeneration.generation_finished.connect(_on_generation_finished, 1)
 	
-	var s := GameGlobals.get_world_size_from_preset(preset_size, custom_size)
-	WorldGeneration.call_deferred("generate_world", s.x, s.y, randi())
+	WorldGeneration.call_deferred("generate_world", size, randi())
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action_pressed("up"):
-		var s := GameGlobals.get_world_size_from_preset(preset_size, custom_size)
-		WorldGeneration.call_deferred("generate_world", s.x, s.y, randi())
+		WorldGeneration.call_deferred("generate_world", size, randi())
 
 func _process(_delta: float) -> void:
 	if WorldGeneration.is_generating() && !_sps.is_empty():
@@ -41,6 +38,10 @@ func _draw() -> void:
 	draw_rect(Rect2(-show_border, Grid.get_size() + show_border * 2), c, false)
 	c.a = 0.5
 	draw_rect(Rect2(Vector2.ZERO, Grid.get_size()), c, false)
+	
+	draw_line(Vector2(0.0, GameGlobals.layer_surface_start), Vector2(Grid.get_size().x, GameGlobals.layer_surface_start), c)
+	draw_line(Vector2(0.0, GameGlobals.layer_cavern_start), Vector2(Grid.get_size().x, GameGlobals.layer_cavern_start), c)
+	draw_line(Vector2(0.0, GameGlobals.layer_hell_start), Vector2(Grid.get_size().x, GameGlobals.layer_hell_start), c)
 	
 	$Gradient.position = Vector2(Grid.get_size().x + show_border.x, -show_border.y)
 	$Gradient.scale = Vector2(float(Grid.get_size().y + show_border.y * 2) / 256.0, float(Grid.get_size().x + show_border.x * 2))

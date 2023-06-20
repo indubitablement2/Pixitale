@@ -1,7 +1,13 @@
 extends GridCharacterBody
 
-const ACCELERATION = Vector2(9.0, 0.0)
+const ACCELERATION = Vector2(8.0, 0.0)
 const GRAVITY = 12.0
+
+func _ready() -> void:
+	GameGlobals.player_alive = true
+
+func _exit_tree() -> void:
+	GameGlobals.player_alive = false
 
 func _physics_process(delta: float) -> void:
 	var dir := Vector2(
@@ -17,5 +23,9 @@ func _physics_process(delta: float) -> void:
 	velocity *= 0.96
 	move()
 	
+	GameGlobals.player_position = position
+	
 	var v := (velocity * 10.0).round() * 0.1
 	$velocity.set_text(str(v))
+	
+	$position.set_text(str(position.round()))

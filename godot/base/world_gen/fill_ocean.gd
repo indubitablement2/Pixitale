@@ -2,11 +2,13 @@ extends GenerationPass
 
 @export var width := 0.1
 @export var y_stop := 0.5
+@export var y_offset := 20
 
 func generate() -> void:
 	var water := CellMaterials.get_cell_materials_idx("water")
 	
 	var ocean_top : int = WorldGeneration.get_pass("ocean").ocean_top
+	ocean_top += y_offset
 	
 	var size := Grid.get_size()
 	

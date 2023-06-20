@@ -7,7 +7,7 @@ _data = [Vector2(0.0865801, 0.518182), 0.0, 0.0, 0, 0, Vector2(0.255411, 0.5), -
 point_count = 3
 
 [sub_resource type="Curve" id="Curve_8f2x6"]
-_data = [Vector2(0.108225, 1), 0.0, -0.171429, 0, 0, Vector2(0.952381, 0), -3.37826, 0.0, 0, 0]
+_data = [Vector2(0, 1), 0.0, -0.171429, 0, 0, Vector2(0.952381, 0), -3.37826, 0.0, 0, 0]
 point_count = 2
 
 [resource]
@@ -18,4 +18,4 @@ sand_outer_curve = SubResource("Curve_8f2x6")
 beach_width = 0.05
 id = "ocean"
 description = "Carving oceans!"
-skip = false
+skip = true

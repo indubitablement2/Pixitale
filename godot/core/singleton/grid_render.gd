@@ -20,6 +20,9 @@ var data_size := Vector2i.ZERO
 var render_origin := Vector2i.ZERO
 var render_size := Vector2i.ZERO
 
+var view_origin := Vector2.ZERO
+var view_size := Vector2.ZERO
+
 @onready var color_viewport : SubViewport = $ColorPass
 @onready var color_data_sprite : Sprite2D = $ColorPass/Data
 
@@ -36,8 +39,8 @@ func _ready() -> void:
 
 func _process(_delta: float) -> void:
 	var ctrans := get_canvas_transform()
-	var view_origin := -ctrans.get_origin() / ctrans.get_scale()
-	var view_size := get_viewport_rect().size / ctrans.get_scale()
+	view_origin = -ctrans.get_origin() / ctrans.get_scale()
+	view_size = get_viewport_rect().size / ctrans.get_scale()
 	
 	render_origin = Vector2i(view_origin.floor()) - render_padding
 	render_size = Vector2i(view_size.floor()) + render_padding * 2

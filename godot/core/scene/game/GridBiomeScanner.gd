@@ -1,12 +1,35 @@
 extends GridBiomeScanner
 
-@onready var last_biome_idx := 0
+const BG_TRANSITION_SPEED := 1.0
+var biome_bgs : Array[BiomeBackground] = []
 
-func _ready() -> void:
-	last_biome_idx = maxi(Mod.biomes_data.size() - 1, 0)
+var current_biome : BiomeData
 
-func _process(_delta: float) -> void:
-	if scan():
-		var new_biome := get_current_biome()
-		print("Biome changed: ", Mod.biomes_data[last_biome_idx].id, "->", Mod.biomes_data[new_biome].id)
-		last_biome_idx = new_biome
+var current_biome_bg : BiomeBackground = null
+var new_biome_bg : BiomeBackground = null
+var transition := false
+
+func _process(delta: float) -> void:
+	position = GameGlobals.player_position
+	
+	if transition:
+		if current_biome_bg == null:
+			transition = false
+			current_biome_bg = new_biome_bg
+			new_biome_bg = null
+		elif current_biome_bg.fade_out(delta * BG_TRANSITION_SPEED):
+			current_biome_bg = null
+	elif scan():
+		transition = true
+		current_biome = Mod.biomes_data[get_current_biome()]
+		
+		print("Biome changed: ", current_biome.id)
+		
+		if current_biome.background != null:
+			new_biome_bg = current_biome.background.instantiate()
+			new_biome_bg.layer = -101
+			add_child(new_biome_bg)
+		
+		if current_biome_bg:
+			current_biome_bg.layer = -100
+
