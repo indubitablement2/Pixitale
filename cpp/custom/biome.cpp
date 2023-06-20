@@ -28,8 +28,8 @@ bool GridBiomeScanner::scan() {
 
 	Vector2 pos = get_global_position();
 
-	const i32 half_x_size = 80;
-	const i32 half_y_size = 120;
+	const i32 half_x_size = 160;
+	const i32 half_y_size = 160;
 	i32 x_start = i32(pos.x) - half_x_size;
 	i32 x_end = x_start + half_x_size * 2;
 	i32 y_start = i32(pos.y) - half_y_size;
