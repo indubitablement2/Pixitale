@@ -13,7 +13,7 @@ colors = PackedColorArray(0, 0, 0, 1, 0.356863, 0.631373, 0.866667, 1)
 [sub_resource type="GradientTexture2D" id="GradientTexture2D_mwf3r"]
 gradient = SubResource("Gradient_233mh")
 width = 1
-height = 512
+height = 1024
 fill_to = Vector2(0, 1)
 
 [node name="ParallaxBackground" type="ParallaxBackground"]
@@ -25,7 +25,7 @@ fade = Array[NodePath]([NodePath("ParallaxLayer"), NodePath("ParallaxLayer2"), N
 motion_mirroring = Vector2(4096, 0)
 
 [node name="Sprite2D" type="Sprite2D" parent="ParallaxLayer"]
-scale = Vector2(4096, 4)
+scale = Vector2(4096, 2)
 texture = SubResource("GradientTexture2D_mwf3r")
 centered = false
 region_rect = Rect2(0, 0, 10000, 10000)

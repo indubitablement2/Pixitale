@@ -15,6 +15,5 @@ func generate() -> void:
 		vertical_gradient,
 		caverns,
 		caverns_x_warp,
-		GameGlobals.layer_surface_start,
 		caverns_threshold
 	)

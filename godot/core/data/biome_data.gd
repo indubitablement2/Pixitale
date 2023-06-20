@@ -10,10 +10,11 @@ class_name BiomeData
 @export var cavern_background : Texture2D
 
 @export_category("Condition")
-## This biome requite that this many cells nearby are tagged as this biome.
+## This biome requite that at least
+# this many cells nearby are tagged as this biome.
 @export var min_cell_count := 0
 
-@export_enum("anywhere", "surface_and_lower", "cavern_and_lower", "hell_and_lower", "custom") var min_depth_preset := "anywhere"
+@export_enum("anywhere", "cavern_and_lower", "custom") var min_depth_preset := "anywhere"
 ## 0 is the grid highest point, 0 is the lowest.
 ## 0 means this biome can appear from 0 (top of the grid) to +infinity 
 @export var min_depth := 0.0 : get = get_min_depth
@@ -31,12 +32,8 @@ func get_min_depth() -> float:
 	match min_depth_preset:
 		"anywhere":
 			return -999999.0
-		"surface_and_lower":
-			return GameGlobals.SURFACE_START
 		"cavern_and_lower":
 			return GameGlobals.CAVERN_START
-		"hell_and_lower":
-			return GameGlobals.HELL_START
 		_:
 			return min_depth
 

@@ -39,9 +39,7 @@ func _draw() -> void:
 	c.a = 0.5
 	draw_rect(Rect2(Vector2.ZERO, Grid.get_size()), c, false)
 	
-	draw_line(Vector2(0.0, GameGlobals.layer_surface_start), Vector2(Grid.get_size().x, GameGlobals.layer_surface_start), c)
-	draw_line(Vector2(0.0, GameGlobals.layer_cavern_start), Vector2(Grid.get_size().x, GameGlobals.layer_cavern_start), c)
-	draw_line(Vector2(0.0, GameGlobals.layer_hell_start), Vector2(Grid.get_size().x, GameGlobals.layer_hell_start), c)
+	draw_line(Vector2(0.0, GameGlobals.cavern_start_depth), Vector2(Grid.get_size().x, GameGlobals.cavern_start_depth), c)
 	
 	$Gradient.position = Vector2(Grid.get_size().x + show_border.x, -show_border.y)
 	$Gradient.scale = Vector2(float(Grid.get_size().y + show_border.y * 2) / 256.0, float(Grid.get_size().x + show_border.x * 2))

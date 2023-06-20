@@ -28,32 +28,26 @@ func get_wish_world_size() -> Vector2i:
 		_:
 			return WORLD_SIZE_TINY
 
-const SURFACE_START := 0.05
 const CAVERN_START := 0.3
-const HELL_START := 0.9
 
-var layer_surface_start := 0
-var layer_cavern_start := 0
-var layer_hell_start := 0
+var cavern_start_depth := 0
 
 func compute_layers_starts() -> void:
 	var hf := float(Grid.get_size().y)
-	layer_surface_start = int(hf * SURFACE_START)
-	layer_cavern_start = int(hf * CAVERN_START)
-	layer_hell_start = int(hf * HELL_START)
+	cavern_start_depth = int(hf * CAVERN_START)
 
 var background_offset := Vector2.ZERO
 
 func update_background_y_offset() -> void:
 	match world_size:
 		WORLD_SIZE.LARGE:
-			background_offset.y = layer_cavern_start * 2.14
+			background_offset.y = cavern_start_depth * 2.14
 		WORLD_SIZE.MEDIUM:
-			background_offset.y = layer_cavern_start * 1.83
+			background_offset.y = cavern_start_depth * 1.83
 		WORLD_SIZE.SMALL:
-			background_offset.y = layer_cavern_start * 1.62
+			background_offset.y = cavern_start_depth * 1.62
 		_:
-			background_offset.y = layer_cavern_start
+			background_offset.y = cavern_start_depth
 
 
 var player_position := Vector2.ZERO

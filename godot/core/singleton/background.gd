@@ -45,9 +45,7 @@ func _process(delta: float) -> void:
 
 func start() -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT
-	$CanvasLayer.offset.y = GameGlobals.layer_cavern_start
-#	current_biome_cavern.position.y = GameGlobals.layer_cavern_start
-#	new_biome_cavern.position.y = GameGlobals.layer_cavern_start
+	$CanvasLayer.offset.y = GameGlobals.cavern_start_depth
 
 func stop() -> void:
 	current_biome = null

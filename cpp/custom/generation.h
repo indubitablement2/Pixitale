@@ -22,7 +22,6 @@ public:
 			Ref<Curve> vertical_gradient,
 			Ref<FastNoiseLite> cavern,
 			f32 cavern_x_scale,
-			i32 surface_top,
 			f32 cavern_threshold);
 };
 

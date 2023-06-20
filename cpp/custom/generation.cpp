@@ -26,7 +26,6 @@ void Generation::_bind_methods() {
 					"vertical_gradient",
 					"cavern",
 					"cavern_x_scale",
-					"surface_top",
 					"cavern_threshold"),
 			&Generation::cavern_pass);
 }
@@ -54,16 +53,13 @@ void Generation::cavern_pass(
 		Ref<Curve> vertical_gradient,
 		Ref<FastNoiseLite> cavern,
 		f32 cavern_x_scale,
-		i32 surface_top,
 		f32 cavern_threshold) {
 	ERR_FAIL_COND_MSG(Grid::cells == nullptr, "Grid is not initialized");
-
-	surface_top = MAX(0, surface_top);
 
 	horizontal_gradient->bake();
 	vertical_gradient->bake();
 
-	for (i32 y = surface_top; y < Grid::height; y++) {
+	for (i32 y = 0; y < Grid::height; y++) {
 		f32 vg = vertical_gradient->sample_baked((f32)y / (f32)Grid::height);
 
 		for (i32 x = 0; x < Grid::width; x++) {
