@@ -19,6 +19,10 @@ void fragment() {
 	vec3 col = light * cell_color.rgb;
 	col *= 1.0 - cell_color.a * cell_color.a;
 	
+	// Cell glow.
+	vec3 glow = (cell_color.rgb - 0.8) * 5.0 * cell_color.a;
+	col += max(glow, vec3(0.0));
+	
 //	// Global raycast light (sun).
 //	vec3 sun = light;
 //	vec3 ray_col = light;

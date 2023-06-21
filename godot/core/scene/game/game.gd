@@ -4,7 +4,7 @@ extends Node2D
 @onready var m1 := CellMaterials.get_cell_materials_idx("rock")
 @onready var m2 := CellMaterials.get_cell_materials_idx("sand")
 @onready var m3 := CellMaterials.get_cell_materials_idx("water")
-@onready var m4 := CellMaterials.get_cell_materials_idx("blood")
+@onready var m4 := CellMaterials.get_cell_materials_idx("lava")
 
 var brush_size := Vector2i(55, 55)
 

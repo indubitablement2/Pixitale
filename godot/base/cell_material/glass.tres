@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_ys1hb")
-display_name = &"Glass"
+display_name = &"glass"
 id = "glass"
 tags = PackedStringArray()
 base_color = Color(1, 1, 1, 0.117647)

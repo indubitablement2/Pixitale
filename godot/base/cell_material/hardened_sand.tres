@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_40ymv")
-display_name = &"Hardened Sand"
+display_name = &"hardened sand"
 id = "hardened_sand"
 tags = PackedStringArray()
 base_color = Color(0.701961, 0.54902, 0.141176, 1)
