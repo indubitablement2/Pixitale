@@ -1,4 +1,5 @@
 shader_type canvas_item;
+render_mode blend_disabled;
 
 const uint MASK_MATERIAL_IDX = 4095u;
 
@@ -32,6 +33,8 @@ void fragment() {
 		ivec2(int(hue_idx), int(value_idx)),
 		0
 	);
+	
+//	col.a = max(col.a, 0.01);
 	
 	COLOR = col;
 }

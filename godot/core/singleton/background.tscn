@@ -16,14 +16,6 @@ z_index = -100
 layer = -50
 follow_viewport_enabled = true
 
-[node name="Transition" type="Sprite2D" parent="CanvasLayer"]
-texture_repeat = 2
-position = Vector2(-1e+06, 0)
-texture = ExtResource("2_v6v0b")
-centered = false
-region_enabled = true
-region_rect = Rect2(0, 0, 2e+06, 1)
-
 [node name="CurrentCavern" type="Sprite2D" parent="CanvasLayer"]
 texture_repeat = 2
 position = Vector2(-1e+06, 0)
@@ -38,3 +30,12 @@ position = Vector2(-1e+06, 0)
 centered = false
 region_enabled = true
 region_rect = Rect2(0, 0, 2e+06, 1e+06)
+
+[node name="Transition" type="Sprite2D" parent="CanvasLayer"]
+modulate = Color(1, 1, 1, 0.278431)
+texture_repeat = 2
+position = Vector2(-1e+06, 0)
+texture = ExtResource("2_v6v0b")
+centered = false
+region_enabled = true
+region_rect = Rect2(0, 0, 2e+06, 1)

@@ -33,8 +33,8 @@
             - [ ] Can disable (eg. when no sun/moon or too deep)
         - [ ] raycast light
             - [ ] only update if affected chunks changed or light moved.
-        - [ ] global light
-            - [ ] Can set strenght
+        - [x] global light
+            - [x] Can set strenght
             - [x] Take color and add light if we can see bg
             - [x] Can disable (eg. when no sun/moon or too deep)
     - [ ] Backgroud cells
@@ -61,7 +61,7 @@
         - [ ] Mountain
         - [ ] Slime pit
         - [ ] Mushroom cavern
-    - [ ] Post generation
+    - [x] Post generation
         - [x] Add set_cell_generation(x, y, mat) to gdscript which can set border cells and skip activation
         - [x] Take border cell from cells's border.
         - [x] Activate all
@@ -101,7 +101,7 @@
         - [ ] Picked-up if enough space & nearby
         - [ ] Merge same item nearby
         - [ ] Delete if > than a configurable amount
-- [ ] Biome
+- [x] Biome
     - [x] Biome condition
         - [x] Min cell coverage needed.
         - [x] Min distance from center.
@@ -111,8 +111,8 @@
     - [x] New biome scan node
         - [x] Continuously scan nearby cells. Keep a moving average
         - [x] Emit signal on biome change.
-    - [ ] Remove biome depth requirement
-    - [ ] Only cavern + surface layer
+    - [x] Remove biome depth requirement
+    - [x] Only cavern + surface layer
     - [x] Add bg to biomes data
         - [x] Background
             - [x] Use layer height to clamp biomes bg position
