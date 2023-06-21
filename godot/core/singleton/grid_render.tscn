@@ -20,7 +20,7 @@ environment = SubResource("Environment_bap7c")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sxpjy"]
 shader = ExtResource("3_use85")
-shader_parameter/light = Color(1, 1, 1, 1)
+shader_parameter/light = Color(0.5, 0.5, 0.5, 1)
 shader_parameter/global_origin = null
 shader_parameter/color_offset = null
 shader_parameter/no_light_start = null
