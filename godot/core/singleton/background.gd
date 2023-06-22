@@ -14,19 +14,28 @@ var new_biome_bg : BiomeBackground = null
 
 func _process(delta: float) -> void:
 	if new_biome:
-		var a_Delta := delta * BG_TRANSITION_SPEED
-		current_biome_cavern.modulate.a -= a_Delta
-		if current_biome_bg.fade_out(a_Delta):
+		var a_delta := delta * BG_TRANSITION_SPEED
+		
+		current_biome_cavern.modulate.a -= a_delta
+		new_biome_cavern.modulate.a += a_delta
+		
+		current_biome_bg.set_alpha(current_biome_cavern.modulate.a)
+#		new_biome_bg.set_alpha(new_biome_cavern.modulate.a)
+		
+		if current_biome_cavern.modulate.a <= 0.0:
 			current_biome = new_biome
 			new_biome = null
 			
+			current_biome_bg.queue_free()
 			current_biome_bg = new_biome_bg
-			current_biome_bg.layer = -100
 			new_biome_bg = null
+			current_biome_bg.set_alpha(1.0)
+			current_biome_bg.layer = -100
 			
 			current_biome_cavern.modulate.a = 1.0
 			current_biome_cavern.texture = new_biome_cavern.texture
 			new_biome_cavern.hide()
+#			new_biome_cavern.modulate.a = 0.0
 			
 			print("Biome changed: ", current_biome.id)
 	else:
@@ -34,8 +43,12 @@ func _process(delta: float) -> void:
 		if scanner.scan():
 			if current_biome:
 				new_biome = Mod.biomes_data[scanner.get_current_biome()]
+				
 				new_biome_bg = _make_bg(new_biome)
+#				new_biome_bg.set_alpha(0.0)
+				
 				new_biome_cavern.texture = new_biome.cavern_background
+				new_biome_cavern.modulate.a = 0.0
 				new_biome_cavern.show()
 			else:
 				current_biome = Mod.biomes_data[scanner.get_current_biome()]

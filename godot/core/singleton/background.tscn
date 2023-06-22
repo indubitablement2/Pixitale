@@ -32,6 +32,7 @@ region_enabled = true
 region_rect = Rect2(0, 0, 2e+06, 1e+06)
 
 [node name="Transition" type="Sprite2D" parent="CanvasLayer"]
+visible = false
 modulate = Color(1, 1, 1, 0.278431)
 texture_repeat = 2
 position = Vector2(-1e+06, 0)

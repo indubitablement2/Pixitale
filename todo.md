@@ -125,4 +125,4 @@
             - [x] Add cavern fallback bg
             - [x] Add cavern start texture
             - [x] Add surface color gradient
-            - [ ] new bg should fade-in as well (so that the bgs overlap does not add to >1.0).
+            - [x] new bg should fade-in as well (so that the bgs overlap does not add to >1.0).
