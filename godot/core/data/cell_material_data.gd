@@ -10,6 +10,10 @@ class_name CellMaterialData
 @export var base_color := Color.TRANSPARENT
 ## If this cell can have hue/value modifier.
 @export var can_color := false
+## Alpha not used.
+@export var glow := Color.BLACK
+## Alpha blocks light. Rgb tint light passing through.
+@export var light_block := Color.TRANSPARENT
 
 ## 0 == no noise.
 ## Generate noise from min to max (including max)

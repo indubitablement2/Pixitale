@@ -1,4 +1,4 @@
-[gd_scene load_steps=11 format=3 uid="uid://b833h7iwtj2dr"]
+[gd_scene load_steps=9 format=3 uid="uid://b833h7iwtj2dr"]
 
 [ext_resource type="Script" path="res://core/singleton/grid_render.gd" id="1_bekdw"]
 [ext_resource type="Material" uid="uid://btwoiop8xxp15" path="res://core/shader/cell.material" id="2_w20ut"]
@@ -21,16 +21,7 @@ environment = SubResource("Environment_bap7c")
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sxpjy"]
 shader = ExtResource("3_use85")
 shader_parameter/light = Color(0.5, 0.5, 0.5, 1)
-shader_parameter/global_origin = null
-shader_parameter/color_offset = null
-shader_parameter/no_light_start = null
-shader_parameter/no_light_end = null
-
-[sub_resource type="ViewportTexture" id="ViewportTexture_4w76d"]
-viewport_path = NodePath("ColorPass")
-
-[sub_resource type="ViewportTexture" id="ViewportTexture_erj3w"]
-viewport_path = NodePath("ColorPass")
+shader_parameter/global_light_local_end = null
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_f00lt"]
 blend_mode = 3
@@ -42,30 +33,31 @@ viewport_path = NodePath("LightPass")
 process_priority = 10
 script = ExtResource("1_bekdw")
 
-[node name="ColorPass" type="SubViewport" parent="."]
-editor_description = "Covert cell data to color."
-transparent_bg = true
-
-[node name="Data" type="Sprite2D" parent="ColorPass"]
-material = ExtResource("2_w20ut")
-centered = false
-
 [node name="LightPass" type="SubViewport" parent="."]
 editor_description = "Raycast global light, add background light, isolate light emitting cells. 
 
 This is the place to add light so that they are properly blurred."
 world_3d = SubResource("World3D_54s67")
 
-[node name="Color" type="Sprite2D" parent="LightPass"]
+[node name="GlobalLight" type="Sprite2D" parent="LightPass"]
 material = SubResource("ShaderMaterial_sxpjy")
-texture = SubResource("ViewportTexture_4w76d")
 centered = false
 
-[node name="Color" type="Sprite2D" parent="."]
-texture = SubResource("ViewportTexture_erj3w")
+[node name="CellBackgroud" type="Sprite2D" parent="."]
+visible = false
+z_index = -50
+z_as_relative = false
+centered = false
+
+[node name="Cell" type="Sprite2D" parent="."]
+z_index = 100
+z_as_relative = false
+material = ExtResource("2_w20ut")
 centered = false
 
 [node name="Light" type="Sprite2D" parent="."]
+z_index = 200
+z_as_relative = false
 material = SubResource("CanvasItemMaterial_f00lt")
 texture = SubResource("ViewportTexture_jq6io")
 centered = false

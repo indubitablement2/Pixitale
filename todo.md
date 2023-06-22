@@ -28,20 +28,21 @@
         - [x] Add padding to light viewport, so that light does not pop-in
         - [x] Take cell data that can be seen + padding
         - [x] convert cell data to color
-        - [ ] raycast global light
-            - [ ] Raycast toward global light origin
-            - [ ] Can disable (eg. when no sun/moon or too deep)
+        - [x] raycast global light
+            - [x] Raycast toward global light origin
+            - [x] Can disable (eg. when no sun/moon or too deep)
         - [ ] raycast light
             - [ ] only update if affected chunks changed or light moved.
         - [x] global light
             - [x] Can set strenght
             - [x] Take color and add light if we can see bg
             - [x] Can disable (eg. when no sun/moon or too deep)
+    - [x] Merge color pass with global light pass.
     - [ ] Backgroud cells
         - [ ] data: 8 bg color, 3 wire, 1 actuator, 12 actuated tile, 8 actuated tile color/value
         - [ ] only alocate a chunk if there is any
     - [ ] last color bit is transparency (20%)
-    - [ ] Draw cells & lights on layer 10. 
+    - [x] Draw cells & lights above layer 0. 
 - [ ] World gen.
     - [x] Can configure infinite border cells material.
     - [x] Figure out gdscript interface.
@@ -124,3 +125,4 @@
             - [x] Add cavern fallback bg
             - [x] Add cavern start texture
             - [x] Add surface color gradient
+            - [ ] new bg should fade-in as well (so that the bgs overlap does not add to >1.0).

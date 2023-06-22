@@ -51,7 +51,7 @@ func load_cell_materials() -> void:
 func _make_cell_materials_texture() -> void:
 	var img := Image.create(
 		cell_materials.size(),
-		1,
+		3,
 		false,
 		Image.FORMAT_RGBA8
 	)
@@ -59,6 +59,10 @@ func _make_cell_materials_texture() -> void:
 	var idx := 0
 	for m in cell_materials:
 		img.set_pixel(idx, 0, m.base_color)
+		img.set_pixel(idx, 1, m.glow)
+		var light_block := m.light_block
+		light_block.a = 1.0 - light_block.a
+		img.set_pixel(idx, 2, light_block)
 		idx += 1
 	
 #	img.save_png("user://cell_data.png")

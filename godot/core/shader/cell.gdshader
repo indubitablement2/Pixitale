@@ -1,40 +1,14 @@
 shader_type canvas_item;
-render_mode blend_disabled;
+//render_mode blend_disabled;
 
-const uint MASK_MATERIAL_IDX = 4095u;
-
-const uint MASK_COLOR = 15u;
-const uint SHIFT_HUE = 24u;
-const uint SHIFT_VALUE = 28u;
-
-global uniform sampler2D cell_materials_data;
-global uniform sampler2D cell_modulate_palette;
+#include "cell_data_unpack.gdshaderinc"
 
 void fragment() {
 	ivec2 local_coords = ivec2((UV * vec2(textureSize(TEXTURE, 0))));
-	uint data = floatBitsToUint(texelFetch(TEXTURE, local_coords, 0).x);
-//	uint data = floatBitsToUint(texture(TEXTURE, UV).x);
+	uint data = get_cell_data(TEXTURE, local_coords);
 	
-	// Unpack cell data
-	uint material_idx = data & MASK_MATERIAL_IDX;
-	uint hue_idx = (data >> SHIFT_HUE) & MASK_COLOR;
-	uint value_idx = (data >> SHIFT_VALUE);
-	
-	// Get base color
-	vec4 col = texelFetch(
-		cell_materials_data,
-		ivec2(int(material_idx), 0),
-		0
-	);
-	
-	// Apply modulate
-	col *= texelFetch(
-		cell_modulate_palette,
-		ivec2(int(hue_idx), int(value_idx)),
-		0
-	);
-	
-//	col.a = max(col.a, 0.01);
+	vec4 col = get_cell_base_color(data, ivec2(VERTEX));
+	col *= get_cell_modulate(data);
 	
 	COLOR = col;
 }

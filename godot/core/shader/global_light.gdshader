@@ -1,27 +1,37 @@
 shader_type canvas_item;
 render_mode blend_add;
 
+#include "cell_data_unpack.gdshaderinc"
+
 uniform vec3 light : source_color;
 
-uniform vec2 global_origin;
-uniform vec2 color_offset;
-uniform float no_light_start;
-uniform float no_light_end;
+//uniform ivec2 global_origin;
+
+uniform int global_light_local_end;
 
 void fragment() {
-	//	vec2 global_pos = VERTEX + global_origin;
+	ivec2 local_coords = ivec2(VERTEX);
+//	ivec2 global_coords = ivec2(VERTEX) + global_origin;
+	
+	uint data = get_cell_data(TEXTURE, local_coords);
+	
+//	COLOR = get_cell_base_color(data, ivec2(0));
 	
 	// Global light.
-	vec2 color_pos = VERTEX + color_offset;
-	ivec2 color_posi = ivec2(VERTEX + color_offset);
-	vec4 cell_color = texelFetch(TEXTURE, color_posi, 0);
+	vec3 col = light;
 	
-	vec3 col = light * cell_color.rgb;
-	col *= 1.0 - cell_color.a * cell_color.a;
+	vec4 light_block = get_cell_light_block(data);
+	col *= light_block.rgb;
+//	col *= 1.0 - light_block.a;
+	// It is already inverted.
+	col *= light_block.a;
+	
+	col *= float(local_coords.y < global_light_local_end);
 	
 	// Cell glow.
-	vec3 glow = (cell_color.rgb - 0.8) * 5.0 * cell_color.a;
-	col += max(glow, vec3(0.0));
+	col += get_cell_glow(data).rgb;
+	
+	COLOR = vec4(col, 1.0);
 	
 //	// Global raycast light (sun).
 //	vec3 sun = light;
@@ -40,6 +50,4 @@ void fragment() {
 //	ray_col /= 30.0;
 //	col *= 0.75;
 //	col += sun * ray_col * 0.25;
-	
-	COLOR = vec4(col, 1.0);
 }
