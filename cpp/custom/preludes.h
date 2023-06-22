@@ -2,8 +2,9 @@
 #define PRELUDES_HPP
 
 #include "core/error/error_macros.h"
+#include "editor/connections_dialog.h"
 #include "godot/core/typedefs.h"
-#include <assert.h>
+#include <cstdlib>
 #include <vector>
 
 using u8 = uint8_t;
@@ -41,5 +42,17 @@ inline T swap_remove(std::vector<T> &vec, const u32 i) {
 	vec[i] = vec[vec.size() - 1];
 	return v;
 }
+
+#define TEST_ASSERT
+#ifdef TEST_ASSERT
+inline void test_assert(bool condition, const char *message) {
+	if (!condition) {
+		ERR_FAIL_MSG(message);
+		abort();
+	}
+}
+#else
+inline void test(bool condition, const char *message) {}
+#endif
 
 #endif // PRELUDES_HPP

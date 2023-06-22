@@ -39,8 +39,8 @@ inline ChunkActiveRect active_rect(u64 chunk) {
 	u32 rows = get_rows(chunk);
 	u32 columns = get_columns(chunk);
 
-	assert(rows > 0);
-	assert(columns > 0);
+	test_assert(rows > 0, "Rows is 0");
+	test_assert(columns > 0, "Columns is 0");
 
 	rect.x_start = std::countr_zero(columns);
 	rect.x_end = 32 - std::countl_zero(columns);
@@ -57,18 +57,18 @@ inline void unsafe_activate_rect(
 		i32 y_offset,
 		u64 width,
 		u64 height) {
-	assert(x_offset >= 0);
-	assert(y_offset >= 0);
-	assert(x_offset + width <= 32);
-	assert(y_offset + height <= 32);
-	assert(width > 0);
-	assert(height > 0);
+	test_assert(x_offset >= 0, "x_offset is negative");
+	test_assert(y_offset >= 0, "y_offset is negative");
+	test_assert(x_offset + width <= 32, "x_offset + width is too large");
+	test_assert(y_offset + height <= 32, "y_offset + height is too large");
+	test_assert(width > 0, "width is 0");
+	test_assert(height > 0, "height is 0");
 
 	chunk |= ((1uLL << height) - 1uLL) << y_offset; // Set rows
 	chunk |= ((1uLL << width) - 1uLL) << (x_offset + 32); // Set columns
 
-	assert(get_rows(chunk) != 0);
-	assert(get_columns(chunk) != 0);
+	test_assert(get_rows(chunk) != 0, "a row should've been activated");
+	test_assert(get_columns(chunk) != 0, "a column should've been activated");
 }
 
 inline void activate_point(i32 x, i32 y) {

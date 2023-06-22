@@ -20,8 +20,6 @@ environment = SubResource("Environment_bap7c")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sxpjy"]
 shader = ExtResource("3_use85")
-shader_parameter/light = Color(0.5, 0.5, 0.5, 1)
-shader_parameter/global_light_local_end = null
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_f00lt"]
 blend_mode = 3

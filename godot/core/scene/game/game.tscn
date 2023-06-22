@@ -7,4 +7,4 @@
 script = ExtResource("1_tksre")
 
 [node name="GridBody" parent="." instance=ExtResource("5_r2jck")]
-position = Vector2(145, 0)
+position = Vector2(400, 900)

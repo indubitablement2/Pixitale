@@ -3,11 +3,11 @@ render_mode blend_add;
 
 #include "cell_data_unpack.gdshaderinc"
 
-uniform vec3 light : source_color;
+uniform vec3 light : source_color = vec3(0.5, 0.5, 0.5);
 
 //uniform ivec2 global_origin;
 
-uniform int global_light_local_end;
+uniform int global_light_local_end = 0;
 
 void fragment() {
 	ivec2 local_coords = ivec2(VERTEX);

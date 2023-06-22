@@ -27,6 +27,8 @@ public:
 	inline static i32 chunks_width = 0;
 	inline static i32 chunks_height = 0;
 
+	inline static u64 *active_rows = nullptr;
+
 	inline static u64 tick = 0;
 
 	inline static u64 seed = 0;
