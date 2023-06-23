@@ -3,9 +3,20 @@
 #include "cell.hpp"
 #include "core/typedefs.h"
 #include "grid.h"
+#include "preludes.h"
 #include "rng.hpp"
 
 std::vector<CellMaterial> CellMaterial::materials = {};
+
+u32 reations_key(const u32 material_idx_a, const u32 material_idx_b, bool &swap) {
+	if (material_idx_a <= material_idx_b) {
+		swap = false;
+		return material_idx_a | (material_idx_b << 16);
+	} else {
+		swap = true;
+		return material_idx_b | (material_idx_a << 16);
+	}
+}
 
 void CellMaterial::add(
 		const Cell::Movement cell_movement,
@@ -58,44 +69,25 @@ void CellMaterial::add(
 		cell_material.values = nullptr;
 	}
 
-	cell_material.reaction_ranges = nullptr;
-	cell_material.reaction_ranges_len = 0;
-	for (u32 i = 0; i < higher_reactions.size(); i++) {
-		if (!higher_reactions[i].empty()) {
-			cell_material.reaction_ranges_len = i + 1;
-		}
-	}
-	if (cell_material.reaction_ranges_len > 0) {
-		cell_material.reaction_ranges = new u32[cell_material.reaction_ranges_len];
-
-		for (u32 i = 0; i < cell_material.reaction_ranges_len; i++) {
-			if (higher_reactions[i].empty()) {
-				cell_material.reaction_ranges[i] = 0;
-				continue;
-			}
-
-			// Pack start and len into one u32.
-			cell_material.reaction_ranges[i] =
-					cell_material.reactions.size() | (higher_reactions[i].size() << 20);
-
-			for (u32 j = 0; j < higher_reactions[i].size(); j++) {
-				cell_material.reactions.push_back(higher_reactions[i][j]);
-			}
-		}
-	}
-
+	u32 material_idx = materials.size();
 	materials.push_back(cell_material);
+
+	for (u32 i = 0; i < higher_reactions.size(); i++) {
+		u32 other_material_idx = material_idx + i;
+
+		bool swap;
+		u32 reactions_key = reations_key(
+				material_idx,
+				other_material_idx,
+				swap);
+		TEST_ASSERT(!swap, "should not swap");
+
+		reactions_map[reactions_key] = higher_reactions[i];
+	}
 }
 
 void CellMaterial::free_memory() {
-	for (u32 i = 0; i < materials.size(); i++) {
-		if (materials[i].reaction_ranges != nullptr) {
-			delete[] materials[i].reaction_ranges;
-		}
-		if (materials[i].values != nullptr) {
-			delete[] materials[i].values;
-		}
-	}
+	reactions_map = {};
 	materials = {};
 }
 
@@ -112,33 +104,20 @@ void CellMaterial::try_react_between(
 	u32 other_material_idx = Cell::material_idx(*other_ptr);
 
 	bool swap;
-	u32 reaction_range_idx;
-	CellMaterial *mat;
-	if (material_idx > other_material_idx) {
-		swap = true;
-		reaction_range_idx = material_idx - other_material_idx;
-		mat = materials.data() + other_material_idx;
-	} else {
-		swap = false;
-		reaction_range_idx = other_material_idx - material_idx;
-		mat = materials.data() + material_idx;
-	}
+	u32 reactions_key = reations_key(
+			material_idx,
+			other_material_idx,
+			swap);
 
-	if (mat->reaction_ranges_len >= reaction_range_idx) {
-		return;
-	}
-	u32 packed_reaction_range = mat->reaction_ranges[reaction_range_idx];
+	std::vector<CellReaction> &reactions = reactions_map[reactions_key];
 
-	if (packed_reaction_range == 0) {
+	if (reactions.empty()) {
 		return;
 	}
 
 	active = true;
 
-	u32 reaction_range_start = packed_reaction_range & 0xFFFFF;
-	u32 reaction_range_end = reaction_range_start + (packed_reaction_range >> 20);
-
-	for (u32 i = reaction_range_start; i < reaction_range_end; i++) {
+	for (u32 i = 0; i < reactions.size(); i++) {
 		CellReaction &reaction = reactions[i];
 
 		if (Rng::gen_probability(rng, reaction.probability)) {
@@ -196,43 +175,4 @@ void CellMaterial::print(u32 material_idx) {
 	print_line("values_height ", values_height);
 
 	print_line("max_value_noise ", max_value_noise);
-
-	print_line("reaction_ranges_len: ", reaction_ranges_len);
-
-	u32 used_reaction_range = 0;
-
-	for (u32 other_material_idx_offset = 0; other_material_idx_offset < reaction_ranges_len; other_material_idx_offset++) {
-		u32 reaction_range = *(reaction_ranges + other_material_idx_offset);
-
-		if (reaction_range == 0) {
-			continue;
-		}
-
-		used_reaction_range += 1;
-
-		u32 other_material_idx = material_idx + other_material_idx_offset;
-
-		u32 reaction_start = reaction_range & 0xFFFFF;
-		u32 reaction_len = reaction_range >> 20;
-		u32 reaction_end = reaction_start + reaction_len;
-
-		print_line("       reaction with ", other_material_idx);
-		print_line("       num reactions ", reaction_len);
-
-		for (u32 reaction_idx = reaction_start; reaction_idx < reaction_end; reaction_idx++) {
-			CellReaction *reaction = reactions.data() + reaction_idx;
-			print_line("          probability ", reaction->probability);
-			print_line("          in1 ", material_idx, " -> out1 ", reaction->mat_idx_out1);
-			print_line("          in2 ", other_material_idx, " -> out2 ", reaction->mat_idx_out2);
-		}
-	}
-
-	print_line(
-			"used_reaction_range: ",
-			used_reaction_range,
-			" / ",
-			reaction_ranges_len,
-			" (",
-			reaction_ranges_len - used_reaction_range,
-			" is wasted)");
 }

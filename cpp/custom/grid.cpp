@@ -1,5 +1,6 @@
 #include "grid.h"
 
+#include "core/error/error_macros.h"
 #include "core/object/class_db.h"
 #include "core/typedefs.h"
 #include "core/variant/array.h"
@@ -10,6 +11,7 @@
 #include "cell_material.h"
 #include "chunk.hpp"
 #include "rng.hpp"
+#include <cstring>
 
 namespace Step {
 
@@ -31,10 +33,10 @@ void step_cell(
 		i32 x,
 		i32 y,
 		u64 &rng) {
-	test_assert(x < Grid::width - 32, "x too high");
-	test_assert(x > 31, "x too low");
-	test_assert(y < Grid::height - 32, "y too high");
-	test_assert(y > 31, "y too low");
+	TEST_ASSERT(x < Grid::width - 32, "x too high");
+	TEST_ASSERT(x > 31, "x too low");
+	TEST_ASSERT(y < Grid::height - 32, "y too high");
+	TEST_ASSERT(y > 31, "y too low");
 
 	u32 *cell_ptr = Grid::cells + x + y * Grid::width;
 	u32 cell = *cell_ptr;
@@ -356,6 +358,11 @@ void step_chunk(
 
 		i32 local_x = x_start;
 		while (local_x != x_end) {
+			TEST_ASSERT(local_x >= 0, "x < 0");
+			TEST_ASSERT(local_x < 32, "x >= 32");
+			TEST_ASSERT(local_y >= 0, "y < 0");
+			TEST_ASSERT(local_y < 32, "y >= 32");
+
 			step_cell(x + local_x, y + local_y, rng);
 
 			local_x += x_step;
@@ -373,7 +380,7 @@ void step_row(i32 row_idx) {
 	u64 rng = ((u64)row_idx + (u64)Grid::tick) * 6364136223846792969uLL;
 
 	u64 *chunk_ptr = Grid::chunks + row_idx * Grid::chunks_width;
-	u64 *chunk_ptr_end = chunk_ptr + Grid::chunks_width - 1;
+	u64 *chunk_ptr_end = chunk_ptr + Grid::chunks_width - 2;
 	i32 x = 0;
 	i32 y = row_idx * 32;
 
@@ -502,7 +509,7 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("is_chunk_active", "position"),
+			D_METHOD("is_chunk_active", "chunk_position"),
 			&Grid::is_chunk_active);
 	ClassDB::bind_static_method(
 			"Grid",
@@ -644,6 +651,16 @@ u32 Grid::get_cell_checked(i32 x, i32 y) {
 }
 
 void Grid::activate_neighbors(i32 x, i32 y, u32 *cell_ptr) {
+	TEST_ASSERT(x >= 32, "x < 32");
+	TEST_ASSERT(y >= 32, "y < 32");
+	TEST_ASSERT(x < width - 32, "x >= width - 32");
+	TEST_ASSERT(y < height - 32, "y >= height - 32");
+
+	// Activate rows.
+	active_rows[(y - 1) >> 5] |= 1uLL;
+	active_rows[(y + 1) >> 5] |= 1uLL;
+
+	// Activate chunks.
 	Chunk::activate_point(x - 1, y - 1);
 	Chunk::activate_point(x, y - 1);
 	Chunk::activate_point(x + 1, y - 1);
@@ -656,12 +673,13 @@ void Grid::activate_neighbors(i32 x, i32 y, u32 *cell_ptr) {
 	Chunk::activate_point(x, y + 1);
 	Chunk::activate_point(x + 1, y + 1);
 
+	// Activate cells.
 	cell_ptr[-width - 1] |= Cell::Masks::MASK_ACTIVE;
 	cell_ptr[-width] |= Cell::Masks::MASK_ACTIVE;
 	cell_ptr[-width + 1] |= Cell::Masks::MASK_ACTIVE;
 
 	cell_ptr[-1] |= Cell::Masks::MASK_ACTIVE;
-	// cell_ptr[0] |= Cell::Masks::MASK_ACTIVE;
+	cell_ptr[0] |= Cell::Masks::MASK_ACTIVE;
 	cell_ptr[1] |= Cell::Masks::MASK_ACTIVE;
 
 	cell_ptr[width - 1] |= Cell::Masks::MASK_ACTIVE;
@@ -680,8 +698,8 @@ void Grid::set_cell_rect(Rect2i rect, u32 cell_material_idx) {
 		for (i32 x = rect.position.x; x < rect.get_end().x; x++) {
 			auto cell_ptr = cells + y * width + x;
 
-			test_assert(cell_ptr >= cells, "ptr out of bounds (< cells)");
-			test_assert(cell_ptr < cells + width * height, "ptr out of bounds (>= cells + width * height)");
+			TEST_ASSERT(cell_ptr >= cells, "ptr out of bounds (< cells)");
+			TEST_ASSERT(cell_ptr < cells + width * height, "ptr out of bounds (>= cells + width * height)");
 
 			Cell::set_material_idx(*cell_ptr, cell_material_idx);
 		}
@@ -691,13 +709,19 @@ void Grid::set_cell_rect(Rect2i rect, u32 cell_material_idx) {
 		for (i32 x = rect.position.x - 1; x < rect.get_end().x + 1; x++) {
 			auto cell_ptr = cells + y * width + x;
 
-			test_assert(cell_ptr >= cells, "ptr out of bounds (< cells)");
-			test_assert(cell_ptr < cells + width * height, "ptr out of bounds (>= cells + width * height)");
+			TEST_ASSERT(cell_ptr >= cells, "ptr out of bounds (< cells)");
+			TEST_ASSERT(cell_ptr < cells + width * height, "ptr out of bounds (>= cells + width * height)");
 
 			Cell::set_active(*cell_ptr, true);
 			Chunk::activate_point(x, y);
 		}
 	}
+
+	// Activate rows.
+	for (i32 y = rect.position.y - 1; y < rect.get_end().y; y += 32) {
+		active_rows[y >> 5] |= 1uLL;
+	}
+	active_rows[(rect.get_end().y + 1) >> 5] |= 1uLL;
 }
 
 void Grid::set_cell(Vector2i position, u32 cell_material_idx) {
@@ -753,6 +777,9 @@ void Grid::post_generation_pass() {
 	}
 	for (i32 i = 0; i < chunks_width * chunks_height; i++) {
 		chunks[i] = MAX_U64;
+	}
+	for (i32 i = 0; i < chunks_height; i++) {
+		active_rows[i] = 1;
 	}
 
 	u64 rng = seed;
@@ -854,12 +881,13 @@ void Grid::set_biomes(Array biomes) {
 	GridBiomeScanner::set_biomes(new_biomes);
 }
 
-bool Grid::is_chunk_active(Vector2i position) {
-	if (position.x < 0 || position.y < 0 || position.x >= chunks_width || position.y >= chunks_height) {
+bool Grid::is_chunk_active(Vector2i chunk_position) {
+	if (chunk_position.x < 0 || chunk_position.y < 0 ||
+			chunk_position.x >= chunks_width || chunk_position.y >= chunks_height) {
 		return false;
 	}
 
-	return *(chunks + position.x * chunks_height + position.y) != 0;
+	return *(chunks + chunk_position.y * chunks_width + chunk_position.x) != 0;
 }
 
 void Grid::set_seed(i64 new_seed) {
@@ -898,7 +926,7 @@ void test_activate_rect() {
 	*chunk = 0;
 
 	Chunk::unsafe_activate_rect(*chunk, 0, 0, 32, 32);
-	test_assert(*chunk == ~0uLL, "activate full rect: FAIL");
+	TEST_ASSERT(*chunk == ~0uLL, "activate full rect: FAIL");
 	print_line("activate full rect: OK");
 
 	u64 rng = 12345789;
@@ -912,10 +940,10 @@ void test_activate_rect() {
 
 		Chunk::unsafe_activate_rect(*chunk, x_offset, y_offset, width, height);
 
-		test_assert(Chunk::active_rect(*chunk).x_start == x_offset, "x_start");
-		test_assert(Chunk::active_rect(*chunk).y_start == y_offset, "y_start");
-		test_assert(Chunk::active_rect(*chunk).x_end == x_offset + width, "x_end");
-		test_assert(Chunk::active_rect(*chunk).y_end == y_offset + height, "y_end");
+		TEST_ASSERT(Chunk::active_rect(*chunk).x_start == (i32)x_offset, "x_start");
+		TEST_ASSERT(Chunk::active_rect(*chunk).y_start == (i32)y_offset, "y_start");
+		TEST_ASSERT(Chunk::active_rect(*chunk).x_end == (i32)(x_offset + width), "x_end");
+		TEST_ASSERT(Chunk::active_rect(*chunk).y_end == (i32)(y_offset + height), "y_end");
 	}
 	print_line("activate random rects: OK");
 
@@ -935,8 +963,8 @@ void test_rng() {
 	}
 	f64 true_bias = (f64)num_true / (f64)num_tests;
 	print_line("rng true bias ", true_bias);
-	test_assert(true_bias > 0.45 && true_bias < 0.55, "rng true bias too high");
-	test_assert(true_bias != 0.5, "rng true bias is 0.5");
+	TEST_ASSERT(true_bias > 0.45 && true_bias < 0.55, "rng true bias too high");
+	TEST_ASSERT(true_bias != 0.5, "rng true bias is 0.5");
 
 	print_line("rng non-bias: OK");
 }
@@ -951,5 +979,4 @@ void Grid::run_tests() {
 	Test::test_rng();
 
 	print_line("---------- All tests passed!");
-	test_assert(false, "assert work!");
 }

@@ -9,5 +9,5 @@ in2 = ""
 probability = 0.1
 do_not_change_material1 = false
 out1 = ""
-do_not_change_material2 = false
+do_not_change_material2 = true
 out2 = ""

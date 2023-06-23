@@ -5,6 +5,5 @@ extends GenerationPass
 func generate() -> void:
 	var i := 0
 	while i < num_simulation_step:
-		# TODO
-		
+		Grid.step_manual()
 		i += 1

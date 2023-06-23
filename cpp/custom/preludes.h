@@ -5,6 +5,7 @@
 #include "editor/connections_dialog.h"
 #include "godot/core/typedefs.h"
 #include <cstdlib>
+#include <unordered_map>
 #include <vector>
 
 using u8 = uint8_t;
@@ -43,16 +44,11 @@ inline T swap_remove(std::vector<T> &vec, const u32 i) {
 	return v;
 }
 
-#define TEST_ASSERT
-#ifdef TEST_ASSERT
-inline void test_assert(bool condition, const char *message) {
-	if (!condition) {
-		ERR_FAIL_MSG(message);
-		abort();
-	}
-}
+#define TEST_ASSERT_ENABLED
+#ifdef TEST_ASSERT_ENABLED
+#define TEST_ASSERT(m_cond, m_msg) CRASH_COND_MSG(!(m_cond), m_msg)
 #else
-inline void test(bool condition, const char *message) {}
+#define TEST_ASSERT(m_cond, m_msg) ((void)0)
 #endif
 
 #endif // PRELUDES_HPP

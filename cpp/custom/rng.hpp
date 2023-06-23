@@ -15,8 +15,8 @@ inline u32 gen_u32(u64 &rng) {
 }
 
 inline u32 gen_range_u32(u64 &rng, u32 min, u32 max) {
-	test_assert(min < max, "min must be less than max");
-	test_assert(max > 0, "max must be greater than 0");
+	TEST_ASSERT(min < max, "min must be less than max");
+	TEST_ASSERT(max > 0, "max must be greater than 0");
 
 	return (gen_u32(rng) % (max - min)) + min;
 }

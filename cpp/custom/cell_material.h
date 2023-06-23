@@ -14,16 +14,12 @@ struct CellReaction {
 };
 
 class CellMaterial {
-	inline static std::vector<CellReaction> reactions = {};
+	// Key is lower material_idx | higher material_idx << 16.
+	inline static std::unordered_map<u32, std::vector<CellReaction>> reactions_map = {};
 
 	u8 *values;
 	u32 values_height;
 	u32 values_width;
-
-	// Has all reactions with material that have idx >= this material's idx.
-	// packed as: start idx(0..20) + len (20..32)
-	u32 *reaction_ranges;
-	u32 reaction_ranges_len;
 
 public:
 	static std::vector<CellMaterial> materials;
