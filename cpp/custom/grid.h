@@ -52,7 +52,7 @@ public:
 	static void post_generation_pass();
 
 	// TODO: Rename to step as no other step exists.
-	static void step_manual();
+	static void step();
 
 	static void add_material(
 			i32 movement,

@@ -15,7 +15,7 @@ func _on_generation_finished(_canceled: bool) -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT
 
 func _process(_delta: float) -> void:
-	Grid.step_manual()
+	Grid.step()
 	
 	var mouse_pos := get_global_mouse_position()
 	var grid_pos := Vector2i(mouse_pos)

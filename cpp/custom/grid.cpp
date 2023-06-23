@@ -371,10 +371,6 @@ void step_chunk(
 }
 
 void step_row(i32 row_idx) {
-	if (Grid::active_rows[row_idx] == 0) {
-		return;
-	}
-
 	bool is_row_active = false;
 
 	u64 rng = ((u64)row_idx + (u64)Grid::tick) * 6364136223846792969uLL;
@@ -465,8 +461,8 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("step_manual"),
-			&Grid::step_manual);
+			D_METHOD("step"),
+			&Grid::step);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -797,12 +793,16 @@ void Grid::post_generation_pass() {
 	take_border_cells();
 }
 
-void Grid::step_manual() {
+void Grid::step() {
 	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");
 
 	Step::pre_step();
 
 	for (i32 row_idx = 1; row_idx < chunks_height - 1; row_idx++) {
+		if (Grid::active_rows[row_idx] == 0) {
+			continue;
+		}
+
 		Step::step_row(row_idx);
 	}
 }
