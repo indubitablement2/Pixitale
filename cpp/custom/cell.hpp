@@ -50,10 +50,6 @@ inline u32 material_idx(const u32 &cell) {
 
 inline void set_material_idx(u32 &cell, const u32 material_idx) {
 	cell = (cell & ~Masks::MASK_MATERIAL) | material_idx | Masks::MASK_ACTIVE;
-
-	// TODO: Do that during cell update.
-	// Handle color.
-	// Update flags.
 }
 
 inline bool is_updated(const u32 &cell) {

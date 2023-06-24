@@ -18,4 +18,4 @@ sand_outer_curve = SubResource("Curve_8f2x6")
 beach_width = 0.05
 id = "ocean"
 description = "Carving oceans!"
-skip = true
+skip = false

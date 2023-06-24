@@ -31,7 +31,7 @@ i32 get_movement_dir(u32 &cell, u64 &rng) {
 }
 
 void flip_movement_dir(u32 &cell, i32 &dir) {
-	dir = ~dir + 1;
+	dir = -dir;
 	Cell::set_movement_dir(cell, (u32)(dir + 2));
 }
 
@@ -65,7 +65,7 @@ bool try_swap_h(
 
 	if (cell_material.density > other_material.density) {
 		// Chance to delete cells.
-		const u32 HORIZONTAL_MOVEMENT_DISAPEAR_CHANCE = 2097152;
+		const u32 HORIZONTAL_MOVEMENT_DISAPEAR_CHANCE = 4194304;
 		if (Rng::gen_u32(rng) < HORIZONTAL_MOVEMENT_DISAPEAR_CHANCE) {
 			u32 cell = 0;
 			Cell::set_updated(cell);
@@ -129,7 +129,11 @@ void step_cell(
 
 	u32 *cell_ptr = Grid::cells + x + y * Grid::width;
 
-	if (!Cell::is_active(*cell_ptr) || Cell::is_updated(*cell_ptr)) {
+	if (!Cell::is_active(*cell_ptr)) {
+		return;
+	}
+	if (Cell::is_updated(*cell_ptr)) {
+		Chunk::activate_point(x, y);
 		return;
 	}
 
@@ -595,17 +599,17 @@ void Grid::activate_neighbors(i32 x, i32 y, u32 *cell_ptr) {
 	Chunk::activate_point(x + 1, y + 1);
 
 	// Activate cells.
-	cell_ptr[-width - 1] |= Cell::Masks::MASK_ACTIVE;
-	cell_ptr[-width] |= Cell::Masks::MASK_ACTIVE;
-	cell_ptr[-width + 1] |= Cell::Masks::MASK_ACTIVE;
+	Cell::set_active(cell_ptr[-width - 1], true);
+	Cell::set_active(cell_ptr[-width], true);
+	Cell::set_active(cell_ptr[-width + 1], true);
 
-	cell_ptr[-1] |= Cell::Masks::MASK_ACTIVE;
-	cell_ptr[0] |= Cell::Masks::MASK_ACTIVE;
-	cell_ptr[1] |= Cell::Masks::MASK_ACTIVE;
+	Cell::set_active(cell_ptr[-1], true);
+	Cell::set_active(cell_ptr[0], true);
+	Cell::set_active(cell_ptr[1], true);
 
-	cell_ptr[width - 1] |= Cell::Masks::MASK_ACTIVE;
-	cell_ptr[width] |= Cell::Masks::MASK_ACTIVE;
-	cell_ptr[width + 1] |= Cell::Masks::MASK_ACTIVE;
+	Cell::set_active(cell_ptr[width - 1], true);
+	Cell::set_active(cell_ptr[width], true);
+	Cell::set_active(cell_ptr[width + 1], true);
 }
 
 void Grid::set_cell_rect(Rect2i rect, u32 cell_material_idx) {

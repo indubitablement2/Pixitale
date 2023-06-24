@@ -1,6 +1,8 @@
 const uint MASK_MATERIAL_IDX = 4095u;
 
-const uint MASK_COLOR = 15u;
+const uint MASK_ACTIVE = 16384u;
+
+const uint MASK_HUE = 7u;
 const uint SHIFT_HUE = 24u;
 const uint SHIFT_VALUE = 28u;
 
@@ -16,7 +18,7 @@ uint get_cell_data(sampler2D data_tex, ivec2 local_coords) {
 }
 
 vec4 get_cell_modulate(uint data) {
-	uint hue_idx = (data >> SHIFT_HUE) & MASK_COLOR;
+	uint hue_idx = (data >> SHIFT_HUE) & MASK_HUE;
 	uint value_idx = (data >> SHIFT_VALUE);
 	
 	return texelFetch(
@@ -54,4 +56,8 @@ vec4 get_cell_light_block(uint data) {
 		ivec2(int(material_idx), CELL_DATA_LIGHT_BLOCK),
 		0
 	);
+}
+
+bool is_cell_active(uint data) {
+	return (data & MASK_ACTIVE) != 0u;
 }
