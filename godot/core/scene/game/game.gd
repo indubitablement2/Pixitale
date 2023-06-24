@@ -6,7 +6,7 @@ extends Node2D
 @onready var m3 := CellMaterials.get_cell_materials_idx("test")
 @onready var m4 := CellMaterials.get_cell_materials_idx("lava")
 
-var brush_size := Vector2i(55, 55)
+var brush_size := Vector2i(7, 7)
 
 func _process(_delta: float) -> void:
 	if Input.is_action_pressed("attack"):

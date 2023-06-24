@@ -31,30 +31,29 @@ i32 get_movement_dir(u32 &cell, u64 &rng) {
 }
 
 void flip_movement_dir(u32 &cell, i32 &dir) {
-	Cell::set_movement_dir(cell, (u32)(dir + 2));
 	dir = ~dir + 1;
+	Cell::set_movement_dir(cell, (u32)(dir + 2));
 }
 
 void swap_cells(
-		u32 cell,
 		u32 *cell_ptr,
 		i32 x,
 		i32 y,
-		u32 other,
 		u32 *other_ptr,
 		i32 other_x,
 		i32 other_y) {
-	Cell::set_updated(other);
-
-	*cell_ptr = other;
+	u32 cell = *cell_ptr;
+	*cell_ptr = *other_ptr;
 	*other_ptr = cell;
+
+	Cell::set_updated(*cell_ptr);
+	Cell::set_updated(*other_ptr);
 
 	Grid::activate_neighbors(x, y, cell_ptr);
 	Grid::activate_neighbors(other_x, other_y, other_ptr);
 }
 
 bool try_swap_h(
-		u32 cell,
 		u32 *cell_ptr,
 		i32 x,
 		i32 y,
@@ -62,14 +61,13 @@ bool try_swap_h(
 		i32 dir,
 		u64 &rng) {
 	u32 *other_ptr = cell_ptr + dir;
-	u32 other = *other_ptr;
-	CellMaterial &other_material = CellMaterial::materials[Cell::material_idx(other)];
+	CellMaterial &other_material = CellMaterial::materials[Cell::material_idx(*other_ptr)];
 
 	if (cell_material.density > other_material.density) {
 		// Chance to delete cells.
 		const u32 HORIZONTAL_MOVEMENT_DISAPEAR_CHANCE = 2097152;
 		if (Rng::gen_u32(rng) < HORIZONTAL_MOVEMENT_DISAPEAR_CHANCE) {
-			cell = 0;
+			u32 cell = 0;
 			Cell::set_updated(cell);
 
 			*cell_ptr = cell;
@@ -82,11 +80,9 @@ bool try_swap_h(
 		}
 
 		swap_cells(
-				cell,
 				cell_ptr,
 				x,
 				y,
-				other,
 				other_ptr,
 				x + dir,
 				y);
@@ -105,16 +101,13 @@ bool try_swap_v(
 		i32 x_offset,
 		i32 y_offset) {
 	u32 *other_ptr = cell_ptr + x_offset + y_offset * Grid::width;
-	u32 other = *other_ptr;
-	CellMaterial &other_material = CellMaterial::materials[Cell::material_idx(other)];
+	CellMaterial &other_material = CellMaterial::materials[Cell::material_idx(*other_ptr)];
 
 	if (cell_material.density > other_material.density) {
 		swap_cells(
-				*cell_ptr,
 				cell_ptr,
 				x,
 				y,
-				other,
 				other_ptr,
 				x + x_offset,
 				y + y_offset);
@@ -135,16 +128,13 @@ void step_cell(
 	TEST_ASSERT(y > 31, "y too low");
 
 	u32 *cell_ptr = Grid::cells + x + y * Grid::width;
-	u32 cell = *cell_ptr;
 
-	if (!Cell::is_active(cell) || Cell::is_updated(cell)) {
+	if (!Cell::is_active(*cell_ptr) || Cell::is_updated(*cell_ptr)) {
 		return;
 	}
-	Cell::set_updated(*cell_ptr);
 
+	u32 cell_material_idx = Cell::material_idx(*cell_ptr);
 	bool active = false;
-
-	u32 cell_material_idx = Cell::material_idx(cell);
 
 	// Reactions
 	// x x x
@@ -240,9 +230,8 @@ void step_cell(
 
 			// Horizontal movement.
 			if (cell_material.horizontal_movement) {
-				dir = get_movement_dir(cell, rng);
+				dir = get_movement_dir(*cell_ptr, rng);
 				if (try_swap_h(
-							cell,
 							cell_ptr,
 							x,
 							y,
@@ -251,9 +240,8 @@ void step_cell(
 							rng)) {
 					return;
 				}
-				flip_movement_dir(cell, dir);
+				flip_movement_dir(*cell_ptr, dir);
 				if (try_swap_h(
-							cell,
 							cell_ptr,
 							x,
 							y,
@@ -268,6 +256,7 @@ void step_cell(
 		}
 	}
 
+	Cell::set_updated(*cell_ptr);
 	if (active) {
 		Cell::set_active(*cell_ptr, true);
 		Chunk::activate_point(x, y);
