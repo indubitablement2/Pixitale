@@ -15,18 +15,108 @@
 
 namespace Step {
 
+i32 get_movement_dir(u32 &cell, u64 &rng) {
+	u32 n = Cell::movement_dir(cell);
+
+	if (n == 0) {
+		if (Rng::gen_bool(rng)) {
+			n = 1;
+		} else {
+			n = 3;
+		}
+		Cell::set_movement_dir(cell, n);
+	}
+
+	return (i32)n - 2;
+}
+
+void flip_movement_dir(u32 &cell, i32 &dir) {
+	Cell::set_movement_dir(cell, (u32)(dir + 2));
+	dir = ~dir + 1;
+}
+
 void swap_cells(
 		u32 cell,
 		u32 *cell_ptr,
 		i32 x,
 		i32 y,
+		u32 other,
 		u32 *other_ptr,
 		i32 other_x,
 		i32 other_y) {
-	*cell_ptr = *other_ptr;
+	Cell::set_updated(other);
+
+	*cell_ptr = other;
 	*other_ptr = cell;
+
 	Grid::activate_neighbors(x, y, cell_ptr);
-	Grid::activate_neighbors(other_x, other_y, cell_ptr);
+	Grid::activate_neighbors(other_x, other_y, other_ptr);
+}
+
+bool try_swap_h(
+		u32 cell,
+		u32 *cell_ptr,
+		i32 x,
+		i32 y,
+		CellMaterial &cell_material,
+		i32 dir,
+		u64 &rng) {
+	u32 *other_ptr = cell_ptr + dir;
+	u32 other = *other_ptr;
+	CellMaterial &other_material = CellMaterial::materials[Cell::material_idx(other)];
+
+	if (cell_material.density > other_material.density) {
+		// Chance to delete cells.
+		if (Rng::gen_probability(rng, cell_material.liquid_movement_disapear_chance)) {
+			cell = 0;
+			Cell::set_updated(cell);
+		}
+		if (Rng::gen_probability(rng, other_material.liquid_movement_disapear_chance)) {
+			other = 0;
+		}
+
+		swap_cells(
+				cell,
+				cell_ptr,
+				x,
+				y,
+				other,
+				other_ptr,
+				x + dir,
+				y);
+
+		return true;
+	} else {
+		return false;
+	}
+}
+
+bool try_swap_v(
+		u32 *cell_ptr,
+		i32 x,
+		i32 y,
+		CellMaterial &cell_material,
+		i32 x_offset,
+		i32 y_offset) {
+	u32 *other_ptr = cell_ptr + x_offset + y_offset * Grid::width;
+	u32 other = *other_ptr;
+	CellMaterial &other_material = CellMaterial::materials[Cell::material_idx(other)];
+
+	if (cell_material.density > other_material.density) {
+		swap_cells(
+				*cell_ptr,
+				cell_ptr,
+				x,
+				y,
+				other,
+				other_ptr,
+				x + x_offset,
+				y + y_offset);
+
+		return true;
+	} else {
+		return false;
+	}
 }
 
 void step_cell(
@@ -44,9 +134,9 @@ void step_cell(
 	if (!Cell::is_active(cell) || Cell::is_updated(cell)) {
 		return;
 	}
+	Cell::set_updated(*cell_ptr);
 
 	bool active = false;
-	bool changed = false;
 
 	u32 cell_material_idx = Cell::material_idx(cell);
 
@@ -54,273 +144,135 @@ void step_cell(
 	// x x x
 	// . o x
 	// . . .
-	CellMaterial::try_react_between(
-			active,
-			changed,
-			cell_material_idx,
-			x,
-			y,
-			cell_ptr + 1,
-			x + 1,
-			y,
-			rng);
-	CellMaterial::try_react_between(
-			active,
-			changed,
-			cell_material_idx,
-			x,
-			y,
-			cell_ptr - Grid::width - 1,
-			x - 1,
-			y - 1,
-			rng);
-	CellMaterial::try_react_between(
-			active,
-			changed,
-			cell_material_idx,
-			x,
-			y,
-			cell_ptr - Grid::width,
-			x,
-			y - 1,
-			rng);
-	CellMaterial::try_react_between(
-			active,
-			changed,
-			cell_material_idx,
-			x,
-			y,
-			cell_ptr - Grid::width + 1,
-			x + 1,
-			y - 1,
-			rng);
-
-	Cell::set_material_idx(cell, cell_material_idx);
-	Cell::set_updated(cell);
+	if (CellMaterial::try_react_between(
+				cell_ptr,
+				active,
+				cell_material_idx,
+				x,
+				y,
+				1,
+				0,
+				rng)) {
+		return;
+	}
+	if (CellMaterial::try_react_between(
+				cell_ptr,
+				active,
+				cell_material_idx,
+				x,
+				y,
+				-1,
+				-1,
+				rng)) {
+		return;
+	}
+	if (CellMaterial::try_react_between(
+				cell_ptr,
+				active,
+				cell_material_idx,
+				x,
+				y,
+				0,
+				-1,
+				rng)) {
+		return;
+	}
+	if (CellMaterial::try_react_between(
+				cell_ptr,
+				active,
+				cell_material_idx,
+				x,
+				y,
+				1,
+				-1,
+				rng)) {
+		return;
+	}
 
 	// Movement
 
-	// CellMaterial *mat = Grid::cell_materials + cell_material_idx;
+	CellMaterial &cell_material = CellMaterial::materials[cell_material_idx];
 
-	// auto b = cell_ptr + Grid::width;
-	// CellMaterial *b_mat = Grid::cell_materials + Cell::material_idx(*b);
+	u64 sand_movement = cell_material.sand_movement;
+	if (sand_movement != 0) {
+		// Down not affected by slow movement.
+		if (try_swap_v(
+					cell_ptr,
+					x,
+					y,
+					cell_material,
+					0,
+					1)) {
+			return;
+		}
 
-	// auto br = cell_ptr + Grid::width + 1;
-	// CellMaterial *br_mat = Grid::cell_materials + Cell::material_idx(*br);
+		if (Grid::tick % sand_movement == 0) {
+			i32 dir;
+			if (Rng::gen_bool(rng)) {
+				dir = -1;
+			} else {
+				dir = 1;
+			}
+			if (try_swap_v(
+						cell_ptr,
+						x,
+						y,
+						cell_material,
+						dir,
+						1)) {
+				return;
+			}
+			if (try_swap_v(
+						cell_ptr,
+						x,
+						y,
+						cell_material,
+						-dir,
+						1)) {
+				return;
+			}
+		} else {
+			active = true;
+		}
+	}
 
-	// auto bl = cell_ptr + Grid::width - 1;
-	// CellMaterial *bl_mat = Grid::cell_materials + Cell::material_idx(*bl);
+	u64 liquid_movement = cell_material.liquid_movement;
+	if (liquid_movement != 0) {
+		if (Grid::tick % liquid_movement == 0) {
+			i32 dir = get_movement_dir(cell, rng);
 
-	// auto l = cell_ptr - 1;
-	// CellMaterial *l_mat = Grid::cell_materials + Cell::material_idx(*l);
+			if (try_swap_h(
+						cell,
+						cell_ptr,
+						x,
+						y,
+						cell_material,
+						dir,
+						rng)) {
+				return;
+			}
 
-	// auto r = cell_ptr + 1;
-	// CellMaterial *r_mat = Grid::cell_materials + Cell::material_idx(*r);
+			flip_movement_dir(cell, dir);
+			if (try_swap_h(
+						cell,
+						cell_ptr,
+						x,
+						y,
+						cell_material,
+						dir,
+						rng)) {
+				return;
+			}
+		} else {
+			active = true;
+		}
+	}
 
-	// auto t = cell_ptr - Grid::width;
-	// CellMaterial *t_mat = Grid::cell_materials + Cell::material_idx(*t);
-
-	// auto tl = cell_ptr - Grid::width - 1;
-	// CellMaterial *tl_mat = Grid::cell_materials + Cell::material_idx(*tl);
-
-	// auto tr = cell_ptr - Grid::width + 1;
-	// CellMaterial *tr_mat = Grid::cell_materials + Cell::material_idx(*tr);
-
-	// switch (mat->cell_movement) {
-	// 	case Grid::CELL_MOVEMENT_SOLID: {
-	// 	} break;
-	// 	case Grid::CELL_MOVEMENT_POWDER: {
-	// 		if (b_mat->density < mat->density) {
-	// 			swap_cells(
-	// 					cell,
-	// 					cell_ptr,
-	// 					chunk_ptr,
-	// 					local_x,
-	// 					local_y,
-	// 					b,
-	// 					0,
-	// 					1);
-	// 			return;
-	// 		} else if (bl_mat->density < mat->density && br_mat->density < mat->density) {
-	// 			if (Rng::gen_bool(rng)) {
-	// 				swap_cells(
-	// 						cell,
-	// 						cell_ptr,
-	// 						chunk_ptr,
-	// 						local_x,
-	// 						local_y,
-	// 						bl,
-	// 						-1,
-	// 						1);
-	// 				return;
-	// 			} else {
-	// 				swap_cells(
-	// 						cell,
-	// 						cell_ptr,
-	// 						chunk_ptr,
-	// 						local_x,
-	// 						local_y,
-	// 						br,
-	// 						1,
-	// 						1);
-	// 				return;
-	// 			}
-	// 		} else if (bl_mat->density < mat->density) {
-	// 			swap_cells(
-	// 					cell,
-	// 					cell_ptr,
-	// 					chunk_ptr,
-	// 					local_x,
-	// 					local_y,
-	// 					bl,
-	// 					-1,
-	// 					1);
-	// 			return;
-	// 		} else if (br_mat->density < mat->density) {
-	// 			swap_cells(
-	// 					cell,
-	// 					cell_ptr,
-	// 					chunk_ptr,
-	// 					local_x,
-	// 					local_y,
-	// 					br,
-	// 					1,
-	// 					1);
-	// 			return;
-	// 		}
-	// 	} break;
-	// 	case Grid::CELL_MOVEMENT_LIQUID: {
-	// 		// TODO: Movemet speed.
-
-	// 		const u32 dissipate_chance = 8388608;
-
-	// 		if (b_mat->density < mat->density) {
-	// 			swap_cells(
-	// 					cell,
-	// 					cell_ptr,
-	// 					chunk_ptr,
-	// 					local_x,
-	// 					local_y,
-	// 					b,
-	// 					0,
-	// 					1);
-	// 			return;
-	// 			// } else if (bl_mat->density < mat->density && br_mat->density < mat->density) {
-
-	// 		} else if (bl_mat->density < mat->density) {
-	// 			Cell::set_value(cell, 1, false);
-
-	// 			swap_cells(
-	// 					cell,
-	// 					cell_ptr,
-	// 					chunk_ptr,
-	// 					local_x,
-	// 					local_y,
-	// 					bl,
-	// 					-1,
-	// 					1);
-	// 			return;
-	// 		} else if (br_mat->density < mat->density) {
-	// 			Cell::set_value(cell, 0, false);
-
-	// 			swap_cells(
-	// 					cell,
-	// 					cell_ptr,
-	// 					chunk_ptr,
-	// 					local_x,
-	// 					local_y,
-	// 					br,
-	// 					1,
-	// 					1);
-	// 			return;
-	// 		} else if (l_mat->density < mat->density && r_mat->density < mat->density) {
-	// 			if (Cell::value(cell)) {
-	// 				if (Rng::gen_32bit(rng) < dissipate_chance) {
-	// 					cell = 0;
-	// 					changed = true;
-	// 				} else {
-	// 					swap_cells(
-	// 							cell,
-	// 							cell_ptr,
-	// 							chunk_ptr,
-	// 							local_x,
-	// 							local_y,
-	// 							l,
-	// 							-1,
-	// 							0);
-	// 					return;
-	// 				}
-	// 			} else {
-	// 				if (Rng::gen_32bit(rng) < dissipate_chance) {
-	// 					cell = 0;
-	// 					changed = true;
-	// 				} else {
-	// 					swap_cells(
-	// 							cell,
-	// 							cell_ptr,
-	// 							chunk_ptr,
-	// 							local_x,
-	// 							local_y,
-	// 							r,
-	// 							1,
-	// 							0);
-	// 					return;
-	// 				}
-	// 			}
-	// 		} else if (l_mat->density < mat->density) {
-	// 			if (Rng::gen_32bit(rng) < dissipate_chance) {
-	// 				cell = 0;
-	// 				changed = true;
-	// 			} else {
-	// 				Cell::set_value(cell, 1, false);
-
-	// 				swap_cells(
-	// 						cell,
-	// 						cell_ptr,
-	// 						chunk_ptr,
-	// 						local_x,
-	// 						local_y,
-	// 						l,
-	// 						-1,
-	// 						0);
-	// 				return;
-	// 			}
-	// 		} else if (r_mat->density < mat->density) {
-	// 			if (Rng::gen_32bit(rng) < dissipate_chance) {
-	// 				cell = 0;
-	// 				changed = true;
-	// 			} else {
-	// 				Cell::set_value(cell, 0, false);
-
-	// 				swap_cells(
-	// 						cell,
-	// 						cell_ptr,
-	// 						chunk_ptr,
-	// 						local_x,
-	// 						local_y,
-	// 						r,
-	// 						1,
-	// 						0);
-	// 				return;
-	// 			}
-	// 		}
-	// 	} break;
-	// 	case Grid::CELL_MOVEMENT_GAS: {
-	// 		// TODO: Reverse liquid movement.
-	// 	} break;
-	// }
-
-	if (changed) {
-		*cell_ptr = cell;
-		Grid::activate_neighbors(x, y, cell_ptr);
-	} else if (active) {
-		Cell::set_active(cell, true);
-		*cell_ptr = cell;
-
+	if (active) {
+		Cell::set_active(*cell_ptr, true);
 		Chunk::activate_point(x, y);
 	} else {
-		Cell::set_active(cell, false);
-		*cell_ptr = cell;
+		Cell::set_active(*cell_ptr, false);
 	}
 }
 
@@ -358,11 +310,6 @@ void step_chunk(
 
 		i32 local_x = x_start;
 		while (local_x != x_end) {
-			TEST_ASSERT(local_x >= 0, "x < 0");
-			TEST_ASSERT(local_x < 32, "x >= 32");
-			TEST_ASSERT(local_y >= 0, "y < 0");
-			TEST_ASSERT(local_y < 32, "y >= 32");
-
 			step_cell(x + local_x, y + local_y, rng);
 
 			local_x += x_step;
@@ -402,12 +349,6 @@ void step_row(i32 row_idx) {
 	} else {
 		Grid::active_rows[row_idx] = 0;
 	}
-}
-
-void pre_step() {
-	Cell::update_updated_bit((u64)Grid::tick);
-
-	Grid::tick++;
 }
 
 } // namespace Step
@@ -477,8 +418,10 @@ void Grid::_bind_methods() {
 			"Grid",
 			D_METHOD(
 					"add_material",
-					"cell_movement",
 					"density",
+					"liquid_movement_disapear_chance",
+					"sand_movement",
+					"liquid_movement",
 					"durability",
 					"cell_collision",
 					"friction",
@@ -531,11 +474,6 @@ void Grid::_bind_methods() {
 	BIND_ENUM_CONSTANT(COLLISION_SOLID);
 	BIND_ENUM_CONSTANT(COLLISION_PLATFORM);
 	BIND_ENUM_CONSTANT(COLLISION_LIQUID);
-
-	BIND_ENUM_CONSTANT(MOVEMENT_SOLID);
-	BIND_ENUM_CONSTANT(MOVEMENT_POWDER);
-	BIND_ENUM_CONSTANT(MOVEMENT_LIQUID);
-	BIND_ENUM_CONSTANT(MOVEMENT_GAS);
 }
 
 void Grid::delete_grid() {
@@ -647,14 +585,12 @@ u32 Grid::get_cell_checked(i32 x, i32 y) {
 }
 
 void Grid::activate_neighbors(i32 x, i32 y, u32 *cell_ptr) {
-	TEST_ASSERT(x >= 32, "x < 32");
-	TEST_ASSERT(y >= 32, "y < 32");
-	TEST_ASSERT(x < width - 32, "x >= width - 32");
-	TEST_ASSERT(y < height - 32, "y >= height - 32");
+	TEST_ASSERT(x >= 1, "x < 1");
+	TEST_ASSERT(y >= 1, "y < 1");
+	TEST_ASSERT(x < width - 1, "x >= width - 1");
+	TEST_ASSERT(y < height - 1, "y >= height - 1");
 
-	// Activate rows.
-	active_rows[(y - 1) >> 5] |= 1uLL;
-	active_rows[(y + 1) >> 5] |= 1uLL;
+	TEST_ASSERT((cells + y * width + x) == cell_ptr, "wrong coords");
 
 	// Activate chunks.
 	Chunk::activate_point(x - 1, y - 1);
@@ -717,7 +653,7 @@ void Grid::set_cell_rect(Rect2i rect, u32 cell_material_idx) {
 	for (i32 y = rect.position.y - 1; y < rect.get_end().y; y += 32) {
 		active_rows[y >> 5] |= 1uLL;
 	}
-	active_rows[(rect.get_end().y + 1) >> 5] |= 1uLL;
+	active_rows[(rect.get_end().y + 1) >> 5] = 1uLL;
 }
 
 void Grid::set_cell(Vector2i position, u32 cell_material_idx) {
@@ -725,12 +661,11 @@ void Grid::set_cell(Vector2i position, u32 cell_material_idx) {
 		return;
 	}
 
-	// TODO: Check that mat idx is valid. Otherwise set to empty.
-
 	auto cell_ptr = cells + position.y * width + position.x;
 	*cell_ptr = cell_material_idx;
 
 	activate_neighbors(position.x, position.y, cell_ptr);
+	active_rows[(position.y) >> 5] = 1uLL;
 }
 
 void Grid::set_cell_color(Vector2i position, u32 hue_palette_idx, u32 value_palette_idx) {
@@ -796,7 +731,9 @@ void Grid::post_generation_pass() {
 void Grid::step() {
 	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");
 
-	Step::pre_step();
+	Cell::update_updated_bit((u64)Grid::tick);
+
+	Grid::tick++;
 
 	for (i32 row_idx = 1; row_idx < chunks_height - 1; row_idx++) {
 		if (Grid::active_rows[row_idx] == 0) {
@@ -808,8 +745,10 @@ void Grid::step() {
 }
 
 void Grid::add_material(
-		i32 movement,
 		i32 density,
+		f32 liquid_movement_disapear_chance,
+		u8 sand_movement,
+		u8 liquid_movement,
 		f32 durability,
 		i32 collision,
 		f32 friction,
@@ -847,8 +786,10 @@ void Grid::add_material(
 
 	// TODO: Check that enums are valid.
 	CellMaterial::add(
-			static_cast<Cell::Movement>(movement),
 			density,
+			liquid_movement_disapear_chance,
+			sand_movement,
+			liquid_movement,
 			durability,
 			static_cast<Cell::Collision>(collision),
 			friction,

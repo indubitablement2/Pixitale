@@ -19,8 +19,10 @@ u32 reations_key(const u32 material_idx_a, const u32 material_idx_b, bool &swap)
 }
 
 void CellMaterial::add(
-		const Cell::Movement cell_movement,
 		const i32 density,
+		const f32 liquid_movement_disapear_chance,
+		const u8 sand_movement,
+		const u8 liquid_movement,
 		const f32 durability,
 		const Cell::Collision collision,
 		const f32 friction,
@@ -30,8 +32,10 @@ void CellMaterial::add(
 		const std::vector<std::vector<CellReaction>> higher_reactions,
 		const u32 cell_biome) {
 	CellMaterial cell_material = CellMaterial();
-	cell_material.movement = cell_movement;
 	cell_material.density = density;
+	cell_material.liquid_movement_disapear_chance = liquid_movement_disapear_chance;
+	cell_material.sand_movement = sand_movement;
+	cell_material.liquid_movement = liquid_movement;
 	cell_material.durability = durability;
 	cell_material.collision = collision;
 	cell_material.friction = friction;
@@ -91,16 +95,16 @@ void CellMaterial::free_memory() {
 	materials = {};
 }
 
-void CellMaterial::try_react_between(
+bool CellMaterial::try_react_between(
+		u32 *cell_ptr,
 		bool &active,
-		bool &changed,
-		u32 &material_idx,
+		const u32 material_idx,
 		const i32 x,
 		const i32 y,
-		u32 *other_ptr,
-		const i32 other_x,
-		const i32 other_y,
+		const i32 other_offset_x,
+		const i32 other_offset_y,
 		u64 &rng) {
+	u32 *other_ptr = cell_ptr + (other_offset_x + other_offset_y * Grid::width);
 	u32 other_material_idx = Cell::material_idx(*other_ptr);
 
 	bool swap;
@@ -110,12 +114,6 @@ void CellMaterial::try_react_between(
 			swap);
 
 	std::vector<CellReaction> &reactions = reactions_map[reactions_key];
-
-	if (reactions.empty()) {
-		return;
-	}
-
-	active = true;
 
 	for (u32 i = 0; i < reactions.size(); i++) {
 		CellReaction &reaction = reactions[i];
@@ -131,18 +129,27 @@ void CellMaterial::try_react_between(
 			}
 
 			if (out1 != material_idx) {
-				material_idx = out1;
-				changed = true;
+				*cell_ptr = out1;
 			}
-
 			if (out2 != other_material_idx) {
-				Cell::set_material_idx(*other_ptr, out2);
-				Grid::activate_neighbors(other_x, other_y, other_ptr);
+				*other_ptr = out2;
 			}
 
-			return;
+			Cell::set_updated(*other_ptr);
+			Cell::set_updated(*cell_ptr);
+
+			Grid::activate_neighbors(x, y, cell_ptr);
+			Grid::activate_neighbors(x + other_offset_x, y + other_offset_y, other_ptr);
+
+			return true;
 		}
 	}
+
+	if (!reactions.empty()) {
+		active = true;
+	}
+
+	return false;
 }
 
 u32 CellMaterial::get_value_idx_at(const i32 x, const i32 y, u64 &rng) {
@@ -163,16 +170,20 @@ u32 CellMaterial::get_value_idx_at(const i32 x, const i32 y, u64 &rng) {
 void CellMaterial::print(u32 material_idx) {
 	print_line("-----------", material_idx, "-----------");
 
-	print_line("cell_movement ", movement);
-	print_line("density ", density);
 	print_line("durability ", durability);
+
 	print_line("cell_collision ", collision);
 	print_line("friction ", friction);
 
-	print_line("can_change_hue ", can_color);
+	print_line("cell_biome ", cell_biome);
 
+	print_line("can_change_hue ", can_color);
 	print_line("values_width ", values_width);
 	print_line("values_height ", values_height);
-
 	print_line("max_value_noise ", max_value_noise);
+
+	print_line("density ", density);
+	print_line("liquid_movement_disapear_chance ", liquid_movement_disapear_chance);
+	print_line("sand_movement ", sand_movement);
+	print_line("liquid_movement ", liquid_movement);
 }

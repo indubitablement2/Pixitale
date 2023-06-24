@@ -24,9 +24,6 @@ class CellMaterial {
 public:
 	static std::vector<CellMaterial> materials;
 
-	Cell::Movement movement;
-	i32 density;
-
 	f32 durability;
 
 	Cell::Collision collision;
@@ -37,13 +34,28 @@ public:
 	// If 0, then no noise.
 	u32 max_value_noise;
 
+	// Can swap position with less dense cell.
+	i32 density;
+	// A low chance to replace the cells with empty
+	// after moving (or being moved by another cell) in horizontal direction.
+	// This is to prevent infinite horizontal movement back and forth.
+	f32 liquid_movement_disapear_chance;
+	// 0: no sand movement.
+	// else: sand movement every x tick.
+	u8 sand_movement;
+	// 0: no horizontal movement.
+	// else: hotizontal movement every x tick.
+	u8 liquid_movement;
+
 	bool can_color;
 
 	// higher_reactions is all reactions with material that have idx > this material's idx.
 	// Inner vector can be empty (no reactions with this material).
 	static void add(
-			const Cell::Movement cell_movement,
 			const i32 density,
+			const f32 liquid_movement_disapear_chance,
+			const u8 sand_movement,
+			const u8 liquid_movement,
 			const f32 durability,
 			const Cell::Collision collision,
 			const f32 friction,
@@ -54,15 +66,14 @@ public:
 			const u32 cell_biome);
 	static void free_memory();
 
-	static void try_react_between(
+	static bool try_react_between(
+			u32 *cell_ptr,
 			bool &active,
-			bool &changed,
-			u32 &material_idx,
+			const u32 material_idx,
 			const i32 x,
 			const i32 y,
-			u32 *other_ptr,
-			const i32 other_x,
-			const i32 other_y,
+			const i32 other_offset_x,
+			const i32 other_offset_y,
 			u64 &rng);
 
 	u32 get_value_idx_at(const i32 x, const i32 y, u64 &rng);

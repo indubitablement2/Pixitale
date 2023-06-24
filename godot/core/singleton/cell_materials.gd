@@ -34,8 +34,10 @@ func load_cell_materials() -> void:
 			values = m.values.get_image()
 		
 		Grid.add_material(
-			m.movement_type,
 			m.density,
+			m.liquid_movement_disapear_chance,
+			m.sand_movement,
+			m.liquid_movement,
 			m.durability,
 			m.collision_type,
 			m.friction,

@@ -1,10 +1,13 @@
 extends Resource
 class_name CellMaterialData
 
-@export var display_name: StringName
+# Default values are what empty cell (id: "", idx: 0) uses.
 
-@export var id: String
-@export var tags: PackedStringArray
+@export var display_name := ""
+
+@export var id := ""
+## tag "all" is implicit here.
+@export var tags := PackedStringArray() 
 
 @export_category("Render")
 @export var base_color := Color.TRANSPARENT
@@ -24,9 +27,18 @@ class_name CellMaterialData
 @export var values :Texture2D = null
 
 @export_category("Movement")
-@export var movement_type := Grid.MOVEMENT_SOLID
-#@export_range(0.1, 1.0) var movement_speed := 1.0
+## Can swap position with less dense cell.
 @export var density := 0
+## A low chance to replace the cells with empty
+## after moving (or being moved by another cell) in horizontal direction.
+## This is to prevent infinite horizontal movement back and forth.
+@export var liquid_movement_disapear_chance := 0.0
+## 0: no sand movement.
+## else: sand movement every x tick.
+@export var sand_movement := 1
+## 0: no horizontal movement.
+## else: hotizontal movement every x tick.
+@export var liquid_movement := 1
 
 @export_category("Interaction")
 @export var durability := 0

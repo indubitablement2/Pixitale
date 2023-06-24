@@ -5,13 +5,6 @@
 
 namespace Cell {
 
-enum Movement {
-	MOVEMENT_SOLID,
-	MOVEMENT_POWDER,
-	MOVEMENT_LIQUID,
-	MOVEMENT_GAS,
-};
-
 enum Collision {
 	COLLISION_NONE,
 	COLLISION_SOLID,
@@ -22,6 +15,7 @@ enum Collision {
 enum Shifts {
 	SHIFT_UPDATED = 12,
 	SHIFT_ACTIVE = 14,
+	MOVEMENT_DIR = 15,
 	SHIFT_HUE = 24,
 	SHIFT_VALUE = 28,
 };
@@ -29,7 +23,8 @@ enum Shifts {
 // MASK_MATERIAL = 0..12
 // MASK_UPDATED = 12..14
 // MASK_ACTIVE = 14..15
-// unused = 15..24
+// MASK_MOVEMENT_DIR = 15..17
+// unused = 16..24
 // MASK_HUE = 24..28
 // MASK_VALUE = 28..32
 enum Masks {
@@ -38,6 +33,8 @@ enum Masks {
 	// 0 used for inactive/new cell. eg. always update.
 	MASK_UPDATED = 0b11 << Shifts::SHIFT_UPDATED,
 	MASK_ACTIVE = 1 << Shifts::SHIFT_ACTIVE,
+	// 0 not set, 1 left, 3 right.
+	MASK_MOVEMENT_DIR = 0b11 << Shifts::MOVEMENT_DIR,
 	MASK_HUE = 0xF << Shifts::SHIFT_HUE,
 	MASK_VALUE = 0xF << Shifts::SHIFT_VALUE,
 };
@@ -78,7 +75,16 @@ inline void set_active(u32 &cell, const bool active) {
 	} else {
 		cell &= ~Masks::MASK_ACTIVE;
 		cell &= ~Masks::MASK_UPDATED;
+		cell &= ~Masks::MASK_MOVEMENT_DIR;
 	}
+}
+
+inline u32 movement_dir(const u32 cell) {
+	return (cell & Masks::MASK_MOVEMENT_DIR) >> Shifts::MOVEMENT_DIR;
+}
+
+inline void set_movement_dir(u32 &cell, const u32 movement_dir) {
+	cell = (cell & ~Masks::MASK_MOVEMENT_DIR) | (movement_dir << Shifts::MOVEMENT_DIR);
 }
 
 inline void set_hue(u32 &cell, const u32 hue_palette_idx) {

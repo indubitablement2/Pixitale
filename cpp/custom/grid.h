@@ -51,12 +51,13 @@ public:
 	static void take_border_cells();
 	static void post_generation_pass();
 
-	// TODO: Rename to step as no other step exists.
 	static void step();
 
 	static void add_material(
-			i32 movement,
 			i32 density,
+			f32 liquid_movement_disapear_chance,
+			u8 sand_movement,
+			u8 liquid_movement,
 			f32 durability,
 			i32 collision,
 			f32 friction,
@@ -80,7 +81,6 @@ public:
 	static void run_tests();
 };
 
-VARIANT_ENUM_CAST(Cell::Movement);
 VARIANT_ENUM_CAST(Cell::Collision);
 
 #endif

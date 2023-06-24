@@ -77,7 +77,8 @@
     - [ ] Run without blocking main thread.
     - [ ] Run using multiple thread.
     - [x] Consider storing ractions in hashmap.
-    - [ ] Refactor cell movement.
+    - [x] Refactor cell movement.
+    - [ ] Activate rows manualy when setting cells.
 - [ ] Character
     - [ ] Fix character going slightly down just before going up for some reason.
     - [ ] Animation template

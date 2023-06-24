@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_6ebbd")
-num_simulation_step = 10
+num_simulation_step = 1
 id = "simulation"
 description = "Settling things down"
 skip = false
