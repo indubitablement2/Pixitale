@@ -1,7 +1,7 @@
 extends Resource
 class_name CellMaterialData
 
-# Default values are what empty cell (id: "", idx: 0) uses.
+## Default values are what empty cell (id: "", idx: 0) uses.
 
 @export var display_name := ""
 
@@ -29,16 +29,17 @@ class_name CellMaterialData
 @export_category("Movement")
 ## Can swap position with less dense cell.
 @export var density := 0
-## A low chance to replace the cells with empty
-## after moving (or being moved by another cell) in horizontal direction.
-## This is to prevent infinite horizontal movement back and forth.
-@export var liquid_movement_disapear_chance := 0.0
-## 0: no sand movement.
-## else: sand movement every x tick.
-@export var sand_movement := 1
-## 0: no horizontal movement.
-## else: hotizontal movement every x tick.
-@export var liquid_movement := 1
+## 0: no movement.
+## 1: vertical movement down.
+## -1: vertical movement up.
+@export_enum("no movement:0", "up:-1", "down:1") var movement_vertical_step := 0
+## >= 1.0: can always move.
+## < 1.0: may randomly stop moving.
+## This is to simulate slow moving cell.
+@export var movement_chance := 1.0
+## Needs movement_vertical_step. 
+## Vertical movement is tried first.
+@export var horizontal_movement := false
 
 @export_category("Interaction")
 @export var durability := 0

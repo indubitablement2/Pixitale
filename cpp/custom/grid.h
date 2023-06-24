@@ -55,9 +55,9 @@ public:
 
 	static void add_material(
 			i32 density,
-			f32 liquid_movement_disapear_chance,
-			u8 sand_movement,
-			u8 liquid_movement,
+			i32 movement_vertical_step,
+			f32 movement_chance,
+			bool horizontal_movement,
 			f32 durability,
 			i32 collision,
 			f32 friction,

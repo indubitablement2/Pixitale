@@ -36,16 +36,12 @@ public:
 
 	// Can swap position with less dense cell.
 	i32 density;
-	// A low chance to replace the cells with empty
-	// after moving (or being moved by another cell) in horizontal direction.
-	// This is to prevent infinite horizontal movement back and forth.
-	f32 liquid_movement_disapear_chance;
-	// 0: no sand movement.
-	// else: sand movement every x tick.
-	u8 sand_movement;
-	// 0: no horizontal movement.
-	// else: hotizontal movement every x tick.
-	u8 liquid_movement;
+	// 0: no vertical movement.
+	// 1: vertical movement down.
+	// -1: vertical movement up.
+	i32 movement_vertical_step;
+	f32 movement_chance;
+	bool horizontal_movement;
 
 	bool can_color;
 
@@ -53,9 +49,9 @@ public:
 	// Inner vector can be empty (no reactions with this material).
 	static void add(
 			const i32 density,
-			const f32 liquid_movement_disapear_chance,
-			const u8 sand_movement,
-			const u8 liquid_movement,
+			const i32 movement_vertical_step,
+			const f32 movement_chance,
+			const bool horizontal_movement,
 			const f32 durability,
 			const Cell::Collision collision,
 			const f32 friction,

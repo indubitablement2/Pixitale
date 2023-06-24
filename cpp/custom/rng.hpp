@@ -32,7 +32,7 @@ inline f32 gen_f32(u64 &rng) {
 // probability > 1 always return true.
 // probability < 0 always return false.
 inline bool gen_probability(u64 &rng, f32 probability) {
-	return gen_u32(rng) < u32(probability * (f32)MAX_U32);
+	return (f32)gen_u32(rng) < (probability * (f32)MAX_U32);
 }
 
 } // namespace Rng

@@ -20,9 +20,9 @@ u32 reations_key(const u32 material_idx_a, const u32 material_idx_b, bool &swap)
 
 void CellMaterial::add(
 		const i32 density,
-		const f32 liquid_movement_disapear_chance,
-		const u8 sand_movement,
-		const u8 liquid_movement,
+		const i32 movement_vertical_step,
+		const f32 movement_chance,
+		const bool horizontal_movement,
 		const f32 durability,
 		const Cell::Collision collision,
 		const f32 friction,
@@ -33,9 +33,9 @@ void CellMaterial::add(
 		const u32 cell_biome) {
 	CellMaterial cell_material = CellMaterial();
 	cell_material.density = density;
-	cell_material.liquid_movement_disapear_chance = liquid_movement_disapear_chance;
-	cell_material.sand_movement = sand_movement;
-	cell_material.liquid_movement = liquid_movement;
+	cell_material.horizontal_movement = horizontal_movement;
+	cell_material.movement_vertical_step = movement_vertical_step;
+	cell_material.movement_chance = movement_chance;
 	cell_material.durability = durability;
 	cell_material.collision = collision;
 	cell_material.friction = friction;
@@ -183,7 +183,7 @@ void CellMaterial::print(u32 material_idx) {
 	print_line("max_value_noise ", max_value_noise);
 
 	print_line("density ", density);
-	print_line("liquid_movement_disapear_chance ", liquid_movement_disapear_chance);
-	print_line("sand_movement ", sand_movement);
-	print_line("liquid_movement ", liquid_movement);
+	print_line("movement_vertical_step ", movement_vertical_step);
+	print_line("movement_chance ", movement_chance);
+	print_line("horizontal_movement ", horizontal_movement);
 }

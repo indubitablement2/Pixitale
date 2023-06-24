@@ -4,7 +4,7 @@
 
 [resource]
 script = ExtResource("1_pes7h")
-display_name = &"blood"
+display_name = ""
 id = "blood"
 tags = PackedStringArray()
 base_color = Color(0.639216, 0, 0, 0.945098)
@@ -13,9 +13,10 @@ glow = Color(0, 0, 0, 1)
 light_block = Color(1, 0, 0, 0.713726)
 noise_max = 0
 density = 9
-liquid_movement_disapear_chance = 0.001
-sand_movement = 1
-liquid_movement = 1
+movement_vertical_step = 1
+movement_chance = 1.0
+horizontal_movement = true
+horizontal_movement_disapear_chance = 0.001
 durability = 0
 biome_id = ""
 collision_type = 3

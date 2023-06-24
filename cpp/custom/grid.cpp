@@ -67,12 +67,18 @@ bool try_swap_h(
 
 	if (cell_material.density > other_material.density) {
 		// Chance to delete cells.
-		if (Rng::gen_probability(rng, cell_material.liquid_movement_disapear_chance)) {
+		const u32 HORIZONTAL_MOVEMENT_DISAPEAR_CHANCE = 2097152;
+		if (Rng::gen_u32(rng) < HORIZONTAL_MOVEMENT_DISAPEAR_CHANCE) {
 			cell = 0;
 			Cell::set_updated(cell);
-		}
-		if (Rng::gen_probability(rng, other_material.liquid_movement_disapear_chance)) {
-			other = 0;
+
+			*cell_ptr = cell;
+			*other_ptr = cell;
+
+			Grid::activate_neighbors(x, y, cell_ptr);
+			Grid::activate_neighbors(x + dir, y, other_ptr);
+
+			return true;
 		}
 
 		swap_cells(
@@ -193,25 +199,25 @@ void step_cell(
 
 	CellMaterial &cell_material = CellMaterial::materials[cell_material_idx];
 
-	u64 sand_movement = cell_material.sand_movement;
-	if (sand_movement != 0) {
-		// Down not affected by slow movement.
+	if (cell_material.movement_vertical_step != 0) {
+		// Vertical movement not affected by slow movement.
 		if (try_swap_v(
 					cell_ptr,
 					x,
 					y,
 					cell_material,
 					0,
-					1)) {
+					cell_material.movement_vertical_step)) {
 			return;
 		}
 
-		if (Grid::tick % sand_movement == 0) {
+		if (Rng::gen_probability(rng, cell_material.movement_chance)) {
+			// Diagonal movement.
 			i32 dir;
 			if (Rng::gen_bool(rng)) {
-				dir = -1;
-			} else {
 				dir = 1;
+			} else {
+				dir = -1;
 			}
 			if (try_swap_v(
 						cell_ptr,
@@ -219,7 +225,7 @@ void step_cell(
 						y,
 						cell_material,
 						dir,
-						1)) {
+						cell_material.movement_vertical_step)) {
 				return;
 			}
 			if (try_swap_v(
@@ -228,40 +234,34 @@ void step_cell(
 						y,
 						cell_material,
 						-dir,
-						1)) {
-				return;
-			}
-		} else {
-			active = true;
-		}
-	}
-
-	u64 liquid_movement = cell_material.liquid_movement;
-	if (liquid_movement != 0) {
-		if (Grid::tick % liquid_movement == 0) {
-			i32 dir = get_movement_dir(cell, rng);
-
-			if (try_swap_h(
-						cell,
-						cell_ptr,
-						x,
-						y,
-						cell_material,
-						dir,
-						rng)) {
+						cell_material.movement_vertical_step)) {
 				return;
 			}
 
-			flip_movement_dir(cell, dir);
-			if (try_swap_h(
-						cell,
-						cell_ptr,
-						x,
-						y,
-						cell_material,
-						dir,
-						rng)) {
-				return;
+			// Horizontal movement.
+			if (cell_material.horizontal_movement) {
+				dir = get_movement_dir(cell, rng);
+				if (try_swap_h(
+							cell,
+							cell_ptr,
+							x,
+							y,
+							cell_material,
+							dir,
+							rng)) {
+					return;
+				}
+				flip_movement_dir(cell, dir);
+				if (try_swap_h(
+							cell,
+							cell_ptr,
+							x,
+							y,
+							cell_material,
+							dir,
+							rng)) {
+					return;
+				}
 			}
 		} else {
 			active = true;
@@ -419,9 +419,9 @@ void Grid::_bind_methods() {
 			D_METHOD(
 					"add_material",
 					"density",
-					"liquid_movement_disapear_chance",
-					"sand_movement",
-					"liquid_movement",
+					"movement_vertical_step",
+					"movement_chance",
+					"horizontal_movement",
 					"durability",
 					"cell_collision",
 					"friction",
@@ -746,9 +746,9 @@ void Grid::step() {
 
 void Grid::add_material(
 		i32 density,
-		f32 liquid_movement_disapear_chance,
-		u8 sand_movement,
-		u8 liquid_movement,
+		i32 movement_vertical_step,
+		f32 movement_chance,
+		bool horizontal_movement,
 		f32 durability,
 		i32 collision,
 		f32 friction,
@@ -787,9 +787,9 @@ void Grid::add_material(
 	// TODO: Check that enums are valid.
 	CellMaterial::add(
 			density,
-			liquid_movement_disapear_chance,
-			sand_movement,
-			liquid_movement,
+			movement_vertical_step,
+			movement_chance,
+			horizontal_movement,
 			durability,
 			static_cast<Cell::Collision>(collision),
 			friction,
