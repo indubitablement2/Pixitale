@@ -619,6 +619,9 @@ void Grid::set_cell_rect(Rect2i rect, u32 cell_material_idx) {
 		return;
 	}
 
+	CellMaterial &cell_material = CellMaterial::materials[cell_material_idx];
+	u32 cell = cell_material_idx;
+
 	for (i32 y = rect.position.y; y < rect.get_end().y; y++) {
 		for (i32 x = rect.position.x; x < rect.get_end().x; x++) {
 			auto cell_ptr = cells + y * width + x;
@@ -626,7 +629,9 @@ void Grid::set_cell_rect(Rect2i rect, u32 cell_material_idx) {
 			TEST_ASSERT(cell_ptr >= cells, "ptr out of bounds (< cells)");
 			TEST_ASSERT(cell_ptr < cells + width * height, "ptr out of bounds (>= cells + width * height)");
 
-			Cell::set_material_idx(*cell_ptr, cell_material_idx);
+			Cell::set_value(cell, cell_material.get_value_idx_at(x, y, rng));
+
+			*cell_ptr = cell;
 		}
 	}
 
@@ -654,8 +659,12 @@ void Grid::set_cell(Vector2i position, u32 cell_material_idx) {
 		return;
 	}
 
+	CellMaterial &cell_material = CellMaterial::materials[cell_material_idx];
 	auto cell_ptr = cells + position.y * width + position.x;
 	*cell_ptr = cell_material_idx;
+	Cell::set_value(
+			*cell_ptr,
+			cell_material.get_value_idx_at(position.x, position.y, rng));
 
 	activate_neighbors(position.x, position.y, cell_ptr);
 	active_rows[(position.y) >> 5] = 1uLL;

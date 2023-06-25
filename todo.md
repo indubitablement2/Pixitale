@@ -15,11 +15,11 @@
         - [x] Add 4 bits modulate to cell data.
         - [x] Apply modulate on cell shader.
     - [x] Add booleant to not apply color in cell material.
-    - [ ] Check that cell can have color when changing material.
+    - [x] Check that cell can have color when changing material.
         - [x] set color (gdscript)
-        - [ ] reaction
-        - [ ] set cell (gdscript)
-        - [ ] cpp
+        - [x] reaction
+        - [x] set cell (gdscript)
+        - [x] cpp
     - [x] Color generation (noise/sudoku/texture)
         - [x] Generation type can be set on cell material data.
     - [x] Bloom 80%+
@@ -76,9 +76,10 @@
 - [ ] Simulation
     - [ ] Run without blocking main thread.
     - [ ] Run using multiple thread.
+    - [ ] If too many active chunk, only update those close to the player.
     - [x] Consider storing ractions in hashmap.
     - [x] Refactor cell movement.
-    - [ ] Activate rows manualy when setting cells.
+    - [x] Activate rows manualy when setting cells.
 - [ ] Character
     - [ ] Fix character going slightly down just before going up for some reason.
     - [ ] Animation template

@@ -32,6 +32,7 @@ public:
 	inline static u64 tick = 0;
 
 	inline static u64 seed = 0;
+	inline static u64 rng = 0;
 
 	static void delete_grid();
 	static void new_empty(i32 wish_width, i32 wish_height);
