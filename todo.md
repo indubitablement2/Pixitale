@@ -69,9 +69,9 @@
         - [x] Paint all
         - [x] Simulate for 3k-10k ticks for cells to settle 
     - [x] Add layer height to some global state.
-- [ ] Border cells.
+- [x] Border cells.
     - [x] Looping infinite border.
-    - [ ] Reapply border cell when border is modified.
+    - [x] Reapply border cell when border is modified.
 - [x] Benchmark
 - [ ] Simulation
     - [ ] Run without blocking main thread.

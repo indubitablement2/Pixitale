@@ -344,6 +344,82 @@ void step_row(i32 row_idx) {
 	}
 }
 
+void copy_border_chunk(
+		i32 x_start,
+		i32 y_start) {
+	for (i32 y = y_start; y < y_start + 32; y++) {
+		for (i32 x = 0; x < 32; x++) {
+			i32 grid_x = x_start + x;
+			Grid::cells[y * Grid::width + grid_x] = Grid::border_cells[y * 32 + x];
+		}
+	}
+}
+
+void step_borders() {
+	// Top
+	if (Grid::active_rows[0] != 0) {
+		for (i32 chunk_idx = 0; chunk_idx < Grid::chunks_width; chunk_idx++) {
+			if (Grid::chunks[chunk_idx] == 0) {
+				continue;
+			}
+
+			copy_border_chunk(chunk_idx * 32, 0);
+		}
+	}
+	// Bot
+	if (Grid::active_rows[Grid::chunks_height - 1] != 0) {
+		for (i32 chunk_idx = 0; chunk_idx < Grid::chunks_width; chunk_idx++) {
+			if (Grid::chunks[chunk_idx] == 0) {
+				continue;
+			}
+
+			copy_border_chunk(chunk_idx * 32, 0);
+		}
+	}
+	// Left & right
+	for (i32 chunk_y = 1; chunk_y < Grid::chunks_height - 1; chunk_y++) {
+		if (Grid::chunks[chunk_y * Grid::chunks_width] != 0) {
+			copy_border_chunk(0, chunk_y * 32);
+		}
+		if (Grid::chunks[chunk_y * Grid::chunks_width + Grid::chunks_width - 1] != 0) {
+			copy_border_chunk(Grid::width - 32, chunk_y * 32);
+		}
+	}
+}
+
+void pre_step_border() {
+	Grid::active_rows[0] = 0;
+	Grid::active_rows[Grid::chunks_height - 1] = 0;
+
+	// Top
+	i32 top_chunk_start = 0;
+	i32 top_chunk_end = Grid::chunks_width;
+	for (i32 chunk_idx = top_chunk_start; chunk_idx < top_chunk_end; chunk_idx++) {
+		Grid::chunks[chunk_idx] = 0;
+	}
+
+	// Bot
+	i32 bot_chunk_start = (Grid::chunks_height - 2) * Grid::chunks_width;
+	i32 bot_chunk_end = (Grid::chunks_height - 1) * Grid::chunks_width;
+	for (i32 chunk_idx = bot_chunk_start; chunk_idx < bot_chunk_end; chunk_idx++) {
+		Grid::chunks[chunk_idx] = 0;
+	}
+
+	// Left
+	i32 left_chunk_start = top_chunk_start + Grid::chunks_width;
+	i32 left_chunk_end = bot_chunk_start;
+	for (i32 chunk_idx = left_chunk_start; chunk_idx < left_chunk_end; chunk_idx += Grid::chunks_width) {
+		Grid::chunks[chunk_idx] = 0;
+	}
+
+	// Right
+	i32 right_chunk_start = top_chunk_end + Grid::chunks_width - 1;
+	i32 right_chunk_end = bot_chunk_end - Grid::chunks_width;
+	for (i32 chunk_idx = right_chunk_start; chunk_idx < right_chunk_end; chunk_idx += Grid::chunks_width) {
+		Grid::chunks[chunk_idx] = 0;
+	}
+}
+
 } // namespace Step
 
 void Grid::_bind_methods() {
@@ -495,7 +571,7 @@ void Grid::new_empty(i32 wish_width, i32 wish_height) {
 	delete_grid();
 
 	chunks_width = CLAMP(wish_width / 32, 8, 2048);
-	// Make sure that width is a multiple of 64/8.
+	// Make sure that width is a multiple of 64/8(8).
 	// This is to avoid mutably sharing cache lines between threads.
 	// Chunks are only 8 bytes.
 	while (chunks_width % 8 != 0) {
@@ -715,8 +791,6 @@ void Grid::post_generation_pass() {
 		active_rows[i] = 1;
 	}
 
-	u64 rng = seed;
-
 	for (i32 y = 0; y < height; y++) {
 		for (i32 x = 0; x < width; x++) {
 			u32 cell = cells[y * width + x];
@@ -736,6 +810,9 @@ void Grid::step() {
 	Cell::update_updated_bit((u64)Grid::tick);
 
 	Grid::tick++;
+
+	Step::step_borders();
+	Step::pre_step_border();
 
 	for (i32 row_idx = 1; row_idx < chunks_height - 1; row_idx++) {
 		if (Grid::active_rows[row_idx] == 0) {
@@ -834,7 +911,8 @@ bool Grid::is_chunk_active(Vector2i chunk_position) {
 }
 
 void Grid::set_seed(i64 new_seed) {
-	Grid::seed = (u64)new_seed;
+	seed = (u64)new_seed;
+	rng = seed;
 }
 
 i64 Grid::get_seed() {

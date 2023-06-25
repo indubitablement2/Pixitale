@@ -5,6 +5,7 @@ extends Node2D
 @onready var m2 := CellMaterials.get_cell_materials_idx("sand")
 @onready var m3 := CellMaterials.get_cell_materials_idx("test")
 @onready var m4 := CellMaterials.get_cell_materials_idx("lava")
+@onready var m5 := CellMaterials.get_cell_materials_idx("rock")
 
 var brush_size := 17
 
@@ -19,6 +20,8 @@ func _process(_delta: float) -> void:
 		_set_rect(m3)
 	elif Input.is_action_pressed("use_item_4"):
 		_set_rect(m4)
+	elif Input.is_action_pressed("use_item_5"):
+		_set_rect(m5)
 
 func _set_rect(cell_material_idx : int) -> void:
 	var set_cell_position = Vector2i(get_global_mouse_position())

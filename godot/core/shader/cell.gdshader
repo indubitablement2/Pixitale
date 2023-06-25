@@ -1,7 +1,7 @@
 shader_type canvas_item;
 //render_mode blend_disabled;
 
-//#define SHOW_ACTIVE
+#define SHOW_ACTIVE
 
 #include "cell_data_unpack.gdshaderinc"
 
