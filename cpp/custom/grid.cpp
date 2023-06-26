@@ -354,6 +354,35 @@ void copy_border_chunk(
 	}
 }
 
+void copy_stripe_h(i32 x_start, i32 y, u32 expected_material, u32 copy_cell) {
+	for (i32 i = 0; i < 32; i++) {
+		i32 x = x_start + i;
+
+		u32 *cell_ptr = Grid::cells + y * Grid::width + x;
+
+		if (Cell::material_idx(*cell_ptr) != expected_material) {
+			*cell_ptr = copy_cell;
+			Grid::activate_neighbors(x, y, cell_ptr);
+		}
+	}
+}
+
+void copy_stripe_v(i32 x, i32 y_start, i32 x_border) {
+	for (i32 i = 0; i < 32; i++) {
+		i32 y = y_start + i;
+
+		u32 copy_cell = Grid::border_cells[y * 32 + x_border];
+		u32 expected_material = Cell::material_idx(copy_cell);
+
+		u32 *cell_ptr = Grid::cells + y * Grid::width + x;
+
+		if (Cell::material_idx(*cell_ptr) != expected_material) {
+			*cell_ptr = copy_cell;
+			Grid::activate_neighbors(x, y, cell_ptr);
+		}
+	}
+}
+
 void step_borders() {
 	// Top
 	if (Grid::active_rows[0] != 0) {
@@ -391,6 +420,56 @@ void step_borders() {
 			copy_border_chunk(Grid::width - 32, chunk_y * 32);
 			Grid::chunks[chunk_y * Grid::chunks_width + Grid::chunks_width - 1] = 0;
 		}
+	}
+
+	// Apply 1 cell border on the active part of the grid as well.
+	// Top
+	u32 copy_cell = Grid::get_cell_checked(0, 0);
+	u32 expected_material = Cell::material_idx(copy_cell);
+	i32 chunk_x = 1;
+	i32 chunk_y = 1;
+	i32 y = 32;
+	while (chunk_x < Grid::chunks_width - 1) {
+		if (Grid::chunks[chunk_y * Grid::chunks_width + chunk_x] != 0) {
+			copy_stripe_h(chunk_x * 32, y, expected_material, copy_cell);
+		}
+
+		chunk_x += 1;
+	}
+	// Bot
+	copy_cell = Grid::get_cell_checked(0, Grid::height);
+	expected_material = Cell::material_idx(copy_cell);
+	chunk_x = 1;
+	chunk_y = Grid::chunks_height - 2;
+	y = Grid::height - 32 - 1;
+	while (chunk_x < Grid::chunks_width - 1) {
+		if (Grid::chunks[chunk_y * Grid::chunks_width + chunk_x] != 0) {
+			copy_stripe_h(chunk_x * 32, y, expected_material, copy_cell);
+		}
+
+		chunk_x += 1;
+	}
+	// Left
+	chunk_x = 1;
+	chunk_y = 2;
+	i32 x = 32;
+	while (chunk_y < Grid::chunks_height - 2) {
+		if (Grid::chunks[chunk_y * Grid::chunks_width + chunk_x] != 0) {
+			copy_stripe_v(x, chunk_y * 32, 0);
+		}
+
+		chunk_y += 1;
+	}
+	// Right
+	chunk_x = Grid::chunks_width - 2;
+	chunk_y = 2;
+	x = Grid::width - 32 - 1;
+	while (chunk_y < Grid::chunks_height - 2) {
+		if (Grid::chunks[chunk_y * Grid::chunks_width + chunk_x] != 0) {
+			copy_stripe_v(x, chunk_y * 32, 31);
+		}
+
+		chunk_y += 1;
 	}
 }
 

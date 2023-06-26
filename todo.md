@@ -75,7 +75,7 @@
 - [x] Benchmark
 - [ ] Simulation
     - [ ] Run without blocking main thread.
-    - [ ] Run using multiple thread.
+    - [x] Run using multiple thread.
     - [ ] If too many active chunk, only update those close to the player.
     - [x] Consider storing ractions in hashmap.
     - [x] Refactor cell movement.
