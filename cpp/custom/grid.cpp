@@ -6,12 +6,14 @@
 #include "core/variant/array.h"
 #include "preludes.h"
 
+#include "BS_thread_pool.hpp"
 #include "biome.h"
 #include "cell.hpp"
 #include "cell_material.h"
 #include "chunk.hpp"
 #include "rng.hpp"
-#include <cstring>
+
+inline static BS::thread_pool tp = BS::thread_pool();
 
 namespace Step {
 
@@ -64,14 +66,11 @@ bool try_swap_h(
 	CellMaterial &other_material = CellMaterial::materials[Cell::material_idx(*other_ptr)];
 
 	if (cell_material.density > other_material.density) {
-		// Chance to delete cells.
-		const u32 HORIZONTAL_MOVEMENT_DISAPEAR_CHANCE = 4194304;
-		if (Rng::gen_u32(rng) < HORIZONTAL_MOVEMENT_DISAPEAR_CHANCE) {
-			u32 cell = 0;
-			Cell::set_updated(cell);
-
-			*cell_ptr = cell;
-			*other_ptr = cell;
+		// Chance to copy cells.
+		const u32 HORIZONTAL_MOVEMENT_DUPLICATE_CHANCE = 2097152;
+		if (Rng::gen_u32(rng) < HORIZONTAL_MOVEMENT_DUPLICATE_CHANCE) {
+			Cell::set_updated(*cell_ptr);
+			*other_ptr = *cell_ptr;
 
 			Grid::activate_neighbors(x, y, cell_ptr);
 			Grid::activate_neighbors(x + dir, y, other_ptr);
@@ -364,7 +363,10 @@ void step_borders() {
 			}
 
 			copy_border_chunk(chunk_idx * 32, 0);
+			Grid::chunks[chunk_idx] = 0;
 		}
+
+		Grid::active_rows[0] = 0;
 	}
 	// Bot
 	if (Grid::active_rows[Grid::chunks_height - 1] != 0) {
@@ -374,49 +376,21 @@ void step_borders() {
 			}
 
 			copy_border_chunk(chunk_idx * 32, 0);
+			Grid::chunks[chunk_idx] = 0;
 		}
+
+		Grid::active_rows[Grid::chunks_height - 1] = 0;
 	}
 	// Left & right
 	for (i32 chunk_y = 1; chunk_y < Grid::chunks_height - 1; chunk_y++) {
 		if (Grid::chunks[chunk_y * Grid::chunks_width] != 0) {
 			copy_border_chunk(0, chunk_y * 32);
+			Grid::chunks[chunk_y * Grid::chunks_width] = 0;
 		}
 		if (Grid::chunks[chunk_y * Grid::chunks_width + Grid::chunks_width - 1] != 0) {
 			copy_border_chunk(Grid::width - 32, chunk_y * 32);
+			Grid::chunks[chunk_y * Grid::chunks_width + Grid::chunks_width - 1] = 0;
 		}
-	}
-}
-
-void pre_step_border() {
-	Grid::active_rows[0] = 0;
-	Grid::active_rows[Grid::chunks_height - 1] = 0;
-
-	// Top
-	i32 top_chunk_start = 0;
-	i32 top_chunk_end = Grid::chunks_width;
-	for (i32 chunk_idx = top_chunk_start; chunk_idx < top_chunk_end; chunk_idx++) {
-		Grid::chunks[chunk_idx] = 0;
-	}
-
-	// Bot
-	i32 bot_chunk_start = (Grid::chunks_height - 2) * Grid::chunks_width;
-	i32 bot_chunk_end = (Grid::chunks_height - 1) * Grid::chunks_width;
-	for (i32 chunk_idx = bot_chunk_start; chunk_idx < bot_chunk_end; chunk_idx++) {
-		Grid::chunks[chunk_idx] = 0;
-	}
-
-	// Left
-	i32 left_chunk_start = top_chunk_start + Grid::chunks_width;
-	i32 left_chunk_end = bot_chunk_start;
-	for (i32 chunk_idx = left_chunk_start; chunk_idx < left_chunk_end; chunk_idx += Grid::chunks_width) {
-		Grid::chunks[chunk_idx] = 0;
-	}
-
-	// Right
-	i32 right_chunk_start = top_chunk_end + Grid::chunks_width - 1;
-	i32 right_chunk_end = bot_chunk_end - Grid::chunks_width;
-	for (i32 chunk_idx = right_chunk_start; chunk_idx < right_chunk_end; chunk_idx += Grid::chunks_width) {
-		Grid::chunks[chunk_idx] = 0;
 	}
 }
 
@@ -812,14 +786,26 @@ void Grid::step() {
 	Grid::tick++;
 
 	Step::step_borders();
-	Step::pre_step_border();
 
-	for (i32 row_idx = 1; row_idx < chunks_height - 1; row_idx++) {
-		if (Grid::active_rows[row_idx] == 0) {
-			continue;
+	// Update rows in 3 passes.
+	// 0 x x x -
+	// 1 o x x 1
+	// 2 x o x 2
+	// 3 x x o 3
+	// 4 o x x 1
+	// 5 x o x 2
+	// 6 x x o 3
+	// 7 o x x 1
+	// 8 x x x -
+	for (i32 row_start = 1; row_start < 4; row_start++) {
+		for (i32 row_idx = row_start; row_idx < chunks_height - 1; row_idx += 3) {
+			if (Grid::active_rows[row_idx] == 0) {
+				continue;
+			}
+
+			tp.push_task(Step::step_row, row_idx);
 		}
-
-		Step::step_row(row_idx);
+		tp.wait_for_tasks();
 	}
 }
 
