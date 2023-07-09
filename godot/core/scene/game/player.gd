@@ -1,4 +1,8 @@
-extends Node2D
+extends GridCharacterBody
+class_name Player
+
+const ACCELERATION = Vector2(8.0, 0.0)
+const GRAVITY = 12.0
 
 @onready var m := CellMaterials.get_cell_materials_idx("")
 @onready var m1 := CellMaterials.get_cell_materials_idx("water")
@@ -9,7 +13,29 @@ extends Node2D
 
 var brush_size := 17
 
-func _process(_delta: float) -> void:
+func _ready() -> void:
+	GameGlobals.player = self
+
+func _exit_tree() -> void:
+	if GameGlobals.player == self:
+		GameGlobals.player = null
+
+func _process(delta: float) -> void:
+	var dir := Vector2(
+		Input.get_action_strength("right") - Input.get_action_strength("left"),
+		Input.get_action_strength("down") - Input.get_action_strength("up")
+	)
+	
+	if Input.is_action_just_pressed("up"):
+		velocity.y -= 5.0
+	
+	velocity += dir * ACCELERATION * delta
+	velocity.y += GRAVITY * delta
+	velocity *= 0.95
+	move()
+	
+	GameGlobals.player_position = position
+	
 	if Input.is_action_pressed("attack"):
 		_set_rect(m)
 	elif Input.is_action_pressed("use_item_1"):
@@ -24,7 +50,7 @@ func _process(_delta: float) -> void:
 		_set_rect(m5)
 
 func _set_rect(cell_material_idx : int) -> void:
-	var set_cell_position = Vector2i(get_global_mouse_position())
+	var set_cell_position := Vector2i(GameGlobals.mouse_position)
 	
 	Grid.set_cell_rect(Rect2i(
 		set_cell_position - (Vector2i(brush_size, brush_size) - Vector2i.ONE) / 2,

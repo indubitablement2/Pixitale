@@ -13,7 +13,7 @@ func _ready() -> void:
 func _on_generation_finished(_canceled: bool) -> void:
 	Background.start()
 	process_mode = Node.PROCESS_MODE_INHERIT
-
-func _process(_delta: float) -> void:
-	Grid.step()
-
+	
+	hide()
+	GameGlobals.game_ready = true
+	GridRender.set_enabled(true)

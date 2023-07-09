@@ -1,4 +1,4 @@
-extends Node
+extends Node2D
 
 enum WORLD_SIZE {
 	LARGE,
@@ -45,5 +45,15 @@ func update_background_y_offset() -> void:
 			background_offset.y = cavern_start_depth
 
 var player_position := Vector2.ZERO
-var player_alive := false
+# null if dead.
+var player : Player = null
 
+# Updated from Background singleton.
+# Saved here as get_global_mouse_position is quite slow.
+var mouse_position := Vector2.ZERO
+
+func _process(_delta: float) -> void:
+	if game_ready && player == null:
+		add_child(preload("res://core/scene/game/player.tscn").instantiate())
+	
+	Grid.step()

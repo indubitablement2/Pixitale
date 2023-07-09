@@ -24,7 +24,8 @@ CellMaterials="*res://core/singleton/cell_materials.gd"
 WorldGeneration="*res://core/singleton/world_generation.gd"
 Background="*res://core/singleton/background.tscn"
 GridRender="*res://core/singleton/grid_render.tscn"
-GameGlobals="*res://core/singleton/game_globals.gd"
+Game="*res://core/singleton/game.tscn"
+Gui="*res://core/singleton/gui.tscn"
 
 [display]
 

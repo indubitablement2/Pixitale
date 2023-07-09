@@ -23,6 +23,7 @@ var render_size := Vector2i.ZERO
 func _ready() -> void:
 	cell_sprite.texture = data_texture
 	light_global_light_sprite.texture = data_texture
+	set_enabled(false)
 
 func _process(_delta: float) -> void:
 	var ctrans := get_canvas_transform()

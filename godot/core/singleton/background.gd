@@ -13,6 +13,8 @@ var new_biome_bg : BiomeBackground = null
 @onready var scanner : GridBiomeScanner = $GridBiomeScanner
 
 func _process(delta: float) -> void:
+	GameGlobals.mouse_position = get_global_mouse_position()
+	
 	if new_biome:
 		var a_delta := delta * BG_TRANSITION_SPEED
 		

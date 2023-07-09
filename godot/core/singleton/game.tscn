@@ -1,0 +1,10 @@
+[gd_scene load_steps=2 format=3 uid="uid://b163kya5e3chi"]
+
+[ext_resource type="Script" path="res://core/singleton/game_globals.gd" id="1_h51gi"]
+
+[node name="game" type="Node"]
+process_mode = 4
+script = ExtResource("1_h51gi")
+
+[node name="Camera" type="Camera2D" parent="."]
+zoom = Vector2(5, 5)

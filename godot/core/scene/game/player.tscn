@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://dgnqog1dj4nuq"]
+
+[ext_resource type="Script" path="res://core/scene/game/player.gd" id="1_payt6"]
+[ext_resource type="Texture2D" uid="uid://ck73ei3ddic5k" path="res://core/texture/util/pixel.png" id="2_uwigw"]
+
+[node name="Player" type="GridCharacterBody"]
+z_index = 3000
+script = ExtResource("1_payt6")
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+scale = Vector2(10, 10)
+texture = ExtResource("2_uwigw")
