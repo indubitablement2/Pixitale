@@ -15,7 +15,7 @@ func generate() -> void:
 	rock_patches.seed = Grid.get_seed() + 2
 	
 	var size := Grid.get_size()
-	var surface_bot := GameGlobals.cavern_start_depth
+	var surface_bot := Game.cavern_start_depth
 	var hills_start_offset := -int(hills_start_height * float(size.y))
 	
 	# Fill cavern with rock.

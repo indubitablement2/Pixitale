@@ -13,7 +13,7 @@ void fragment() {
 	col *= get_cell_modulate(data);
 	
 	#ifdef SHOW_ACTIVE
-	if (is_cell_active(data)) {
+	if (is_cell_active(data) && data == 3u) {
 		col += vec4(0.0, 0.0, 1.0, 1.0);
 	}
 	#endif

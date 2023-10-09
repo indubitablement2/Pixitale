@@ -2,7 +2,7 @@ extends Control
 
 var t := 0
 
-@export var wish_size := GameGlobals.WORLD_SIZE.TINY
+@export var wish_size := Game.WORLD_SIZE.TINY
 
 func _ready() -> void:
 	WorldGeneration.generation_finished.connect(_on_generation_finished, 1)
@@ -15,5 +15,5 @@ func _on_generation_finished(_canceled: bool) -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT
 	
 	hide()
-	GameGlobals.game_ready = true
+#	Game.game_ready = true
 	GridRender.set_enabled(true)

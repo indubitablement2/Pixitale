@@ -11,20 +11,20 @@ signal generation_finished(canceled: bool)
 func is_generating() -> bool:
 	return _thread.is_started()
 
-func generate_world(size: GameGlobals.WORLD_SIZE, base_seed: int) -> void:
+func generate_world(size: Game.WORLD_SIZE, base_seed: int) -> void:
 	if is_generating():
 		push_error("is already generating world")
 		return
 	
-	GameGlobals.world_size = size
-	var s := GameGlobals.get_wish_world_size()
+	Game.world_size = size
+	var s := Game.get_wish_world_size()
 	Grid.new_empty(s.x, s.y)
 	Grid.set_seed(base_seed)
 	seed(base_seed)
 	
-	GameGlobals.compute_layers_starts()
-	GameGlobals.background_offset.x = randf() * 1024.0
-	GameGlobals.update_background_y_offset()
+	Game.compute_layers_starts()
+	Game.background_offset.x = randf() * 1024.0
+	Game.update_background_y_offset()
 	
 	_thread.start(_generate)
 	

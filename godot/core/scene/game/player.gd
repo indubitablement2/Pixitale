@@ -14,11 +14,11 @@ const GRAVITY = 12.0
 var brush_size := 17
 
 func _ready() -> void:
-	GameGlobals.player = self
+	Game.player = self
 
 func _exit_tree() -> void:
-	if GameGlobals.player == self:
-		GameGlobals.player = null
+	if Game.player == self:
+		Game.player = null
 
 func _process(delta: float) -> void:
 	var dir := Vector2(
@@ -34,7 +34,7 @@ func _process(delta: float) -> void:
 	velocity *= 0.95
 	move()
 	
-	GameGlobals.player_position = position
+	Game.player_position = position
 	
 	if Input.is_action_pressed("attack"):
 		_set_rect(m)
@@ -50,7 +50,7 @@ func _process(delta: float) -> void:
 		_set_rect(m5)
 
 func _set_rect(cell_material_idx : int) -> void:
-	var set_cell_position := Vector2i(GameGlobals.mouse_position)
+	var set_cell_position := Vector2i(Game.mouse_position)
 	
 	Grid.set_cell_rect(Rect2i(
 		set_cell_position - (Vector2i(brush_size, brush_size) - Vector2i.ONE) / 2,

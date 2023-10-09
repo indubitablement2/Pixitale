@@ -9,7 +9,7 @@ func _ready() -> void:
 	
 	if OS.is_debug_build():
 		Grid.run_tests()
-#		Grid.print_materials()
+		Grid.print_materials()
 
 # Return 0 if cell material not found.
 func get_cell_materials_idx(id: StringName) -> int:

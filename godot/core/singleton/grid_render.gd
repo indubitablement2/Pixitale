@@ -53,7 +53,7 @@ func _process(_delta: float) -> void:
 	light_viewport.size = render_size
 	light_global_light_sprite.material.set_shader_parameter(
 		&"global_light_local_end",
-		GameGlobals.cavern_start_depth - render_origin.y
+		Game.cavern_start_depth - render_origin.y
 	)
 
 func set_enabled(enabled: bool) -> void:

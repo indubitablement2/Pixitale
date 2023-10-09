@@ -26,6 +26,9 @@ func get_wish_world_size() -> Vector2i:
 		_:
 			return WORLD_SIZE_TINY
 
+#func _ready() -> void:
+#	add_child(preload("res://core/camera/camera.tscn").instantiate())
+
 const CAVERN_START := 0.3
 var cavern_start_depth := 0
 func compute_layers_starts() -> void:
@@ -53,7 +56,7 @@ var player : Player = null
 var mouse_position := Vector2.ZERO
 
 func _process(_delta: float) -> void:
-	if game_ready && player == null:
+	if player == null:
 		add_child(preload("res://core/scene/game/player.tscn").instantiate())
 	
 	Grid.step()

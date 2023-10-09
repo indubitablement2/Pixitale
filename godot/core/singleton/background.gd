@@ -13,7 +13,7 @@ var new_biome_bg : BiomeBackground = null
 @onready var scanner : GridBiomeScanner = $GridBiomeScanner
 
 func _process(delta: float) -> void:
-	GameGlobals.mouse_position = get_global_mouse_position()
+	Game.mouse_position = get_global_mouse_position()
 	
 	if new_biome:
 		var a_delta := delta * BG_TRANSITION_SPEED
@@ -41,7 +41,7 @@ func _process(delta: float) -> void:
 			
 			print("Biome changed: ", current_biome.id)
 	else:
-		scanner.position = GameGlobals.player_position
+		scanner.position = Game.player_position
 		if scanner.scan():
 			if current_biome:
 				new_biome = Mod.biomes_data[scanner.get_current_biome()]
@@ -60,7 +60,7 @@ func _process(delta: float) -> void:
 
 func start() -> void:
 	process_mode = Node.PROCESS_MODE_INHERIT
-	$CanvasLayer.offset.y = GameGlobals.cavern_start_depth
+	$CanvasLayer.offset.y = Game.cavern_start_depth
 
 func stop() -> void:
 	current_biome = null
@@ -81,7 +81,7 @@ func _make_bg(data: BiomeData) -> BiomeBackground:
 	else:
 		bg = BiomeBackground.new()
 	
-	bg.scroll_base_offset = GameGlobals.background_offset
+	bg.scroll_base_offset = Game.background_offset
 	bg.layer = -101
 	
 	add_child(bg)

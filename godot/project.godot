@@ -24,13 +24,17 @@ CellMaterials="*res://core/singleton/cell_materials.gd"
 WorldGeneration="*res://core/singleton/world_generation.gd"
 Background="*res://core/singleton/background.tscn"
 GridRender="*res://core/singleton/grid_render.tscn"
-Game="*res://core/singleton/game.tscn"
+Game="*res://core/singleton/game_globals.gd"
 Gui="*res://core/singleton/gui.tscn"
 
 [display]
 
 window/size/viewport_width=960
 window/size/viewport_height=540
+
+[editor]
+
+movie_writer/movie_file="/home/anon/Dev/Pixitale/godot/movie.avi"
 
 [editor_plugins]
 
