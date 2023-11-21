@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="GemData" load_steps=3 format=3 uid="uid://1g04a0rtki2u"]
+
+[ext_resource type="Script" path="res://core/script/gem_data.gd" id="1_8inrf"]
+[ext_resource type="Script" path="res://base/gem/support/lesser_mutiple_projectile/script.gd" id="2_jm4dc"]
+
+[resource]
+script = ExtResource("1_8inrf")
+display_name = "Lesser Multiple Projectile"
+gem_type = 1
+support_script = ExtResource("2_jm4dc")

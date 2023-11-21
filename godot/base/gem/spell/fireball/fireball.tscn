@@ -5,8 +5,6 @@
 
 [node name="Fireball" type="Node2D"]
 script = ExtResource("1_tt1dl")
-speed = 500.0
-pierce = 55
 direct_cast_cooldown = 0.5
 
 [node name="Sprite2D" type="Sprite2D" parent="."]

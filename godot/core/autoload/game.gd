@@ -66,8 +66,11 @@ func parse_gems() -> void:
 		if first_spell_gem_idx >= gems.size():
 			# No spell gem found.
 			return
-		if gems[first_spell_gem_idx].gem_type == GemData.GemType.SPELL:
-			break
+		var gem := gems[first_spell_gem_idx]
+		if gem != null:
+			if gem.gem_type == GemData.GemType.SPELL:
+				break
+
 		first_spell_gem_idx += 1
 	
 	# Splits gems into groups.
@@ -77,13 +80,14 @@ func parse_gems() -> void:
 	while true:
 		var gem := gems[gem_idx]
 		
-		if gem.gem_type == GemData.GemType.SPELL:
-			var group : Array[GemData] = []
-			group.push_back(gem)
-			group.append_array(global_support_gems)
-			groups.push_back(group)
-		else:
-			groups[-1].push_back(gem)
+		if gem != null:
+			if gem.gem_type == GemData.GemType.SPELL:
+				var group : Array[GemData] = []
+				group.push_back(gem)
+				group.append_array(global_support_gems)
+				groups.push_back(group)
+			else:
+				groups[-1].push_back(gem)
 		
 		gem_idx = (gem_idx + 1)  % gems.size()
 		if gem_idx == first_spell_gem_idx:

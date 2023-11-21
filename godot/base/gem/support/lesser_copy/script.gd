@@ -1,4 +1,4 @@
-extends Object
+extends RefCounted
 
 
 func support(spell: Spell) -> void:
