@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://c5rnbj6insrtt"]
+
+[ext_resource type="Texture2D" uid="uid://b8i35i67suwvr" path="res://icon.svg" id="1_o3oho"]
+
+[node name="PathFollow2D" type="Enemy"]
+cubic_interp = false
+loop = false
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_o3oho")
+offset = Vector2(0, -62.615)

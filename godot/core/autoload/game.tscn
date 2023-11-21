@@ -1,0 +1,21 @@
+[gd_scene load_steps=4 format=3 uid="uid://dmlsfm31wlpap"]
+
+[ext_resource type="Script" path="res://core/autoload/game.gd" id="1_avexx"]
+[ext_resource type="Resource" uid="uid://oxxytxuh17t7" path="res://base/gem/spell/fireball/fireball_data.tres" id="2_at1aw"]
+
+[sub_resource type="Curve2D" id="Curve2D_jkxys"]
+_data = {
+"points": PackedVector2Array(10.1022, 95.4092, -10.1022, -95.4092, 205, 240, -206.533, -7.85723, 206.533, 7.85723, 554, 142, -2.24492, -129.083, 2.24492, 129.083, 951, 300, 227.86, -16.8369, -227.86, 16.8369, 505, 575, 4.48985, 120.103, -4.48985, -120.103, 104, 460, -61.7354, 15.7145, 61.7354, -15.7145, 381, 285, -40.4086, -74.0825, 40.4086, 74.0825, 709, 275, 143.675, 10.1022, -143.675, -10.1022, 488, 480, 26.9391, 135.818, -26.9391, -135.818, 205, 240)
+}
+point_count = 9
+
+[node name="Game" type="Node" node_paths=PackedStringArray("path")]
+script = ExtResource("1_avexx")
+path = NodePath("Path2D")
+turret_position = Vector2(500, 350)
+extra_cast_cooldown = 0.1
+gems = Array[Resource("res://core/script/gem_data.gd")]([ExtResource("2_at1aw")])
+
+[node name="Path2D" type="Path2D" parent="."]
+y_sort_enabled = true
+curve = SubResource("Curve2D_jkxys")

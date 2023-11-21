@@ -10,125 +10,24 @@ config_version=5
 
 [application]
 
-config/name="Pixitale"
-run/main_scene="res://core/scene/Main.tscn"
-config/features=PackedStringArray("4.0", "GL Compatibility")
-boot_splash/bg_color=Color(0.141176, 0.141176, 0.141176, 1)
+config/name="Jelly"
+run/main_scene="res://core/scene/main_menu.tscn"
+config/features=PackedStringArray("4.1", "GL Compatibility")
 config/icon="res://icon.svg"
 
 [autoload]
 
-Init="res://core/singleton/init.gd"
-Mod="*res://core/singleton/mod.gd"
-CellMaterials="*res://core/singleton/cell_materials.gd"
-WorldGeneration="*res://core/singleton/world_generation.gd"
-Background="*res://core/singleton/background.tscn"
-GridRender="*res://core/singleton/grid_render.tscn"
-Game="*res://core/singleton/game_globals.gd"
-Gui="*res://core/singleton/gui.tscn"
-
-[display]
-
-window/size/viewport_width=960
-window/size/viewport_height=540
-
-[editor]
-
-movie_writer/movie_file="/home/anon/Dev/Pixitale/godot/movie.avi"
-
-[editor_plugins]
-
-enabled=PackedStringArray()
+Game="*res://core/autoload/game.tscn"
 
 [filesystem]
 
 import/blender/enabled=false
 
-[input]
+[physics]
 
-left={
-"deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":65,"key_label":0,"unicode":0,"echo":false,"script":null)
-]
-}
-right={
-"deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":68,"key_label":0,"unicode":0,"echo":false,"script":null)
-]
-}
-up={
-"deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":87,"key_label":0,"unicode":0,"echo":false,"script":null)
-]
-}
-down={
-"deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":83,"key_label":0,"unicode":0,"echo":false,"script":null)
-]
-}
-camera_zoom_in={
-"deadzone": 0.5,
-"events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":8,"position":Vector2(138, 22),"global_position":Vector2(142, 67),"factor":1.0,"button_index":4,"pressed":true,"double_click":false,"script":null)
-]
-}
-camera_zoom_out={
-"deadzone": 0.5,
-"events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":16,"position":Vector2(56, 9),"global_position":Vector2(60, 54),"factor":1.0,"button_index":5,"pressed":true,"double_click":false,"script":null)
-]
-}
-camera_drag={
-"deadzone": 0.5,
-"events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":4,"position":Vector2(136, 16),"global_position":Vector2(140, 61),"factor":1.0,"button_index":3,"pressed":true,"double_click":false,"script":null)
-]
-}
-attack={
-"deadzone": 0.5,
-"events": [Object(InputEventMouseButton,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"button_mask":1,"position":Vector2(445, 16),"global_position":Vector2(449, 59),"factor":1.0,"button_index":1,"pressed":true,"double_click":false,"script":null)
-]
-}
-use_item_1={
-"deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":49,"key_label":0,"unicode":49,"echo":false,"script":null)
-]
-}
-use_item_2={
-"deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":50,"key_label":0,"unicode":50,"echo":false,"script":null)
-]
-}
-use_item_3={
-"deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":51,"key_label":0,"unicode":51,"echo":false,"script":null)
-]
-}
-use_item_4={
-"deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":52,"key_label":0,"unicode":52,"echo":false,"script":null)
-]
-}
-use_item_5={
-"deadzone": 0.5,
-"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":-1,"window_id":0,"alt_pressed":false,"shift_pressed":false,"ctrl_pressed":false,"meta_pressed":false,"pressed":false,"keycode":0,"physical_keycode":53,"key_label":0,"unicode":53,"echo":false,"script":null)
-]
-}
-
-[mod]
-
-order=PackedStringArray("base")
+common/max_physics_steps_per_frame=4
 
 [rendering]
 
-textures/canvas_textures/default_texture_filter=0
-environment/defaults/default_clear_color=Color(0, 0, 0, 1)
-environment/defaults/default_environment="res://core/default_environment.tres"
-
-[shader_globals]
-
-cell_materials_data={
-"type": "sampler2D",
-"value": "res://core/shader/cell_materials_data.tres"
-}
-cell_modulate_palette={
-"type": "sampler2D",
-"value": "res://core/shader/cell_palette/cell_modulate_palette.tres"
-}
+renderer/rendering_method="gl_compatibility"
+renderer/rendering_method.mobile="gl_compatibility"

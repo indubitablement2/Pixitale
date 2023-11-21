@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="GemData" load_steps=3 format=3 uid="uid://fwhyd5ghnvj7"]
+
+[ext_resource type="Script" path="res://core/script/gem_data.gd" id="1_ri71r"]
+[ext_resource type="Script" path="res://base/gem/support/lesser_copy/script.gd" id="2_fiijw"]
+
+[resource]
+script = ExtResource("1_ri71r")
+display_name = "Lesser Copy"
+gem_type = 1
+support_script = ExtResource("2_fiijw")

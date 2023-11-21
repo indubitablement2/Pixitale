@@ -1,0 +1,12 @@
+[gd_scene load_steps=2 format=3 uid="uid://cqs7udepat54o"]
+
+[ext_resource type="Texture2D" uid="uid://b8i35i67suwvr" path="res://icon.svg" id="1_lxq25"]
+
+[node name="PathFollow2D" type="Enemy"]
+cubic_interp = false
+speed = 5.0
+radius = 60.0
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("1_lxq25")
+offset = Vector2(0, -62.615)

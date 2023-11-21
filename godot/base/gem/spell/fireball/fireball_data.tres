@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="GemData" load_steps=3 format=3 uid="uid://oxxytxuh17t7"]
+
+[ext_resource type="PackedScene" uid="uid://cqdrx3qg8a07w" path="res://base/gem/spell/fireball/fireball.tscn" id="1_vu7ir"]
+[ext_resource type="Script" path="res://core/script/gem_data.gd" id="2_wksxl"]
+
+[resource]
+script = ExtResource("2_wksxl")
+display_name = "Fireball"
+gem_type = 0
+scene = ExtResource("1_vu7ir")

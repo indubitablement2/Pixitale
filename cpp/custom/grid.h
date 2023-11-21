@@ -1,87 +1,37 @@
 #ifndef GRID_H
 #define GRID_H
 
-#include "preludes.h"
-
-#include "cell_material.h"
-#include "core/io/image.h"
-#include "core/object/class_db.h"
+#include "core/math/vector2.h"
 #include "core/object/object.h"
-#include <cell.hpp>
+#include "enemy.h"
+#include "preludes.h"
+#include <vector>
 
 class Grid : public Object {
 	GDCLASS(Grid, Object);
+
+public:
+	struct Collider {
+		Vector2 position;
+		f32 radius;
+		i32 enemy_idx;
+	};
 
 protected:
 	static void _bind_methods();
 
 public:
-	inline static u32 *cells = nullptr;
 	inline static i32 width = 0;
 	inline static i32 height = 0;
+	inline static f32 cell_size = 0.0f;
+	static void new_empty(f32 wish_width, f32 wish_height, f32 wish_cell_size);
 
-	// Same height as cells. Width is one chunk (32).
-	inline static u32 *border_cells = nullptr;
+	inline static std::vector<std::vector<Collider>> cells;
+	inline static std::vector<Enemy *> enemies;
 
-	inline static u64 *chunks = nullptr;
-	inline static i32 chunks_width = 0;
-	inline static i32 chunks_height = 0;
+	static void add_enemy(Enemy *enemy);
 
-	inline static u64 *active_rows = nullptr;
-
-	inline static u64 tick = 0;
-
-	inline static u64 seed = 0;
-	inline static u64 rng = 0;
-
-	static void delete_grid();
-	static void new_empty(i32 wish_width, i32 wish_height);
-	static Vector2i get_size();
-	static Vector2i get_size_chunk();
-
-	static Ref<Image> get_cell_data(Vector2i image_size, Rect2i rect);
-	// Return fallback cell if out of bounds.
-	static u32 get_cell_checked(i32 x, i32 y);
-
-	static void activate_neighbors(i32 x, i32 y, u32 *cell_ptr);
-
-	static void set_cell_rect(Rect2i rect, u32 cell_material_idx);
-	static void set_cell(Vector2i position, u32 cell_material_idx);
-	static void set_cell_color(Vector2i position, u32 hue_palette_idx, u32 value_palette_idx);
-
-	static void take_border_cells();
-	static void post_generation_pass();
-
-	static void step();
-
-	static void add_material(
-			i32 density,
-			i32 movement_vertical_step,
-			f32 movement_chance,
-			bool horizontal_movement,
-			f32 durability,
-			i32 collision,
-			f32 friction,
-			bool can_color,
-			u32 max_value_noise,
-			Ref<Image> values,
-			Array reactions,
-			u32 cell_biome);
-
-	static void set_biomes(Array biomes);
-
-	static i64 get_tick();
-	static u32 get_cell_material_idx(Vector2i position);
-	static bool is_chunk_active(Vector2i position);
-
-	static void set_seed(i64 new_seed);
-	static i64 get_seed();
-
-	static void free_memory();
-	static void print_materials();
-	static void run_tests();
+	static TypedArray<Enemy> query(Vector2 position, f32 radius);
 };
-
-VARIANT_ENUM_CAST(Cell::Collision);
 
 #endif

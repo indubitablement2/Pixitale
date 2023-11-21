@@ -1,0 +1,15 @@
+[gd_scene load_steps=3 format=3 uid="uid://cqdrx3qg8a07w"]
+
+[ext_resource type="Texture2D" uid="uid://b8i35i67suwvr" path="res://icon.svg" id="1_colgs"]
+[ext_resource type="Script" path="res://base/gem/spell/fireball/fireball.gd" id="1_tt1dl"]
+
+[node name="Fireball" type="Node2D"]
+script = ExtResource("1_tt1dl")
+speed = 500.0
+pierce = 55
+direct_cast_cooldown = 0.5
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+modulate = Color(1, 0, 0, 1)
+scale = Vector2(0.275, 0.275)
+texture = ExtResource("1_colgs")
