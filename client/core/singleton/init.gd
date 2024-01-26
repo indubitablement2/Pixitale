@@ -1,8 +1,13 @@
 extends Node
 
+
 func _ready() -> void:
-	pass
+	if PixitaleTests.assert_enabled():
+		PixitaleTests.run_tests()
+
 
 func _exit_tree() -> void:
-	Grid.free_memory()
+	#Grid.free_memory()
 	print("Exiting...")
+
+

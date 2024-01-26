@@ -1,80 +1,112 @@
 #ifndef CELL_MATERIAL_H
 #define CELL_MATERIAL_H
 
-#include "cell.hpp"
 #include "core/io/image.h"
+#include "core/io/resource.h"
+#include "core/math/vector2i.h"
+#include "core/object/object.h"
+#include "core/object/ref_counted.h"
+#include "core/string/string_name.h"
+#include "core/variant/typed_array.h"
 #include "preludes.h"
+#include "rng.hpp"
+#include "vector"
+#include <unordered_map>
+#include <vector>
 
-struct CellReaction {
-	f32 probability;
-	// If eq in1 does not change material.
-	u32 mat_idx_out1;
-	// If eq in2 does not change material.
-	u32 mat_idx_out2;
+const u32 DUPLICATE_ON_VERTICAL_MOVEMENT_PROBABILITY_RANGE = 1 << 20;
+
+enum CellCollision {
+	COLLISION_NONE,
+	COLLISION_SOLID,
+	COLLISION_PLATFORM,
+	COLLISION_LIQUID,
 };
 
-class CellMaterial {
-	// Key is lower material_idx | higher material_idx << 16.
-	inline static std::unordered_map<u32, std::vector<CellReaction>> reactions_map = {};
+class CellMaterial : public Resource {
+	GDCLASS(CellMaterial, Resource);
 
-	u8 *values;
-	u32 values_height;
-	u32 values_width;
+protected:
+	static void _bind_methods();
 
 public:
-	static std::vector<CellMaterial> materials;
+	static std::vector<Ref<CellMaterial>> materials;
+	// Material id to material idx.
+	static std::unordered_map<const void *, u32> material_ids;
+	// Tag to material idx.
+	static std::unordered_map<const void *, std::vector<u32>> material_tags;
 
-	f32 durability;
+	static void add_material(Ref<CellMaterial> value);
 
-	Cell::Collision collision;
-	f32 friction;
+	// Meant for gdscript.
+	// Return 0 if not found.
+	static u32 find_material_idx(StringName material_id);
+	// Return nullptr if not found.
+	static Ref<CellMaterial> find_material(StringName material_id);
+	// Return nullptr if not found.
+	static Ref<CellMaterial> get_material(u32 material_idx);
 
-	u32 cell_biome;
+public:
+	StringName material_id;
+	void set_material_id(StringName value);
+	StringName get_material_id();
+
+	TypedArray<StringName> tags = { StringName("_all") };
+	void set_tags(TypedArray<StringName> value);
+	TypedArray<StringName> get_tags();
+
+	u32 material_idx = 0;
+	u32 get_material_idx();
+
+	CellCollision collision = CellCollision::COLLISION_NONE;
+	void set_collision(CellCollision value);
+	CellCollision get_collision();
+
+	Ref<Image> values_image;
+	std::vector<u8> values = {};
+	u32 values_height = 0;
+	u32 values_width = 0;
+	void set_values_image(Ref<Image> value);
+	Ref<Image> get_values_image();
+	u32 get_value_at(const Vector2i coord, Rng &rng);
+
+	// f32 durability = 0.0f;
+	// f32 friction;
+	// u32 biome_contribution = 0;
 
 	// If 0, then no noise.
-	u32 max_value_noise;
+	u32 max_value_noise = 0;
 
 	// Can swap position with less dense cell.
-	i32 density;
-	// 0: no vertical movement.
-	// 1: vertical movement down.
-	// -1: vertical movement up.
-	i32 movement_vertical_step;
-	f32 movement_chance;
-	bool horizontal_movement;
+	i32 density = 0;
 
-	bool can_color;
+	// How much velocity gained per step.
+	// Negative value moves upwars.
+	f32 vertical_acceleration = 1.0f;
+	// How many vertical movement per step when at max orthogonal velocity.
+	// Fractional part is handled using probability.
+	f32 vertical_velocity_max = 4.0f;
+	// TODO: wind effect when moving vertically.
 
-	// higher_reactions is all reactions with material that have idx > this material's idx.
-	// Inner vector can be empty (no reactions with this material).
-	static void add(
-			const i32 density,
-			const i32 movement_vertical_step,
-			const f32 movement_chance,
-			const bool horizontal_movement,
-			const f32 durability,
-			const Cell::Collision collision,
-			const f32 friction,
-			const bool can_color,
-			const u32 max_value_noise,
-			const Ref<Image> values,
-			const std::vector<std::vector<CellReaction>> higher_reactions,
-			const u32 cell_biome);
-	static void free_memory();
+	// How much orthogonal velocity gained/lost per step when moving horizontally.
+	// Should be set to 1 for fluid and some negative value otherwise.
+	f32 horizontal_acceleration;
+	// How many horizontal movement per step when at max orthogonal velocity.
+	f32 horizontal_velocity_max;
+	// Duplicate this cell on vertical movement when moving atop inactive cells.
+	// This is for top layer of fluid to eventually fill up and become inactive
+	// instead of moving back and forth forever.
+	u32 duplicate_on_vertical_movement_probability;
 
-	static bool try_react_between(
-			u32 *cell_ptr,
-			bool &active,
-			const u32 material_idx,
-			const i32 x,
-			const i32 y,
-			const i32 other_offset_x,
-			const i32 other_offset_y,
-			u64 &rng);
+	// When true, cell will fall when not supported by other cells.
+	bool can_fall = false;
+	bool can_color = false;
 
-	u32 get_value_idx_at(const i32 x, const i32 y, u64 &rng);
+	u32 get_hue_at(const Vector2i coord, Rng &rng);
 
-	void print(u32 material_idx);
+	void print();
 };
+
+VARIANT_ENUM_CAST(CellCollision);
 
 #endif // CELL_MATERIAL_H
