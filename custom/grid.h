@@ -7,9 +7,11 @@
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
 #include "core/object/object.h"
+#include "grid_iter.h"
 #include "preludes.h"
 #include "rng.hpp"
 #include <unordered_map>
+#include <vector>
 
 class Grid : public Object {
 	GDCLASS(Grid, Object);
@@ -23,6 +25,8 @@ public:
 
 	inline static std::unordered_map<u64, Chunk *> chunks = {};
 	inline static std::unordered_map<u64, u32> active_chunks = {};
+
+	inline static std::vector<GridIter *> iters = {};
 
 	// void activate_neighbors(i32 x, i32 y, u32 *cell_ptr);
 
@@ -56,6 +60,9 @@ public:
 	static void set_cell_rect(Rect2i rect, u32 material_idx);
 
 	static Ref<Image> get_cell_buffer(Rect2i rect);
+
+	static GridIter *iter(Rect2i rect);
+	static GridIter *iter_chunk(Vector2i chunk_coord);
 
 	static void step();
 };

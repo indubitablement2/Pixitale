@@ -369,23 +369,34 @@ struct IterChunk {
 	Vector2i local_coord_start;
 	Vector2i local_coord_end;
 
+	inline IterChunk(){};
+
 	inline IterChunk(Rect2i rect) :
 			_start(ChunkLocalCoord(rect.position)),
 			_end(ChunkLocalCoord(rect.get_end())),
 			chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {}
 
+	inline IterChunk(Vector2i p_chunk_coord) :
+			_start(ChunkLocalCoord(p_chunk_coord, Vector2i(0, 0))),
+			_end(ChunkLocalCoord(Vector2i(p_chunk_coord.x, p_chunk_coord.y + 1), Vector2i(32, 32))),
+			chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {}
+
 	// Return true if there is a next chunk
 	// and update chunk_coord and local_coord_start/end.
 	inline bool next() {
-		if (chunk_coord.y >= _end.chunk_coord.y) {
+		if (chunk_coord.y > _end.chunk_coord.y) {
 			return false;
 		}
 
 		chunk_coord.x += 1;
 
-		if (chunk_coord.x >= _end.chunk_coord.x) {
+		if (chunk_coord.x > _end.chunk_coord.x) {
 			chunk_coord.x = _start.chunk_coord.x;
 			chunk_coord.y += 1;
+
+			if (chunk_coord.y > _end.chunk_coord.y) {
+				return false;
+			}
 		}
 
 		if (chunk_coord.x == _start.chunk_coord.x) {
@@ -393,7 +404,7 @@ struct IterChunk {
 		} else {
 			local_coord_start.x = 0;
 		}
-		if (chunk_coord.x + 1 >= _end.chunk_coord.x) {
+		if (chunk_coord.x >= _end.chunk_coord.x) {
 			local_coord_end.x = _end.local_coord.x;
 		} else {
 			local_coord_end.x = 32;
@@ -403,7 +414,7 @@ struct IterChunk {
 		} else {
 			local_coord_start.y = 0;
 		}
-		if (chunk_coord.y + 1 >= _end.chunk_coord.y) {
+		if (chunk_coord.y >= _end.chunk_coord.y) {
 			local_coord_end.y = _end.local_coord.y;
 		} else {
 			local_coord_end.y = 32;
@@ -414,6 +425,10 @@ struct IterChunk {
 
 	inline Iter2D local_iter() {
 		return Iter2D(local_coord_start, local_coord_end);
+	}
+
+	inline void reset() {
+		chunk_coord = Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y);
 	}
 };
 

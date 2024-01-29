@@ -2,9 +2,9 @@
 #include "cell_material.h"
 #include "cell_reaction.h"
 #include "core/object/class_db.h"
-#include "generation_api.h"
 #include "generation_pass.h"
 #include "grid.h"
+#include "grid_iter.h"
 #include "tests.h"
 
 void initialize_custom_module(ModuleInitializationLevel p_level) {
@@ -18,7 +18,7 @@ void initialize_custom_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<CellMaterial>();
 	ClassDB::register_class<CellReaction>();
 
-	ClassDB::register_class<GenerationApi>();
+	ClassDB::register_class<GridIter>();
 	ClassDB::register_class<GenerationPass>();
 
 	// ClassDB::register_class<GridCharacterBody>();

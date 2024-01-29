@@ -68,7 +68,7 @@ void test_int_coord() {
 	TEST_ASSERT(c.local_coord == Vector2i(1, 1), "int coord");
 }
 
-void test_rect_chunked_iter() {
+void test_iter_chunk() {
 	const i32 START_CHUNK = -2;
 	const i32 END_CHUNK = 2;
 	const i32 WIDTH_CHUNK = END_CHUNK - START_CHUNK;
@@ -80,8 +80,12 @@ void test_rect_chunked_iter() {
 	bool visited_cell[SIZE] = { false };
 	bool visited_chunk[SIZE_CHUNK] = { false };
 
-	IterChunk c = IterChunk(Rect2i(START, START, END, END));
+	IterChunk c = IterChunk(Rect2i(START, START, WIDTH, WIDTH));
+	// print_line("from: ", c._start.chunk_coord, " - ", c._start.local_coord);
+	// print_line("to: ", c._end.chunk_coord, " - ", c._end.local_coord);
 	while (c.next()) {
+		// print_line(c.chunk_coord, ": ", c.local_coord_start, " - ", c.local_coord_end);
+
 		TEST_ASSERT(c.chunk_coord.x >= START_CHUNK, "chunk coord oob");
 		TEST_ASSERT(c.chunk_coord.x < END_CHUNK, "chunk coord oob");
 		TEST_ASSERT(c.chunk_coord.y >= START_CHUNK, "chunk coord oob");
@@ -106,6 +110,25 @@ void test_rect_chunked_iter() {
 			TEST_ASSERT(!visited_cell[ii], "local coord visited twice");
 			visited_cell[ii] = true;
 		}
+	}
+
+	for (i32 i = 0; i < SIZE_CHUNK; i++) {
+		TEST_ASSERT(visited_chunk[i], "chunk coord not visited");
+	}
+	for (i32 i = 0; i < SIZE; i++) {
+		TEST_ASSERT(visited_cell[i], "cell not visited");
+	}
+
+	c = IterChunk(Vector2i(-5, -5));
+	TEST_ASSERT(c.next(), "iter chunk");
+	Iter2D cell_iter = c.local_iter();
+	bool v2[32 * 32] = { false };
+	while (cell_iter.next()) {
+		TEST_ASSERT(v2[cell_iter.coord.x + cell_iter.coord.y * 32] == false, "already visited");
+		v2[cell_iter.coord.x + cell_iter.coord.y * 32] = true;
+	}
+	for (i32 i = 0; i < 32 * 32; i++) {
+		TEST_ASSERT(v2[i], "not visited");
 	}
 }
 
@@ -157,7 +180,7 @@ void PixitaleTests::run_tests() {
 
 	test_iter2d();
 	test_int_coord();
-	test_rect_chunked_iter();
+	test_iter_chunk();
 	test_rng_bias();
 }
 

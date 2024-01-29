@@ -64,9 +64,32 @@ void Grid::_bind_methods() {
 			"Grid",
 			D_METHOD("get_cell_buffer", "chunk_rect"),
 			&Grid::get_cell_buffer);
+
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("iter", "rect"),
+			&Grid::iter);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("iter_chunk", "chunk_coord"),
+			&Grid::iter_chunk);
+
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("step"),
+			&Grid::step);
 }
 
 void Grid::clear() {
+	for (auto &iter : iters) {
+		if (iter->next()) {
+			continue;
+		} else {
+			memdelete(iter);
+		}
+	}
+	iters.clear();
+
 	for (auto &[chunk_id, chunk] : chunks) {
 		delete chunk;
 	}
@@ -211,7 +234,36 @@ Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect) {
 			image_data);
 }
 
+GridIter *Grid::iter(Rect2i rect) {
+	GridIter *iter = memnew(GridIter);
+	iter->chunk_iter = IterChunk(rect);
+	iter->rng = get_static_rng(iter->chunk_coord());
+
+	iters.push_back(iter);
+
+	return iter;
+}
+
+GridIter *Grid::iter_chunk(Vector2i chunk_coord) {
+	GridIter *iter = memnew(GridIter);
+	iter->chunk_iter = IterChunk(chunk_coord);
+	iter->rng = get_static_rng(iter->chunk_coord());
+
+	iters.push_back(iter);
+
+	return iter;
+}
+
 void Grid::step() {
+	for (auto &iter : iters) {
+		if (iter->next()) {
+			continue;
+		} else {
+			memdelete(iter);
+		}
+	}
+	iters.clear();
+
 	// TODO
 
 	// 	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");

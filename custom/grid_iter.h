@@ -1,5 +1,5 @@
-#ifndef GENERATION_API_H
-#define GENERATION_API_H
+#ifndef GRID_ITER_H
+#define GRID_ITER_H
 
 #include "chunk.h"
 #include "core/math/vector2i.h"
@@ -8,26 +8,24 @@
 #include "preludes.h"
 #include "rng.hpp"
 
-class GenerationApi : public Object {
-	GDCLASS(GenerationApi, Object);
+class GridIter : public Object {
+	GDCLASS(GridIter, Object);
 
 protected:
 	static void _bind_methods();
 
 public:
-	Chunk *chunk;
-	Vector2i _chunk_coord;
-	Rng rng;
+	IterChunk chunk_iter;
 	Iter2D cell_iter;
-
-	void init(Vector2i chunk_coord);
+	Chunk *chunk;
+	Rng rng;
 
 	bool next();
 
 	void set_cell(u32 value);
 	u32 get_cell();
 
-	void fill(u32 value);
+	void fill_remaining(u32 value);
 
 	void reset_iter();
 

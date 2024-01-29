@@ -1,7 +1,7 @@
 #ifndef GENERATION_PASS_H
 #define GENERATION_PASS_H
 
-#include "generation_api.h"
+#include "grid_iter.h"
 #include "scene/main/node.h"
 
 class GenerationPass : public Node {
@@ -11,9 +11,9 @@ protected:
 	static void _bind_methods();
 
 public:
-	void generate(GenerationApi *api);
+	void generate(GridIter *api);
 
-	GDVIRTUAL1(_generate, GenerationApi *);
+	GDVIRTUAL1(_generate, GridIter *);
 };
 
 #endif

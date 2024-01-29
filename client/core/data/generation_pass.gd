@@ -1,5 +1,5 @@
 extends Resource
-class_name GenerationPass
+#class_name GenerationPass
 
 @export var id := ""
 @export var description := ""

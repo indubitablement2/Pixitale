@@ -7,7 +7,7 @@ func _ready() -> void:
 
 
 func _exit_tree() -> void:
-	#Grid.free_memory()
+	Grid.clear()
 	print("Exiting...")
 
 

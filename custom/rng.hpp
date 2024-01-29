@@ -7,10 +7,10 @@
 struct Rng {
 	u64 state;
 
-	Rng() :
+	inline Rng() :
 			state(0) {}
 
-	Rng(u64 seed) :
+	inline Rng(u64 seed) :
 			state(seed) {
 		state += 0x9e3779b97f4a7c15uLL;
 		state ^= state >> 30;
