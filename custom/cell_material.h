@@ -38,14 +38,14 @@ public:
 	static std::unordered_map<const void *, std::vector<u32>> material_tags;
 
 	static void _clear_materials();
-	static void _add_material(CellMaterial *value);
+	static void _add_material(CellMaterial *material);
 
 	// Meant for gdscript.
 	// Return 0 if not found.
 	static u32 find_material_idx(StringName material_id);
-	// Return nullptr if not found.
+	// Return default if not found.
 	static CellMaterial *find_material(StringName material_id);
-	// Return nullptr if not found.
+	// Return default if not found.
 	static CellMaterial *get_material(u32 material_idx);
 
 public:
@@ -105,8 +105,6 @@ public:
 	bool can_color = false;
 
 	u32 get_hue_at(const Vector2i coord, Rng &rng);
-
-	void print();
 };
 
 VARIANT_ENUM_CAST(CellCollision);

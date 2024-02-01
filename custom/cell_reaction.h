@@ -1,10 +1,10 @@
 #ifndef CELL_REACTION_H
 #define CELL_REACTION_H
 
-#include "core/io/resource.h"
 #include "core/string/string_name.h"
 #include "preludes.h"
 #include "rng.hpp"
+#include "scene/main/node.h"
 #include "vector"
 #include <unordered_map>
 
@@ -36,18 +36,19 @@ struct CellReactionPacked {
 	}
 };
 
-class CellReaction : public Resource {
-	GDCLASS(CellReaction, Resource);
+class CellReaction : public Node {
+	GDCLASS(CellReaction, Node);
 
 protected:
 	static void _bind_methods();
 
 public:
-	inline static std::vector<Ref<CellReaction>> reactions = {};
+	inline static std::vector<CellReaction *> reactions = {};
 	// Key is lower material_idx | higher material_idx << 16.
 	inline static std::unordered_map<u32, std::vector<CellReactionPacked>> reactions_map = {};
 
-	static void add_reaction(Ref<CellReaction> value);
+	static void _clear_reactions();
+	static void _add_reaction(CellReaction *reaction);
 
 	// Set pointers to nullptr if no reaction between m1 and m2.
 	static void reactions_between(

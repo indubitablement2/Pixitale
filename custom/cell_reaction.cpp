@@ -30,8 +30,12 @@ u32 reations_key(const u32 m1, const u32 m2, bool &swap) {
 void CellReaction::_bind_methods() {
 	ClassDB::bind_static_method(
 			"CellReaction",
-			D_METHOD("add_reaction", "reaction"),
-			&CellReaction::add_reaction);
+			D_METHOD("_clear_reactions"),
+			&CellReaction::_clear_reactions);
+	ClassDB::bind_static_method(
+			"CellReaction",
+			D_METHOD("_add_reaction", "reaction"),
+			&CellReaction::_add_reaction);
 
 	ClassDB::bind_method(D_METHOD("set_in1_tag", "value"), &CellReaction::set_in1_tag);
 	ClassDB::bind_method(D_METHOD("get_in1_tag"), &CellReaction::get_in1_tag);
@@ -57,13 +61,18 @@ void CellReaction::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::BOOL, "enable"), "set_enable", "get_enable");
 }
 
-void CellReaction::add_reaction(Ref<CellReaction> value) {
-	value->reaction_idx = reactions.size();
-	reactions.push_back(value);
+void CellReaction::_clear_reactions() {
+	reactions.clear();
+	reactions_map.clear();
+}
 
-	if (value->enabled) {
-		value->enabled = false;
-		value->set_enable(true);
+void CellReaction::_add_reaction(CellReaction *reaction) {
+	reaction->reaction_idx = reactions.size();
+	reactions.push_back(reaction);
+
+	if (reaction->enabled) {
+		reaction->enabled = false;
+		reaction->set_enable(true);
 	}
 }
 

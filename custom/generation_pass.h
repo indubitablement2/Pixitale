@@ -1,7 +1,6 @@
 #ifndef GENERATION_PASS_H
 #define GENERATION_PASS_H
 
-#include "core/variant/array.h"
 #include "grid_iter.h"
 #include "scene/main/node.h"
 #include <vector>
@@ -17,6 +16,8 @@ public:
 
 	static void _clear_generation_passes();
 	static void _add_generation_pass(GenerationPass *pass);
+
+	static void generate_all(GridChunkIter *api);
 
 	void generate(GridChunkIter *api);
 

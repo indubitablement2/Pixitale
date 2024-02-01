@@ -3,7 +3,6 @@
 #include "core/math/rect2.h"
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
-#include "core/os/memory.h"
 #include "grid.h"
 #include "preludes.h"
 
@@ -36,6 +35,7 @@ void GridChunkIter::set_cell(u32 value) {
 	if (chunk == nullptr) {
 		return;
 	}
+	// todo color
 	chunk->set_cell(cell_iter.coord, value);
 }
 
@@ -161,6 +161,7 @@ void GridRectIter::set_cell(u32 value) {
 	if (chunk == nullptr) {
 		return;
 	}
+	// todo color
 	chunk->set_cell(cell_iter.coord, value);
 	modified = true;
 }

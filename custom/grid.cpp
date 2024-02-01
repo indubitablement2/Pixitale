@@ -60,11 +60,6 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("set_cell_rect", "rect", "material_idx"),
-			&Grid::set_cell_rect);
-
-	ClassDB::bind_static_method(
-			"Grid",
 			D_METHOD("get_cell_buffer", "chunk_rect"),
 			&Grid::get_cell_buffer);
 
@@ -135,6 +130,7 @@ void Grid::clear() {
 
 void Grid::set_tick(i64 value) {
 	tick = value;
+	temporal_rng = Rng(seed + tick);
 }
 
 i64 Grid::get_tick() {
@@ -143,6 +139,7 @@ i64 Grid::get_tick() {
 
 void Grid::set_seed(u64 value) {
 	seed = value;
+	temporal_rng = Rng(seed + tick);
 }
 
 u64 Grid::get_seed() {
@@ -187,45 +184,6 @@ Rect2i Grid::get_chunk_active_rect(Vector2i chunk_coord) {
 		return it->second->active_rect();
 	} else {
 		return Rect2i();
-	}
-}
-
-void Grid::set_cell_rect(Rect2i rect, u32 material_idx) {
-	if (rect.get_area() <= 0) {
-		return;
-	}
-
-	// Set cell.
-	IterChunk chunk_iter = IterChunk(rect);
-	while (chunk_iter.next()) {
-		Chunk *chunk = get_chunk(chunk_iter.chunk_coord);
-
-		if (chunk == nullptr) {
-			continue;
-		}
-
-		Iter2D cell_iter = chunk_iter.local_iter();
-		while (cell_iter.next()) {
-			// TODO: set color
-			u32 cell = Cell::build_cell(material_idx);
-			chunk->set_cell(cell_iter.coord, cell);
-		}
-	}
-
-	// Activate chunks.
-	chunk_iter = IterChunk(Rect2i(
-			rect.position - Vector2i(1, 1),
-			rect.size + Vector2i(2, 2)));
-	while (chunk_iter.next()) {
-		Chunk *chunk = get_chunk(chunk_iter.chunk_coord);
-
-		if (chunk == nullptr) {
-			continue;
-		}
-
-		chunk->activate_rect(Rect2i(
-				chunk_iter.local_coord_start,
-				chunk_iter.local_coord_end - chunk_iter.local_coord_start));
 	}
 }
 
@@ -298,7 +256,7 @@ void Grid::queue_step_chunks(Rect2i chunk_rect) {
 }
 
 void Grid::step_prepare() {
-	tick += 1;
+	set_tick(tick + 1);
 
 	clear_iters();
 

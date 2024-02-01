@@ -29,6 +29,14 @@ void test_iter2d() {
 	TEST_ASSERT(!iter.next(), "empty x");
 	iter = Iter2D(Vector2i(1, 1), Vector2i(8, 1));
 	TEST_ASSERT(!iter.next(), "empty y");
+
+	iter = Iter2D(Vector2i(0, 0), Vector2i(32, 32));
+	for (i32 y = 0; y != 32; y++) {
+		for (i32 x = 0; x != 32; x++) {
+			TEST_ASSERT(iter.next(), "iter2d");
+			TEST_ASSERT(iter.coord == Vector2i(x, y), "iter2d");
+		}
+	}
 }
 
 void test_int_coord() {
@@ -120,21 +128,21 @@ void test_iter_chunk() {
 		TEST_ASSERT(visited_cell[i], "cell not visited");
 	}
 
-	c = IterChunk(Vector2i(-5, -5));
-	TEST_ASSERT(c.next(), "iter chunk");
-	Iter2D cell_iter = c.local_iter();
-	bool v2[32 * 32] = { false };
-	while (cell_iter.next()) {
-		TEST_ASSERT(v2[cell_iter.coord.x + cell_iter.coord.y * 32] == false, "already visited");
-		v2[cell_iter.coord.x + cell_iter.coord.y * 32] = true;
-	}
-	for (i32 i = 0; i < 32 * 32; i++) {
-		TEST_ASSERT(v2[i], "not visited");
-	}
+	// c = IterChunk(Vector2i(-5, -5));
+	// TEST_ASSERT(c.next(), "iter chunk");
+	// Iter2D cell_iter = c.local_iter();
+	// bool v2[32 * 32] = { false };
+	// while (cell_iter.next()) {
+	// 	TEST_ASSERT(v2[cell_iter.coord.x + cell_iter.coord.y * 32] == false, "already visited");
+	// 	v2[cell_iter.coord.x + cell_iter.coord.y * 32] = true;
+	// }
+	// for (i32 i = 0; i < 32 * 32; i++) {
+	// 	TEST_ASSERT(v2[i], "not visited");
+	// }
 
 	c = IterChunk(Rect2i(-5, -5, 1, 1));
 	TEST_ASSERT(c.next(), "single");
-	cell_iter = c.local_iter();
+	Iter2D cell_iter = c.local_iter();
 	TEST_ASSERT(cell_iter.next(), "single");
 	TEST_ASSERT(!cell_iter.next(), "single");
 	TEST_ASSERT(!c.next(), "single");

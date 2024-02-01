@@ -59,8 +59,6 @@ public:
 
 	static Rect2i get_chunk_active_rect(Vector2i chunk_coord);
 
-	static void set_cell_rect(Rect2i rect, u32 material_idx);
-
 	static Ref<Image> get_cell_buffer(Rect2i rect);
 
 	static GridChunkIter *iter_chunk(Vector2i chunk_coord, bool activate);

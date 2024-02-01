@@ -5,7 +5,10 @@
 #include "core/math/math_funcs.h"
 #include "core/math/vector2.h"
 #include "core/math/vector2i.h"
+#include "core/os/memory.h"
+#include "generation_pass.h"
 #include "grid.h"
+#include "preludes.h"
 #include <bit>
 
 // Api for working with cells within a single chunk (center)
@@ -37,17 +40,17 @@ public:
 	}
 
 	CellMaterial *cell_material() {
-		return CellMaterial::materials[cell_material_idx()];
+		return CellMaterial::get_material(cell_material_idx());
 	}
 
 	void bound_test(Vector2i coord) {
-		TEST_ASSERT(coord.x >= 0, "coord.x is negative");
-		TEST_ASSERT(coord.y >= 0, "coord.y is negative");
+		TEST_ASSERT(coord.x >= 0, "coord.x is too small");
+		TEST_ASSERT(coord.y >= 0, "coord.y is too small");
 		TEST_ASSERT(coord.x < 96, "coord.x is too large");
 		TEST_ASSERT(coord.y < 96, "coord.y is too large");
 	}
 
-	// Returns chunk idex and transform coord to be local to this chunk.
+	// Returns chunk idx and transform coord to be local to this chunk.
 	i32 to_local(Vector2i &coord) {
 		bound_test(coord);
 
@@ -63,12 +66,12 @@ public:
 	void get_ptrs(Vector2i coord, Chunk *&chunk_ptr, u32 *&other_cell_ptr) {
 		i32 chunk_idx = to_local(coord);
 		chunk_ptr = chunks[chunk_idx];
-		other_cell_ptr = chunk_ptr->cells + (coord.x + coord.y * 32);
+		other_cell_ptr = chunk_ptr->get_cell_ptr(coord);
 	}
 
 	u32 *get_cell_ptr(Vector2i coord) {
 		i32 chunk_idx = to_local(coord);
-		return chunks[chunk_idx]->cells + (coord.x + coord.y * 32);
+		return chunks[chunk_idx]->get_cell_ptr(coord);
 	}
 
 	u32 get_cell(Vector2i coord) {
@@ -106,7 +109,7 @@ public:
 
 	bool can_swap(Vector2i other_coord) {
 		u32 other = get_cell(other_coord);
-		CellMaterial *other_cell_material = CellMaterial::materials[Cell::material_idx(other)];
+		CellMaterial *other_cell_material = CellMaterial::get_material(Cell::material_idx(other));
 		return cell_material()->density > other_cell_material->density;
 	}
 
@@ -116,7 +119,7 @@ public:
 		u32 *other_cell_ptr;
 		get_ptrs(other_coord, other_chunk_ptr, other_cell_ptr);
 		u32 other = *other_cell_ptr;
-		CellMaterial *other_cell_material = CellMaterial::materials[Cell::material_idx(other)];
+		CellMaterial *other_cell_material = CellMaterial::get_material(Cell::material_idx(other));
 
 		if (cell_material()->density > other_cell_material->density) {
 			// todo: duplication on h movement
@@ -194,19 +197,28 @@ public:
 		}
 	}
 
-	void step_cell(const Vector2i center_coord) {
+	void step_cell(const Vector2i center_coord, bool force_step) {
 		cell_ptr = center()->get_cell_ptr(center_coord);
 		cell = *cell_ptr;
 		current_cell_updated_bitmask = center()->current_cell_updated_bitmask;
 		cell_coord = center_coord + Vector2i(32, 32);
 
-		if (!Cell::is_active(cell)) {
-			return;
-		}
+		if (force_step) {
+			if (Cell::is_updated(cell, current_cell_updated_bitmask)) {
+				if (Cell::is_active(cell)) {
+					center()->activate_point(center_coord, false);
+				}
+				return;
+			}
+		} else {
+			if (!Cell::is_active(cell)) {
+				return;
+			}
 
-		if (Cell::is_updated(cell, current_cell_updated_bitmask)) {
-			center()->activate_point(center_coord, false);
-			return;
+			if (Cell::is_updated(cell, current_cell_updated_bitmask)) {
+				center()->activate_point(center_coord, false);
+				return;
+			}
 		}
 
 		Cell::set_updated(cell, current_cell_updated_bitmask);
@@ -294,28 +306,40 @@ public:
 
 void Chunk::step_chunk(Vector2i chunk_coord) {
 	ChunkApi chunk_api = ChunkApi(chunk_coord);
-	bool were_active[9];
 
 	for (i32 y = -1; y <= 1; y++) {
 		for (i32 x = -1; x <= 1; x++) {
-			u64 chunk_id = Grid::chunk_id(chunk_coord + Vector2i(x, y));
-			Chunk **chunk_map_ptr = &Grid::chunks[chunk_id];
-			if (*chunk_map_ptr == nullptr) {
-				*chunk_map_ptr = new Chunk();
+			Vector2i other_chunk_coord = chunk_coord + Vector2i(x, y);
+			Chunk *chunk_ptr = Grid::get_chunk(other_chunk_coord);
 
-				// TODO: Generation
-				// todo use static rng here
+			TEST_ASSERT(chunk_ptr != nullptr, "step chunk got nullptr");
+
+			// Chunk generation
+			if (!chunk_ptr->generated) {
+				chunk_ptr->generated = true;
+
+				// Clear cells.
+				for (i32 i = 0; i < 32 * 32; i++) {
+					chunk_ptr->cells[i] = 0;
+				}
+
+				GridChunkIter *iter = new GridChunkIter(other_chunk_coord, true);
+				postinitialize_handler(iter);
+
+				GenerationPass::generate_all(iter);
+
+				memdelete(iter);
 			}
 
-			i32 chunk_api_chunk_idx = (x + 1) + (y + 1) * 3;
-			chunk_api.chunks[chunk_api_chunk_idx] = *chunk_map_ptr;
-			were_active[chunk_api_chunk_idx] = *chunk_map_ptr;
+			chunk_api.chunks[(x + 1) + (y + 1) * 3] = chunk_ptr;
 		}
 	}
 
 	chunk_api.center()->step_cell_updated_bitmask();
 
-	if (chunk_api.center()->is_inactive()) {
+	bool force_step = chunk_api.center()->last_step_tick != Grid::tick - 1;
+
+	if (chunk_api.center()->is_inactive() && !force_step) {
 		// Nothing to do.
 		return;
 	}
@@ -324,9 +348,13 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 	u32 active_columns = chunk_api.center()->active_columns;
 	chunk_api.center()->clear_active_rect();
 
-	chunk_api.rng.mix(Grid::tick);
-	i32 y_start = std::countr_zero(active_rows);
-	i32 y_end = 32 - std::countl_zero(active_rows);
+	chunk_api.rng = Grid::get_temporal_rng(chunk_coord);
+
+	// i32 y_start = std::countr_zero(active_rows);
+	// i32 y_end = 32 - std::countl_zero(active_rows);
+	i32 y_top = std::countr_zero(active_rows) - 1;
+	i32 y_bot = 31 - std::countl_zero(active_rows);
+	TEST_ASSERT(y_top < y_bot, "y_top is >= than y_top");
 
 	i32 x_start_base = std::countr_zero(active_columns);
 	i32 x_end_base = 32 - std::countl_zero(active_columns);
@@ -344,35 +372,16 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 		x_end = x_end_base;
 	}
 
-	// Iterate over each cell in the chunk.
-	for (i32 y = y_start; y < y_end; y++) {
+	// Iterate over each cell in the chunk from the bottom.
+	for (i32 y = y_bot; y != y_top; y--) {
 		if ((active_rows & (1u << y)) == 0) {
 			continue;
 		}
 
 		i32 x = x_start;
 		while (x != x_end) {
-			chunk_api.step_cell(Vector2i(x, y));
+			chunk_api.step_cell(Vector2i(x, y), force_step);
 			x += x_step;
 		}
-	}
-
-	// TODO: handle active chunk changes
-	// for (i32 y = -1; y <= 1; y++) {
-	// 	for (i32 x = -1; x <= 1; x++) {
-	// 		auto chunk = &Grid::chunks[Grid::chunk_id(chunk_coord + Vector2i(x, y))];
-	// 		if (chunk->get() == nullptr) {
-	// 			chunk->reset(new Chunk());
-
-	// 			// TODO: Generation
-	// 		}
-
-	// 		i32 idx = (x + 1) + (y + 1) * 3;
-	// 		rt.chunks[idx] = chunk->get();
-	// 		were_active[idx] = chunk->get()->is_active();
-	// 	}
-	// }
-
-	if (chunk_api.center()->is_inactive()) {
 	}
 }

@@ -66,21 +66,21 @@ void CellMaterial::_clear_materials() {
 	material_tags.clear();
 }
 
-void CellMaterial::_add_material(CellMaterial *value) {
-	value->material_idx = materials.size();
-	materials.push_back(value);
+void CellMaterial::_add_material(CellMaterial *material) {
+	material->material_idx = materials.size();
+	materials.push_back(material);
 
 	// Add material id to material idx.
-	material_ids[value->material_id.data_unique_pointer()] = value->material_idx;
+	material_ids[material->material_id.data_unique_pointer()] = material->material_idx;
 
 	// Add tag to material idx.
-	value->tags.push_back(value->material_id);
-	for (int i = 0; i < value->tags.size(); i++) {
-		StringName tag = value->tags[i];
+	material->tags.push_back(material->material_id);
+	for (int i = 0; i < material->tags.size(); i++) {
+		StringName tag = material->tags[i];
 		if (auto it = material_tags.find(tag.data_unique_pointer()); it != material_tags.end()) {
-			it->second.push_back(value->material_idx);
+			it->second.push_back(material->material_idx);
 		} else {
-			material_tags[tag.data_unique_pointer()] = { value->material_idx };
+			material_tags[tag.data_unique_pointer()] = { material->material_idx };
 		}
 	}
 }
@@ -97,7 +97,7 @@ CellMaterial *CellMaterial::find_material(StringName material_id) {
 	if (auto it = material_ids.find(material_id.data_unique_pointer()); it != material_ids.end()) {
 		return materials[it->second];
 	} else {
-		return nullptr;
+		return materials[0];
 	}
 }
 
@@ -105,7 +105,7 @@ CellMaterial *CellMaterial::get_material(u32 material_idx) {
 	if (material_idx < materials.size()) {
 		return materials[material_idx];
 	} else {
-		return nullptr;
+		return materials[0];
 	}
 }
 
@@ -169,27 +169,4 @@ u32 CellMaterial::get_value_at(const Vector2i coord, Rng &rng) {
 u32 CellMaterial::get_hue_at(const Vector2i coord, Rng &rng) {
 	// todo
 	return 0;
-}
-
-void CellMaterial::print() {
-	print_line("-----------", material_idx, "-----------");
-
-	// todo
-
-	// print_line("durability ", durability);
-
-	// print_line("cell_collision ", collision);
-	// print_line("friction ", friction);
-
-	// print_line("cell_biome ", biome_contribution);
-
-	// print_line("can_change_hue ", can_color);
-	// print_line("values_width ", values_width);
-	// print_line("values_height ", values_height);
-	// print_line("max_value_noise ", max_value_noise);
-
-	// print_line("density ", density);
-	// print_line("movement_vertical_step ", movement_vertical_step);
-	// print_line("movement_chance ", movement_chance);
-	// print_line("horizontal_movement ", horizontal_movement);
 }

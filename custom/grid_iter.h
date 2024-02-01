@@ -42,6 +42,8 @@ public:
 	f32 randf_range(f32 min, f32 max);
 	i32 randi_range(i32 min, i32 max);
 
+	// Just to make the compiler shut up. Don't use.
+	inline GridChunkIter(){};
 	GridChunkIter(Vector2i chunk_coord, bool p_activate_on_destructor);
 	~GridChunkIter();
 };
@@ -72,6 +74,8 @@ public:
 	Vector2i local_coord();
 	Vector2i coord();
 
+	// Just to make the compiler shut up. Don't use.
+	inline GridRectIter(){};
 	GridRectIter(Rect2i rect);
 	~GridRectIter();
 };

@@ -7,15 +7,15 @@
 #include "preludes.h"
 #include <bit>
 
-// Coord is relative to top left cell.
+// Coord is relative to first (top left) cell.
 class alignas(64) Chunk {
 public:
 	bool generated = false;
 
 	i64 last_step_tick = -1;
 	// Cell updated last time this chunk was stepped.
-	u32 current_cell_updated_bitmask = 1 << Cell::Shifts::SHIFT_UPDATED;
-	u32 next_cell_updated_bitmask = 2 << Cell::Shifts::SHIFT_UPDATED;
+	u32 current_cell_updated_bitmask = 0;
+	u32 next_cell_updated_bitmask = 1 << Cell::Shifts::SHIFT_UPDATED;
 
 	u32 active_rows = MAX_U32;
 	u32 active_columns = MAX_U32;
@@ -106,7 +106,7 @@ public:
 		active_columns = 0;
 	}
 
-	inline u32 get_updated_mask(u64 tick) {
+	inline u32 get_updated_mask(i64 tick) {
 		if (last_step_tick == tick) {
 			// We have already stepped this chunk this tick.
 			return current_cell_updated_bitmask;
