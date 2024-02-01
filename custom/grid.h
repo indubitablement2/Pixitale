@@ -20,26 +20,28 @@ protected:
 	static void _bind_methods();
 
 public:
-	inline static u64 tick = 0;
+	inline static i64 tick = 0;
 	inline static u64 seed = 0;
 
 	inline static std::unordered_map<u64, Chunk *> chunks = {};
 	inline static std::unordered_map<u64, u32> active_chunks = {};
 
-	inline static std::vector<GridIter *> iters = {};
+	inline static std::vector<GridChunkIter *> chunk_iters = {};
+	inline static std::vector<GridRectIter *> rect_iters = {};
 
-	// void activate_neighbors(i32 x, i32 y, u32 *cell_ptr);
+	inline static std::vector<Rect2i> queue_step_chunk_rects = {};
 
-	// void set_cell_rect(Rect2i rect, u32 cell_material_idx);
-	// void set_cell(Vector2i position, u32 cell_material_idx);
-	// void set_cell_color(Vector2i position, u32 hue_palette_idx, u32 value_palette_idx);
+	inline static Rng temporal_rng = Rng(0);
 
-	// static void set_biomes(Array biomes);
+	// 3 passes of columns
+	// x : ys (ys may be duplicated and aren't sorted)
+	inline static std::unordered_map<i32, std::vector<i32>> passes[3] = { {}, {}, {} };
 
+	inline static void clear_iters();
 	static void clear();
 
-	static void set_tick(u64 value);
-	static u64 get_tick();
+	static void set_tick(i64 value);
+	static i64 get_tick();
 
 	static void set_seed(u64 value);
 	static u64 get_seed();
@@ -53,7 +55,7 @@ public:
 
 	// Return a fallback value if cell is not found.
 	static u32 get_cell_material_idx(Vector2i coord);
-	static Ref<CellMaterial> get_cell_material(Vector2i coord);
+	static CellMaterial *get_cell_material(Vector2i coord);
 
 	static Rect2i get_chunk_active_rect(Vector2i chunk_coord);
 
@@ -61,10 +63,20 @@ public:
 
 	static Ref<Image> get_cell_buffer(Rect2i rect);
 
-	static GridIter *iter(Rect2i rect);
-	static GridIter *iter_chunk(Vector2i chunk_coord);
+	static GridChunkIter *iter_chunk(Vector2i chunk_coord, bool activate);
+	static GridRectIter *iter_rect(Rect2i rect);
 
-	static void step();
+	static void queue_step_chunks(Rect2i chunk_rect);
+	// Part of step which can't be done async.
+	static void step_prepare();
+	static void step_start();
+	static void step_wait_to_finish();
+
+	bool randb();
+	bool randb_probability(f32 probability);
+	f32 randf();
+	f32 randf_range(f32 min, f32 max);
+	i32 randi_range(i32 min, i32 max);
 };
 
 #endif

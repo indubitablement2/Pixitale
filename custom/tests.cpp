@@ -1,4 +1,5 @@
 #include "tests.h"
+#include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
 #include "core/os/time.h"
 #include "core/string/print_string.h"
@@ -130,6 +131,19 @@ void test_iter_chunk() {
 	for (i32 i = 0; i < 32 * 32; i++) {
 		TEST_ASSERT(v2[i], "not visited");
 	}
+
+	c = IterChunk(Rect2i(-5, -5, 1, 1));
+	TEST_ASSERT(c.next(), "single");
+	cell_iter = c.local_iter();
+	TEST_ASSERT(cell_iter.next(), "single");
+	TEST_ASSERT(!cell_iter.next(), "single");
+	TEST_ASSERT(!c.next(), "single");
+
+	c = IterChunk(Rect2i(-5, -5, 0, 0));
+	TEST_ASSERT(!c.next(), "empty");
+
+	c = IterChunk(Rect2i(5, 5, -10, -10));
+	TEST_ASSERT(!c.next(), "negative");
 }
 
 void test_rng_bias() {

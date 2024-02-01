@@ -2,21 +2,24 @@
 #define GRID_ITER_H
 
 #include "chunk.h"
+#include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
 #include "core/object/class_db.h"
 #include "core/object/object.h"
 #include "preludes.h"
 #include "rng.hpp"
 
-class GridIter : public Object {
-	GDCLASS(GridIter, Object);
+class GridChunkIter : public Object {
+	GDCLASS(GridChunkIter, Object);
 
 protected:
 	static void _bind_methods();
 
 public:
-	IterChunk chunk_iter;
+	bool activate_on_destructor;
+
 	Iter2D cell_iter;
+	Vector2i _chunk_coord;
 	Chunk *chunk;
 	Rng rng;
 
@@ -39,7 +42,40 @@ public:
 	f32 randf_range(f32 min, f32 max);
 	i32 randi_range(i32 min, i32 max);
 
-	// u32 get_cell_at(Vector2i coord);
+	GridChunkIter(Vector2i chunk_coord, bool p_activate_on_destructor);
+	~GridChunkIter();
 };
+
+class GridRectIter : public Object {
+	GDCLASS(GridRectIter, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	bool modified = false;
+
+	IterChunk chunk_iter;
+	Iter2D cell_iter;
+	Chunk *chunk;
+
+	bool next();
+
+	void set_cell(u32 value);
+	u32 get_cell();
+
+	void fill_remaining(u32 value);
+
+	void reset_iter();
+
+	Vector2i chunk_coord();
+	Vector2i local_coord();
+	Vector2i coord();
+
+	GridRectIter(Rect2i rect);
+	~GridRectIter();
+};
+
+// todo: bitmap iter, circle iter, line iter
 
 #endif

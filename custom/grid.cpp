@@ -1,19 +1,22 @@
 #include "grid.h"
-
 #include "BS_thread_pool.hpp"
 #include "biome.h"
 #include "cell.hpp"
 #include "cell_material.h"
 #include "chunk.h"
-#include "core/error/error_macros.h"
 #include "core/io/image.h"
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
 #include "core/object/class_db.h"
+#include "core/os/memory.h"
 #include "core/templates/vector.h"
 #include "core/variant/array.h"
 #include "preludes.h"
 #include "rng.hpp"
+#include <algorithm>
+#include <unordered_map>
+#include <utility>
+#include <vector>
 
 inline static BS::thread_pool tp = BS::thread_pool();
 
@@ -67,28 +70,57 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("iter", "rect"),
-			&Grid::iter);
+			D_METHOD("iter_chunk", "chunk_coord", "activate"),
+			&Grid::iter_chunk);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("iter_chunk", "chunk_coord"),
-			&Grid::iter_chunk);
+			D_METHOD("iter", "rect"),
+			&Grid::iter_rect);
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("step"),
-			&Grid::step);
+			D_METHOD("queue_step_chunks", "chunk_rect"),
+			&Grid::queue_step_chunks);
+
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("step_prepare"),
+			&Grid::step_prepare);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("step_start"),
+			&Grid::step_start);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("step_wait_to_finish"),
+			&Grid::step_wait_to_finish);
 }
 
-void Grid::clear() {
-	for (auto &iter : iters) {
+void Grid::clear_iters() {
+	for (auto &iter : chunk_iters) {
 		if (iter->next()) {
 			continue;
 		} else {
 			memdelete(iter);
 		}
 	}
-	iters.clear();
+	chunk_iters.clear();
+
+	for (auto &iter : rect_iters) {
+		if (iter->next()) {
+			continue;
+		} else {
+			memdelete(iter);
+		}
+	}
+	rect_iters.clear();
+}
+
+void Grid::clear() {
+	step_wait_to_finish();
+
+	clear_iters();
+	queue_step_chunk_rects = {};
 
 	for (auto &[chunk_id, chunk] : chunks) {
 		delete chunk;
@@ -101,11 +133,11 @@ void Grid::clear() {
 	seed = 0;
 }
 
-void Grid::set_tick(u64 value) {
+void Grid::set_tick(i64 value) {
 	tick = value;
 }
 
-u64 Grid::get_tick() {
+i64 Grid::get_tick() {
 	return tick;
 }
 
@@ -146,7 +178,7 @@ u32 Grid::get_cell_material_idx(Vector2i coord) {
 	}
 }
 
-Ref<CellMaterial> Grid::get_cell_material(Vector2i coord) {
+CellMaterial *Grid::get_cell_material(Vector2i coord) {
 	return CellMaterial::get_material(get_cell_material_idx(coord));
 }
 
@@ -234,56 +266,112 @@ Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect) {
 			image_data);
 }
 
-GridIter *Grid::iter(Rect2i rect) {
-	GridIter *iter = memnew(GridIter);
-	iter->chunk_iter = IterChunk(rect);
-	iter->rng = get_static_rng(iter->chunk_coord());
+GridRectIter *Grid::iter_rect(Rect2i rect) {
+	if (rect.size.x <= 0 || rect.size.y <= 0) {
+		return nullptr;
+	}
 
-	iters.push_back(iter);
+	GridRectIter *iter = new GridRectIter(rect);
+	postinitialize_handler(iter);
 
-	return iter;
-}
-
-GridIter *Grid::iter_chunk(Vector2i chunk_coord) {
-	GridIter *iter = memnew(GridIter);
-	iter->chunk_iter = IterChunk(chunk_coord);
-	iter->rng = get_static_rng(iter->chunk_coord());
-
-	iters.push_back(iter);
+	rect_iters.push_back(iter);
 
 	return iter;
 }
 
-void Grid::step() {
-	for (auto &iter : iters) {
-		if (iter->next()) {
-			continue;
-		} else {
-			memdelete(iter);
+GridChunkIter *Grid::iter_chunk(Vector2i chunk_coord, bool activate) {
+	GridChunkIter *iter = new GridChunkIter(chunk_coord, activate);
+	postinitialize_handler(iter);
+
+	chunk_iters.push_back(iter);
+
+	if (activate) {
+	}
+
+	return iter;
+}
+
+void Grid::queue_step_chunks(Rect2i chunk_rect) {
+	if (chunk_rect.size.x > 0 && chunk_rect.size.y > 0) {
+		queue_step_chunk_rects.push_back(chunk_rect);
+	}
+}
+
+void Grid::step_prepare() {
+	tick += 1;
+
+	clear_iters();
+
+	for (i32 i = 0; i < 3; i++) {
+		passes[i].clear();
+	}
+
+	for (auto chunk_rect : queue_step_chunk_rects) {
+		// Add to-be-generated chunks.
+		Iter2D chunk_iter = Iter2D(
+				chunk_rect.position - Vector2i(1, 1),
+				chunk_rect.get_end() + Vector2i(2, 2));
+		while (chunk_iter.next()) {
+			auto added = chunks.emplace(chunk_id(chunk_iter.coord), nullptr);
+			if (added.second) {
+				added.first->second = new Chunk();
+			}
+		}
+
+		chunk_iter = Iter2D(chunk_rect);
+		while (chunk_iter.next()) {
+			i32 pass_idx = mod_neg(chunk_iter.coord.x, 3);
+			passes[pass_idx][chunk_iter.coord.x].push_back(chunk_iter.coord.y);
 		}
 	}
-	iters.clear();
+	queue_step_chunk_rects.clear();
+}
 
-	// TODO
+void Grid::step_start() {
+	for (i32 i = 0; i < 3; i++) {
+		auto &pass = passes[i];
 
-	// 	ERR_FAIL_COND_MSG(cells == nullptr, "Grid is not initialized");
+		for (auto &pair : pass) {
+			tp.push_task([&pair] {
+				std::sort(pair.second.begin(), pair.second.end());
 
-	// 	Cell::update_updated_bit((u64)Grid::tick);
+				i32 x = pair.first;
+				i32 y = MAX_I32;
 
-	// 	Grid::tick++;
+				// Iterate from bottom to top.
+				for (auto it = pair.second.rbegin(); it != pair.second.rend(); it++) {
+					if (y == *it) {
+						continue;
+					}
+					y = *it;
 
-	// 	Step::apply_active_borders();
-	// 	Step::apply_static_borders();
+					Chunk::step_chunk(Vector2i(x, y));
+				}
+			});
+		}
+	}
+}
 
-	// 	// Update rows in 3 passes.
-	// 	for (i32 row_start = 1; row_start < 4; row_start++) {
-	// 		for (i32 row_idx = row_start; row_idx < chunks_height - 1; row_idx += 3) {
-	// 			if (Grid::active_rows[row_idx] == 0) {
-	// 				continue;
-	// 			}
+void Grid::step_wait_to_finish() {
+	tp.wait_for_tasks();
+}
 
-	// 			tp.push_task(Step::step_row, row_idx);
-	// 		}
-	// 		tp.wait_for_tasks();
-	// 	}
+bool Grid::randb() {
+	return temporal_rng.gen_bool();
+}
+
+bool Grid::randb_probability(f32 probability) {
+	return temporal_rng.gen_probability_f32(probability);
+}
+
+f32 Grid::randf() {
+	return temporal_rng.gen_f32();
+}
+
+f32 Grid::randf_range(f32 min, f32 max) {
+	return temporal_rng.gen_range_f32(min, max);
+}
+
+i32 Grid::randi_range(i32 min, i32 max) {
+	return temporal_rng.gen_range_i32(min, max);
 }

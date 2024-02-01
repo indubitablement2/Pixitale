@@ -6,6 +6,14 @@ void GenerationPass::_bind_methods() {
 	GDVIRTUAL_BIND(_generate, "api");
 }
 
-void GenerationPass::generate(GridIter *api) {
+void GenerationPass::_clear_generation_passes() {
+	generation_passes.clear();
+}
+
+void GenerationPass::_add_generation_pass(GenerationPass *pass) {
+	generation_passes.push_back(pass);
+}
+
+void GenerationPass::generate(GridChunkIter *api) {
 	GDVIRTUAL_CALL(_generate, api);
 }

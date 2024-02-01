@@ -18,7 +18,9 @@ void initialize_custom_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<CellMaterial>();
 	ClassDB::register_class<CellReaction>();
 
-	ClassDB::register_class<GridIter>();
+	ClassDB::register_class<GridChunkIter>();
+	ClassDB::register_class<GridRectIter>();
+
 	ClassDB::register_class<GenerationPass>();
 
 	// ClassDB::register_class<GridCharacterBody>();

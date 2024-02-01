@@ -128,6 +128,16 @@ struct Iter2D {
 			_step(step),
 			coord(p_current) {}
 
+	inline Iter2D(Rect2i rect) :
+			_start(rect.position),
+			_end(rect.get_end()),
+			_step(Vector2i(_end.x >= _start.x ? 1 : -1, _end.y >= _start.y ? 1 : -1)),
+			coord(Vector2i(_start.x - _step.x, _start.y)) {
+		if (_start.x == _end.x) {
+			_end.y = _start.y;
+		}
+	}
+
 	// Iterate from start to end (excluded).
 	// `[start..end[`.
 	inline Iter2D(Vector2i start, Vector2i end) :
@@ -358,6 +368,10 @@ struct ChunkLocalCoord {
 	inline ChunkLocalCoord(Vector2i p_chunk_coord, Vector2i p_local_coord) :
 			chunk_coord(p_chunk_coord),
 			local_coord(p_local_coord) {}
+
+	inline Vector2i coord() {
+		return chunk_coord * 32 + local_coord;
+	}
 };
 
 // Iterate over all the chunks which intersect the rect.
@@ -374,12 +388,25 @@ struct IterChunk {
 	inline IterChunk(Rect2i rect) :
 			_start(ChunkLocalCoord(rect.position)),
 			_end(ChunkLocalCoord(rect.get_end())),
-			chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {}
+			chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {
+		if (rect.size.x <= 0 || rect.size.y <= 0) {
+			chunk_coord.y = _end.chunk_coord.y + 1;
+		}
+	}
 
-	inline IterChunk(Vector2i p_chunk_coord) :
-			_start(ChunkLocalCoord(p_chunk_coord, Vector2i(0, 0))),
-			_end(ChunkLocalCoord(Vector2i(p_chunk_coord.x, p_chunk_coord.y + 1), Vector2i(32, 32))),
-			chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {}
+	inline IterChunk(Vector2i start, Vector2i end) :
+			_start(ChunkLocalCoord(start)),
+			_end(ChunkLocalCoord(end)),
+			chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {
+		// if (rect.size.x <= 0 || rect.size.y <= 0) {
+		// 	chunk_coord.y = _end.chunk_coord.y + 1;
+		// }
+	}
+
+	// inline IterChunk(Vector2i p_chunk_coord) :
+	// 		_start(ChunkLocalCoord(p_chunk_coord, Vector2i(0, 0))),
+	// 		_end(ChunkLocalCoord(Vector2i(p_chunk_coord.x, p_chunk_coord.y + 1), Vector2i(32, 32))),
+	// 		chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {}
 
 	// Return true if there is a next chunk
 	// and update chunk_coord and local_coord_start/end.
@@ -425,6 +452,10 @@ struct IterChunk {
 
 	inline Iter2D local_iter() {
 		return Iter2D(local_coord_start, local_coord_end);
+	}
+
+	inline Rect2i local_rect() {
+		return Rect2i(local_coord_start, local_coord_end - local_coord_start);
 	}
 
 	inline void reset() {

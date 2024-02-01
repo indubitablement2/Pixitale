@@ -10,13 +10,15 @@
 // Coord is relative to top left cell.
 class alignas(64) Chunk {
 public:
-	u64 last_step_tick = 0;
+	bool generated = false;
+
+	i64 last_step_tick = -1;
 	// Cell updated last time this chunk was stepped.
 	u32 current_cell_updated_bitmask = 1 << Cell::Shifts::SHIFT_UPDATED;
 	u32 next_cell_updated_bitmask = 2 << Cell::Shifts::SHIFT_UPDATED;
 
-	u32 active_rows = 0;
-	u32 active_columns = 0;
+	u32 active_rows = MAX_U32;
+	u32 active_columns = MAX_U32;
 
 	i32 num_background_cells = 0;
 	i32 num_particle_cells = 0;
@@ -25,7 +27,7 @@ public:
 	// todo: particles
 	u32 *particle_cells = nullptr;
 
-	u32 cells[32 * 32] = { 0 };
+	u32 cells[32 * 32];
 
 	inline bool is_inactive() {
 		return active_rows == 0;
@@ -116,7 +118,7 @@ public:
 	}
 
 	// Needs chunk and its 8 neighbors to exist in Grid::chunks,
-	// They can be null, in which case they will be generated.
+	// They will be generated if needed.
 	static void step_chunk(Vector2i chunk_coord);
 
 	~Chunk() {

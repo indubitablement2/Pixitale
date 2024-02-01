@@ -37,7 +37,7 @@ public:
 	}
 
 	CellMaterial *cell_material() {
-		return CellMaterial::materials[cell_material_idx()].ptr();
+		return CellMaterial::materials[cell_material_idx()];
 	}
 
 	void bound_test(Vector2i coord) {
@@ -106,7 +106,7 @@ public:
 
 	bool can_swap(Vector2i other_coord) {
 		u32 other = get_cell(other_coord);
-		CellMaterial *other_cell_material = CellMaterial::materials[Cell::material_idx(other)].ptr();
+		CellMaterial *other_cell_material = CellMaterial::materials[Cell::material_idx(other)];
 		return cell_material()->density > other_cell_material->density;
 	}
 
@@ -116,7 +116,7 @@ public:
 		u32 *other_cell_ptr;
 		get_ptrs(other_coord, other_chunk_ptr, other_cell_ptr);
 		u32 other = *other_cell_ptr;
-		CellMaterial *other_cell_material = CellMaterial::materials[Cell::material_idx(other)].ptr();
+		CellMaterial *other_cell_material = CellMaterial::materials[Cell::material_idx(other)];
 
 		if (cell_material()->density > other_cell_material->density) {
 			// todo: duplication on h movement

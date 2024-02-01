@@ -10,6 +10,7 @@
 #include "core/variant/typed_array.h"
 #include "preludes.h"
 #include "rng.hpp"
+#include "scene/main/node.h"
 #include "vector"
 #include <unordered_map>
 #include <vector>
@@ -23,28 +24,29 @@ enum CellCollision {
 	COLLISION_LIQUID,
 };
 
-class CellMaterial : public Resource {
-	GDCLASS(CellMaterial, Resource);
+class CellMaterial : public Node {
+	GDCLASS(CellMaterial, Node);
 
 protected:
 	static void _bind_methods();
 
 public:
-	static std::vector<Ref<CellMaterial>> materials;
+	static std::vector<CellMaterial *> materials;
 	// Material id to material idx.
 	static std::unordered_map<const void *, u32> material_ids;
 	// Tag to material idx.
 	static std::unordered_map<const void *, std::vector<u32>> material_tags;
 
-	static void add_material(Ref<CellMaterial> value);
+	static void _clear_materials();
+	static void _add_material(CellMaterial *value);
 
 	// Meant for gdscript.
 	// Return 0 if not found.
 	static u32 find_material_idx(StringName material_id);
 	// Return nullptr if not found.
-	static Ref<CellMaterial> find_material(StringName material_id);
+	static CellMaterial *find_material(StringName material_id);
 	// Return nullptr if not found.
-	static Ref<CellMaterial> get_material(u32 material_idx);
+	static CellMaterial *get_material(u32 material_idx);
 
 public:
 	StringName material_id;

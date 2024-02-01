@@ -10,13 +10,17 @@
 
 std::unordered_map<const void *, std::vector<u32>> CellMaterial::material_tags = {};
 std::unordered_map<const void *, u32> CellMaterial::material_ids = {};
-std::vector<Ref<CellMaterial>> CellMaterial::materials = {};
+std::vector<CellMaterial *> CellMaterial::materials = {};
 
 void CellMaterial::_bind_methods() {
 	ClassDB::bind_static_method(
 			"CellMaterial",
-			D_METHOD("add_material", "material"),
-			&CellMaterial::add_material);
+			D_METHOD("_clear_materials"),
+			&CellMaterial::_clear_materials);
+	ClassDB::bind_static_method(
+			"CellMaterial",
+			D_METHOD("_add_material", "material"),
+			&CellMaterial::_add_material);
 
 	ClassDB::bind_static_method(
 			"CellMaterial",
@@ -56,7 +60,13 @@ void CellMaterial::_bind_methods() {
 	ADD_PROPERTY(PropertyInfo(Variant::INT, "collision", PROPERTY_HINT_ENUM, "None,Top,Bottom,Left,Right"), "set_collision", "get_collision");
 }
 
-void CellMaterial::add_material(Ref<CellMaterial> value) {
+void CellMaterial::_clear_materials() {
+	materials.clear();
+	material_ids.clear();
+	material_tags.clear();
+}
+
+void CellMaterial::_add_material(CellMaterial *value) {
 	value->material_idx = materials.size();
 	materials.push_back(value);
 
@@ -83,19 +93,19 @@ u32 CellMaterial::find_material_idx(StringName material_id) {
 	}
 }
 
-Ref<CellMaterial> CellMaterial::find_material(StringName material_id) {
+CellMaterial *CellMaterial::find_material(StringName material_id) {
 	if (auto it = material_ids.find(material_id.data_unique_pointer()); it != material_ids.end()) {
 		return materials[it->second];
 	} else {
-		return Ref<CellMaterial>();
+		return nullptr;
 	}
 }
 
-Ref<CellMaterial> CellMaterial::get_material(u32 material_idx) {
+CellMaterial *CellMaterial::get_material(u32 material_idx) {
 	if (material_idx < materials.size()) {
 		return materials[material_idx];
 	} else {
-		return Ref<CellMaterial>();
+		return nullptr;
 	}
 }
 
