@@ -1,12 +1,9 @@
 #include "chunk.h"
 #include "cell.hpp"
 #include "cell_material.h"
-#include "cell_reaction.h"
 #include "core/math/math_funcs.h"
 #include "core/math/vector2.h"
 #include "core/math/vector2i.h"
-#include "core/os/memory.h"
-#include "generation_pass.h"
 #include "grid.h"
 #include "preludes.h"
 #include <bit>
@@ -39,8 +36,8 @@ public:
 		Cell::set_material_idx(cell, new_cell_material_idx);
 	}
 
-	CellMaterial *cell_material() {
-		return CellMaterial::get_material(cell_material_idx());
+	CellMaterial &cell_material() {
+		return Grid::get_cell_material(cell_material_idx());
 	}
 
 	void bound_test(Vector2i coord) {
@@ -109,8 +106,8 @@ public:
 
 	bool can_swap(Vector2i other_coord) {
 		u32 other = get_cell(other_coord);
-		CellMaterial *other_cell_material = CellMaterial::get_material(Cell::material_idx(other));
-		return cell_material()->density > other_cell_material->density;
+		CellMaterial &other_cell_material = Grid::get_cell_material(Cell::material_idx(other));
+		return cell_material().density > other_cell_material.density;
 	}
 
 	// Returns true if swapped.
@@ -119,13 +116,13 @@ public:
 		u32 *other_cell_ptr;
 		get_ptrs(other_coord, other_chunk_ptr, other_cell_ptr);
 		u32 other = *other_cell_ptr;
-		CellMaterial *other_cell_material = CellMaterial::get_material(Cell::material_idx(other));
+		CellMaterial &other_cell_material = Grid::get_cell_material(Cell::material_idx(other));
 
-		if (cell_material()->density > other_cell_material->density) {
+		if (cell_material().density > other_cell_material.density) {
 			// todo: duplication on h movement
 
 			Cell::set_updated(other, current_cell_updated_bitmask);
-			current_cell_updated_bitmask = other_chunk_ptr->get_updated_mask(Grid::tick);
+			current_cell_updated_bitmask = other_chunk_ptr->get_updated_mask(Grid::get_tick());
 			Cell::set_updated(cell, current_cell_updated_bitmask);
 
 			*cell_ptr = other;
@@ -150,9 +147,9 @@ public:
 		u32 other_material_idx = Cell::material_idx(other);
 
 		bool swap;
-		CellReactionPacked *reaction = nullptr;
-		CellReactionPacked *reaction_end = nullptr;
-		CellReaction::reactions_between(reaction, reaction_end, cell_material_idx(), other_material_idx, swap);
+		CellReaction *reaction = nullptr;
+		CellReaction *reaction_end = nullptr;
+		Grid::reactions_between(reaction, reaction_end, cell_material_idx(), other_material_idx, swap);
 
 		if (reaction == nullptr) {
 			return;
@@ -185,7 +182,7 @@ public:
 					// todo: color
 					*other_cell_ptr = Cell::build_cell(
 							other_material_idx_out,
-							other_chunk_ptr->get_updated_mask(Grid::tick),
+							other_chunk_ptr->get_updated_mask(Grid::get_tick()),
 							true);
 					activate_neightbors(other_coord);
 				}
@@ -243,7 +240,7 @@ public:
 			// todo
 		} else {
 			u32 orthogonal_velocity_i = Cell::orthogonal_velocity_i(cell);
-			if (!cell_material()->can_fall && orthogonal_velocity_i == 0) {
+			if (!cell_material().can_fall && orthogonal_velocity_i == 0) {
 				Cell::clear_velocity(cell);
 				*cell_ptr = cell;
 				return;
@@ -251,7 +248,7 @@ public:
 			f32 orthogonal_velocity = f32(orthogonal_velocity_i) / 255.0f;
 
 			i32 v_dir;
-			f32 vertical_acceleration = cell_material()->vertical_acceleration;
+			f32 vertical_acceleration = cell_material().vertical_acceleration;
 			if (vertical_acceleration >= 0) {
 				v_dir = 1;
 			} else {
@@ -271,12 +268,12 @@ public:
 				orthogonal_velocity += vertical_acceleration;
 				orthogonal_velocity = MIN(orthogonal_velocity, 1.0);
 
-				f32 vel = orthogonal_velocity * cell_material()->vertical_velocity_max;
+				f32 vel = orthogonal_velocity * cell_material().vertical_velocity_max;
 				i32 v_num = i32(vel) + i32(rng.gen_probability_f32(vel - Math::floor(vel)));
 				for (i32 i = 0; i < v_num; i++) {
 					if (!try_swap(Vector2i(cell_coord.x, cell_coord.y + v_dir))) {
 						// Blocked. Transfer some vertical velocity to horizontal.
-						orthogonal_velocity *= cell_material()->vertical_velocity_max / cell_material()->horizontal_velocity_max;
+						orthogonal_velocity *= cell_material().vertical_velocity_max / cell_material().horizontal_velocity_max;
 						orthogonal_velocity *= 0.75f;
 						Cell::set_movement_dir(cell, rng.gen_sign());
 						break;
@@ -323,12 +320,7 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 					chunk_ptr->cells[i] = 0;
 				}
 
-				GridChunkIter *iter = new GridChunkIter(other_chunk_coord, true);
-				postinitialize_handler(iter);
-
-				GenerationPass::generate_all(iter);
-
-				memdelete(iter);
+				Grid::generate_chunk(other_chunk_coord);
 			}
 
 			chunk_api.chunks[(x + 1) + (y + 1) * 3] = chunk_ptr;
@@ -337,40 +329,54 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 
 	chunk_api.center()->step_cell_updated_bitmask();
 
-	bool force_step = chunk_api.center()->last_step_tick != Grid::tick - 1;
+	bool force_step = chunk_api.center()->last_step_tick != Grid::get_tick() - 1 || Grid::is_force_step();
 
 	if (chunk_api.center()->is_inactive() && !force_step) {
 		// Nothing to do.
 		return;
 	}
 
-	u32 active_rows = chunk_api.center()->active_rows;
-	u32 active_columns = chunk_api.center()->active_columns;
-	chunk_api.center()->clear_active_rect();
-
 	chunk_api.rng = Grid::get_temporal_rng(chunk_coord);
 
 	// i32 y_start = std::countr_zero(active_rows);
 	// i32 y_end = 32 - std::countl_zero(active_rows);
-	i32 y_top = std::countr_zero(active_rows) - 1;
-	i32 y_bot = 31 - std::countl_zero(active_rows);
-	TEST_ASSERT(y_top < y_bot, "y_top is >= than y_top");
 
-	i32 x_start_base = std::countr_zero(active_columns);
-	i32 x_end_base = 32 - std::countl_zero(active_columns);
+	i32 y_top;
+	i32 y_bot;
 	i32 x_start;
 	i32 x_end;
 	i32 x_step;
-	// Alternate iteration between left and right.
-	if ((Grid::tick & 1) == 0) {
-		x_step = -1;
-		x_start = x_end_base - 1;
-		x_end = x_start_base - 1;
-	} else {
+	u32 active_rows;
+	if (force_step) {
+		y_top = -1;
+		y_bot = 31;
+		x_start = 0;
+		x_end = 32;
 		x_step = 1;
-		x_start = x_start_base;
-		x_end = x_end_base;
+		active_rows = MAX_U32;
+	} else {
+		active_rows = chunk_api.center()->active_rows;
+		u32 active_columns = chunk_api.center()->active_columns;
+
+		y_top = std::countr_zero(active_rows) - 1;
+		y_bot = 31 - std::countl_zero(active_rows);
+		TEST_ASSERT(y_top < y_bot, "y_top is >= than y_top");
+
+		i32 x_start_base = std::countr_zero(active_columns);
+		i32 x_end_base = 32 - std::countl_zero(active_columns);
+		// Alternate iteration between left and right.
+		if ((Grid::get_tick() & 1) == 0) {
+			x_step = -1;
+			x_start = x_end_base - 1;
+			x_end = x_start_base - 1;
+		} else {
+			x_step = 1;
+			x_start = x_start_base;
+			x_end = x_end_base;
+		}
 	}
+
+	chunk_api.center()->clear_active_rect();
 
 	// Iterate over each cell in the chunk from the bottom.
 	for (i32 y = y_bot; y != y_top; y--) {

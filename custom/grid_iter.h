@@ -16,6 +16,7 @@ protected:
 	static void _bind_methods();
 
 public:
+	bool modified = false;
 	bool activate_on_destructor;
 
 	Iter2D cell_iter;

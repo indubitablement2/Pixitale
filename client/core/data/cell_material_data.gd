@@ -48,7 +48,7 @@ class_name CellMaterialData
 @export var biome_id := ""
 
 @export_category("Collision")
-@export var collision_type := Grid.COLLISION_NONE
+@export var collision_type := 0 #CellMaterial.COLLISION_NONE
 ## Less than 1 is slippery, more than 1 is sticky.
 @export_range(0.0, 2.0, 0.01, "or_greater") var friction := 1.0
 #@export_range(0.0, 0.9, 0.01) var bounciness := 0.0

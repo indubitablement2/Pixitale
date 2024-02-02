@@ -1,5 +1,5 @@
-#ifndef PIXITALE_GRID_H
-#define PIXITALE_GRID_H
+#ifndef GRID_H
+#define GRID_H
 
 #include "cell_material.h"
 #include "chunk.h"
@@ -7,6 +7,7 @@
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
 #include "core/object/object.h"
+#include "core/variant/callable.h"
 #include "grid_iter.h"
 #include "preludes.h"
 #include "rng.hpp"
@@ -19,7 +20,14 @@ class Grid : public Object {
 protected:
 	static void _bind_methods();
 
-public:
+private:
+	inline static std::vector<CellMaterial> cell_materials = {};
+
+	// Key is lower material_idx | higher material_idx << 16.
+	inline static std::unordered_map<u32, std::vector<CellReaction>> cell_reactions = {};
+
+	inline static Callable generation_callback = Callable();
+
 	inline static i64 tick = 0;
 	inline static u64 seed = 0;
 
@@ -33,11 +41,48 @@ public:
 
 	inline static Rng temporal_rng = Rng(0);
 
+	inline static bool force_step = false;
+
 	// 3 passes of columns
 	// x : ys (ys may be duplicated and aren't sorted)
 	inline static std::unordered_map<i32, std::vector<i32>> passes[3] = { {}, {}, {} };
 
 	inline static void clear_iters();
+
+public:
+	// Set pointers to nullptr if no reaction between m1 and m2.
+	static void reactions_between(
+			CellReaction *&start,
+			CellReaction *&end,
+			u32 m1,
+			u32 m2,
+			bool &swap);
+
+	static void generate_chunk(Vector2i chunk_coord);
+
+	inline static bool is_force_step() { return force_step; }
+
+	// Return default if not found.
+	static CellMaterial &get_cell_material(u32 material_idx);
+
+	// Unaffected by time. Meant for world generation.
+	static Rng get_static_rng(Vector2i chunk_coord);
+	static Rng get_temporal_rng(Vector2i chunk_coord);
+
+	static u64 chunk_id(Vector2i chunk_coord);
+	// Return nullptr if not found.
+	static Chunk *get_chunk(Vector2i chunk_coord);
+
+public: // godot api
+	static void _clear_cell_materials();
+	static void _add_cell_material(Object *obj);
+
+	static void _clear_cell_reactions();
+	static u64 _add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probability);
+	static bool _remove_cell_reaction(u64 reaction_id);
+
+	static void _set_generation_callback(Callable callback);
+
 	static void clear();
 
 	static void set_tick(i64 value);
@@ -46,35 +91,30 @@ public:
 	static void set_seed(u64 value);
 	static u64 get_seed();
 
-	// Unaffected by time. Meant for world generation.
-	static Rng get_static_rng(Vector2i chunk_coord);
-	static Rng get_temporal_rng(Vector2i chunk_coord);
-
-	static u64 chunk_id(Vector2i chunk_coord);
-	static Chunk *get_chunk(Vector2i chunk_coord);
-
 	// Return a fallback value if cell is not found.
 	static u32 get_cell_material_idx(Vector2i coord);
-	static CellMaterial *get_cell_material(Vector2i coord);
 
 	static Rect2i get_chunk_active_rect(Vector2i chunk_coord);
 
 	static Ref<Image> get_cell_buffer(Rect2i rect);
 
-	static GridChunkIter *iter_chunk(Vector2i chunk_coord, bool activate);
+	static GridChunkIter *iter_chunk(Vector2i chunk_coord);
 	static GridRectIter *iter_rect(Rect2i rect);
 
-	static void queue_step_chunks(Rect2i chunk_rect);
+	static void _set_force_step(bool value);
+	static void _queue_step_chunks(Rect2i chunk_rect);
 	// Part of step which can't be done async.
-	static void step_prepare();
-	static void step_start();
-	static void step_wait_to_finish();
+	static void _step_prepare();
+	static void _step_start();
+	static void _step_wait_to_finish();
 
-	bool randb();
-	bool randb_probability(f32 probability);
-	f32 randf();
-	f32 randf_range(f32 min, f32 max);
-	i32 randi_range(i32 min, i32 max);
+	static bool randb();
+	static bool randb_probability(f32 probability);
+	static f32 randf();
+	static f32 randf_range(f32 min, f32 max);
+	static i32 randi_range(i32 min, i32 max);
 };
+
+VARIANT_ENUM_CAST(CellCollision);
 
 #endif

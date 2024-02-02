@@ -1,86 +1,57 @@
 #ifndef CELL_MATERIAL_H
 #define CELL_MATERIAL_H
 
-#include "core/io/image.h"
-#include "core/io/resource.h"
 #include "core/math/vector2i.h"
 #include "core/object/object.h"
-#include "core/object/ref_counted.h"
-#include "core/string/string_name.h"
-#include "core/variant/typed_array.h"
 #include "preludes.h"
 #include "rng.hpp"
-#include "scene/main/node.h"
 #include "vector"
-#include <unordered_map>
 #include <vector>
 
-const u32 DUPLICATE_ON_VERTICAL_MOVEMENT_PROBABILITY_RANGE = 1 << 20;
-
 enum CellCollision {
-	COLLISION_NONE,
-	COLLISION_SOLID,
-	COLLISION_PLATFORM,
-	COLLISION_LIQUID,
+	CELL_COLLISION_NONE,
+	CELL_COLLISION_SOLID,
+	CELL_COLLISION_PLATFORM,
+	CELL_COLLISION_LIQUID,
 };
 
-class CellMaterial : public Node {
-	GDCLASS(CellMaterial, Node);
+const u32 CELL_REACTION_PROBABILITY_RANGE = 1 << 16;
 
-protected:
-	static void _bind_methods();
+struct CellReaction {
+	// Chance for reaction to happen out of CELL_REACTION_PROBABILITY_RANGE.
+	u16 probability;
 
-public:
-	static std::vector<CellMaterial *> materials;
-	// Material id to material idx.
-	static std::unordered_map<const void *, u32> material_ids;
-	// Tag to material idx.
-	static std::unordered_map<const void *, std::vector<u32>> material_tags;
+	// If eq in1 does not change material.
+	u16 mat_idx_out1;
+	// If eq in2 does not change material.
+	u16 mat_idx_out2;
 
-	static void _clear_materials();
-	static void _add_material(CellMaterial *material);
+	u16 reaction_id;
 
-	// Meant for gdscript.
-	// Return 0 if not found.
-	static u32 find_material_idx(StringName material_id);
-	// Return default if not found.
-	static CellMaterial *find_material(StringName material_id);
-	// Return default if not found.
-	static CellMaterial *get_material(u32 material_idx);
+	// todo: optional gdscript function
+	void *callback;
 
-public:
-	StringName material_id;
-	void set_material_id(StringName value);
-	StringName get_material_id();
+	inline bool try_react(Rng &rng) {
+		return rng.gen_probability_u32(probability, CELL_REACTION_PROBABILITY_RANGE);
+	}
+};
 
-	TypedArray<StringName> tags = { StringName("_all") };
-	void set_tags(TypedArray<StringName> value);
-	TypedArray<StringName> get_tags();
-
-	u32 material_idx = 0;
-	u32 get_material_idx();
-
-	CellCollision collision = CellCollision::COLLISION_NONE;
-	void set_collision(CellCollision value);
-	CellCollision get_collision();
-
-	Ref<Image> values_image;
+class CellMaterial {
+private:
 	std::vector<u8> values = {};
 	u32 values_height = 0;
 	u32 values_width = 0;
-	void set_values_image(Ref<Image> value);
-	Ref<Image> get_values_image();
-	u32 get_value_at(const Vector2i coord, Rng &rng);
-
-	// f32 durability = 0.0f;
-	// f32 friction;
-	// u32 biome_contribution = 0;
 
 	// If 0, then no noise.
 	u32 max_value_noise = 0;
 
+public:
+	// u32 material_idx = 0;
+
 	// Can swap position with less dense cell.
 	i32 density = 0;
+
+	CellCollision collision = CellCollision::CELL_COLLISION_NONE;
 
 	// How much velocity gained per step.
 	// Negative value moves upwars.
@@ -104,9 +75,10 @@ public:
 	bool can_fall = false;
 	bool can_color = false;
 
+	u32 get_value_at(const Vector2i coord, Rng &rng);
 	u32 get_hue_at(const Vector2i coord, Rng &rng);
-};
 
-VARIANT_ENUM_CAST(CellCollision);
+	CellMaterial(Object *obj);
+};
 
 #endif // CELL_MATERIAL_H

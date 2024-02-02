@@ -37,6 +37,7 @@ void GridChunkIter::set_cell(u32 value) {
 	}
 	// todo color
 	chunk->set_cell(cell_iter.coord, value);
+	modified = true;
 }
 
 u32 GridChunkIter::get_cell() {
@@ -89,6 +90,7 @@ i32 GridChunkIter::randi_range(i32 min, i32 max) {
 }
 
 GridChunkIter::GridChunkIter(Vector2i chunk_coord, bool p_activate_on_destructor) {
+	modified = false;
 	activate_on_destructor = p_activate_on_destructor;
 	cell_iter = Iter2D(Vector2i(0, 0), Vector2i(32, 32));
 	_chunk_coord = chunk_coord;
@@ -97,7 +99,7 @@ GridChunkIter::GridChunkIter(Vector2i chunk_coord, bool p_activate_on_destructor
 }
 
 GridChunkIter::~GridChunkIter() {
-	if (activate_on_destructor) {
+	if (activate_on_destructor && modified) {
 		if (chunk != nullptr) {
 			IterChunk _chunk_iter = IterChunk(Rect2(
 					_chunk_coord * 32 - Vector2i(1, 1),
@@ -198,6 +200,7 @@ Vector2i GridRectIter::coord() {
 }
 
 GridRectIter::GridRectIter(Rect2i rect) {
+	modified = false;
 	chunk_iter = IterChunk(rect);
 	cell_iter = Iter2D();
 	chunk = nullptr;
