@@ -1,5 +1,4 @@
 #include "image_packer.h"
-#include "core/math/color.h"
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
 #include <algorithm>

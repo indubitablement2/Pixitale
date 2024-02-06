@@ -4,6 +4,36 @@
 #include "core/typedefs.h"
 #include "preludes.h"
 
+struct CellColor {
+	f32 r;
+	f32 g;
+	f32 b;
+
+	inline CellColor() {
+		r = 0.0f;
+		g = 0.0f;
+		b = 0.0f;
+	}
+
+	inline void average(CellColor other) {
+		r = (r + other.r) / 2.0f;
+		g = (g + other.g) / 2.0f;
+		b = (b + other.b) / 2.0f;
+	}
+
+	inline void blend(CellColor other) {
+		r *= other.r;
+		g *= other.g;
+		b *= other.b;
+	}
+
+	inline void add(CellColor other) {
+		r += other.r;
+		g += other.g;
+		b += other.b;
+	}
+};
+
 namespace Cell {
 
 enum Shifts {
@@ -125,6 +155,13 @@ inline void set_orthogonal_velocity(u32 &cell, const f32 orthogonal_velocity) {
 
 inline void clear_velocity(u32 &cell) {
 	cell &= ~Masks::MASK_VELOCITY;
+}
+
+inline CellColor color(const u32 cell) {
+	return CellColor();
+}
+
+inline void set_color(u32 &cell, const CellColor color) {
 }
 
 inline void set_hue(u32 &cell, const u32 hue_palette_idx) {

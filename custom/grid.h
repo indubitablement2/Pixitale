@@ -8,6 +8,7 @@
 #include "core/math/vector2i.h"
 #include "core/object/object.h"
 #include "core/variant/callable.h"
+#include "generation_pass.h"
 #include "grid_iter.h"
 #include "preludes.h"
 #include "rng.hpp"
@@ -26,7 +27,7 @@ private:
 	// Key is lower material_idx | higher material_idx << 16.
 	inline static std::unordered_map<u32, std::vector<CellReaction>> cell_reactions = {};
 
-	inline static Callable generation_callback = Callable();
+	inline static std::vector<GenerationPass *> generation_passes = {};
 
 	inline static i64 tick = 0;
 	inline static u64 seed = 0;
@@ -74,14 +75,15 @@ public:
 	static Chunk *get_chunk(Vector2i chunk_coord);
 
 public: // godot api
-	static void _clear_cell_materials();
-	static void _add_cell_material(Object *obj);
+	static void clear_cell_materials();
+	static void add_cell_material(Object *obj);
 
-	static void _clear_cell_reactions();
-	static u64 _add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probability);
-	static bool _remove_cell_reaction(u64 reaction_id);
+	static void clear_cell_reactions();
+	static u64 add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probability);
+	static bool remove_cell_reaction(u64 reaction_id);
 
-	static void _set_generation_callback(Callable callback);
+	static void clear_generation_passes();
+	static void add_generation_pass(GenerationPass *value);
 
 	static void clear();
 
@@ -96,17 +98,17 @@ public: // godot api
 
 	static Rect2i get_chunk_active_rect(Vector2i chunk_coord);
 
-	static Ref<Image> get_cell_buffer(Rect2i rect);
+	static Ref<Image> get_cell_buffer(Rect2i chunk_rect);
 
 	static GridChunkIter *iter_chunk(Vector2i chunk_coord);
 	static GridRectIter *iter_rect(Rect2i rect);
 
-	static void _set_force_step(bool value);
-	static void _queue_step_chunks(Rect2i chunk_rect);
+	static void set_force_step(bool value);
+	static void queue_step_chunks(Rect2i chunk_rect);
 	// Part of step which can't be done async.
-	static void _step_prepare();
-	static void _step_start();
-	static void _step_wait_to_finish();
+	static void step_prepare();
+	static void step_start();
+	static void step_wait_to_finish();
 
 	static bool randb();
 	static bool randb_probability(f32 probability);

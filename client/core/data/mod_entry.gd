@@ -1,17 +1,21 @@
 extends Resource
 class_name ModEntry
-#
-#@export var passes : Array[GenerationPass] = []
-#
-### Order is priority.
-#@export var biomes : Array[BiomeData] = []
-#
-#static func entry_path(mod_name: String) -> String:
-	#return "res://" + mod_name + "/entry.tres"
-#
-## This will be called when loading this mod
-## if it is located at "res://[mod_name]/entry.gd".
-#func entry() -> void:
-	#var world_passes := WorldGeneration.get_passes()
-	#for p in passes:
-		#world_passes.push_back(p)
+
+static func folder_path(mod_name: String) -> String:
+	return "res://" + mod_name + "/"
+
+static func entry_path(mod_name: String) -> String:
+	return "res://" + mod_name + "/entry.tres"
+
+@export_file("*.tscn") var cell_materials
+
+@export_file("*.tscn") var generation_passes
+
+## Called once before game start.
+func entry() -> void:
+	pass
+
+## Called after game exit.
+## Any change made by entry should be undone here.
+func exit() -> void:
+	pass

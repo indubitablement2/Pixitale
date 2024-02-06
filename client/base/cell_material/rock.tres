@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="CellMaterialData" load_steps=3 format=3 uid="uid://b3d08bn8a1yn0"]
 
-[ext_resource type="Script" path="res://core/data/cell_material_data.gd" id="1_r5djh"]
+[ext_resource type="Script" path="res://core/data/cell_material.gd" id="1_r5djh"]
 [ext_resource type="Texture2D" uid="uid://bksnupjma5fjc" path="res://base/cell_material/rock_texture.png" id="2_l22vb"]
 
 [resource]

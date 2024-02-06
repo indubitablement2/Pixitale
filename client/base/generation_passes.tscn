@@ -1,0 +1,19 @@
+[gd_scene load_steps=2 format=3 uid="uid://dwifqm8gdteve"]
+
+[sub_resource type="GDScript" id="GDScript_1t5jj"]
+script/source = "extends GenerationPass
+
+var rock := 0
+
+func _init() -> void:
+	rock = GridApi.find_cell_material(&\"Rock\").idx
+
+func _generate(iter: GridChunkIter) -> void:
+	if iter.chunk_coord().y >= 0:
+		iter.fill_remaining(rock)
+"
+
+[node name="Node" type="Node"]
+
+[node name="MakePlane" type="GenerationPass" parent="."]
+script = SubResource("GDScript_1t5jj")

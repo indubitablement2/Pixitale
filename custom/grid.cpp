@@ -8,9 +8,11 @@
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
 #include "core/object/class_db.h"
+#include "core/object/ref_counted.h"
 #include "core/os/memory.h"
 #include "core/templates/vector.h"
 #include "core/variant/array.h"
+#include "generation_pass.h"
 #include "grid_iter.h"
 #include "preludes.h"
 #include "rng.hpp"
@@ -34,30 +36,34 @@ u32 reations_key(const u32 m1, const u32 m2, bool &swap) {
 void Grid::_bind_methods() {
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("_clear_cell_materials"),
-			&Grid::_clear_cell_materials);
+			D_METHOD("clear_cell_materials"),
+			&Grid::clear_cell_materials);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("_add_cell_material"),
-			&Grid::_add_cell_material);
+			D_METHOD("add_cell_material", "obj"),
+			&Grid::add_cell_material);
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("_clear_cell_reactions"),
-			&Grid::_clear_cell_reactions);
+			D_METHOD("clear_cell_reactions"),
+			&Grid::clear_cell_reactions);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("_add_cell_reaction", "in1", "in2", "out1", "out2", "probability"),
-			&Grid::_add_cell_reaction);
+			D_METHOD("add_cell_reaction", "in1", "in2", "out1", "out2", "probability"),
+			&Grid::add_cell_reaction);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("_remove_cell_reaction"),
-			&Grid::_remove_cell_reaction);
+			D_METHOD("remove_cell_reaction", "reaction_id"),
+			&Grid::remove_cell_reaction);
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("_set_generation_callback", "callback"),
-			&Grid::_set_generation_callback);
+			D_METHOD("clear_generation_passes"),
+			&Grid::clear_generation_passes);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("add_generation_pass", "value"),
+			&Grid::add_generation_pass);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -103,29 +109,29 @@ void Grid::_bind_methods() {
 			&Grid::iter_chunk);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("iter", "rect"),
+			D_METHOD("iter_rect", "rect"),
 			&Grid::iter_rect);
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("_set_force_step", "value"),
-			&Grid::_set_force_step);
+			D_METHOD("set_force_step", "value"),
+			&Grid::set_force_step);
 	ClassDB::bind_static_method(
 			"Grid",
 			D_METHOD("queue_step_chunks", "chunk_rect"),
-			&Grid::_queue_step_chunks);
+			&Grid::queue_step_chunks);
 	ClassDB::bind_static_method(
 			"Grid",
 			D_METHOD("step_prepare"),
-			&Grid::_step_prepare);
+			&Grid::step_prepare);
 	ClassDB::bind_static_method(
 			"Grid",
 			D_METHOD("step_start"),
-			&Grid::_step_start);
+			&Grid::step_start);
 	ClassDB::bind_static_method(
 			"Grid",
 			D_METHOD("step_wait_to_finish"),
-			&Grid::_step_wait_to_finish);
+			&Grid::step_wait_to_finish);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -199,7 +205,10 @@ void Grid::generate_chunk(Vector2i chunk_coord) {
 	GridChunkIter *iter = new GridChunkIter(chunk_coord, false);
 	postinitialize_handler(iter);
 
-	generation_callback.call(iter);
+	for (auto pass : generation_passes) {
+		iter->reset_iter();
+		pass->generate(iter);
+	}
 
 	memdelete(iter);
 }
@@ -232,19 +241,19 @@ Chunk *Grid::get_chunk(Vector2i chunk_coord) {
 	}
 }
 
-void Grid::_clear_cell_materials() {
+void Grid::clear_cell_materials() {
 	cell_materials.clear();
 }
 
-void Grid::_add_cell_material(Object *obj) {
+void Grid::add_cell_material(Object *obj) {
 	cell_materials.push_back(CellMaterial(obj));
 }
 
-void Grid::_clear_cell_reactions() {
+void Grid::clear_cell_reactions() {
 	cell_reactions.clear();
 }
 
-u64 Grid::_add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probability) {
+u64 Grid::add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probability) {
 	// TODO: check if mat idx are valid
 
 	bool swap = false;
@@ -282,7 +291,7 @@ u64 Grid::_add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probabili
 	return reaction_key | (u64(reaction.reaction_id) << 32);
 }
 
-bool Grid::_remove_cell_reaction(u64 reaction_id) {
+bool Grid::remove_cell_reaction(u64 reaction_id) {
 	u32 key = u32(reaction_id & 0xFFFFFFFF);
 	u16 id = u16(reaction_id >> 32);
 
@@ -299,12 +308,16 @@ bool Grid::_remove_cell_reaction(u64 reaction_id) {
 	return false;
 }
 
-void Grid::_set_generation_callback(Callable callback) {
-	generation_callback = callback;
+void Grid::clear_generation_passes() {
+	generation_passes = {};
+}
+
+void Grid::add_generation_pass(GenerationPass *value) {
+	generation_passes.push_back(value);
 }
 
 void Grid::clear() {
-	_step_wait_to_finish();
+	step_wait_to_finish();
 
 	clear_iters();
 	queue_step_chunk_rects = {};
@@ -416,17 +429,17 @@ GridChunkIter *Grid::iter_chunk(Vector2i chunk_coord) {
 	return iter;
 }
 
-void Grid::_set_force_step(bool value) {
+void Grid::set_force_step(bool value) {
 	force_step = value;
 }
 
-void Grid::_queue_step_chunks(Rect2i chunk_rect) {
+void Grid::queue_step_chunks(Rect2i chunk_rect) {
 	if (chunk_rect.size.x > 0 && chunk_rect.size.y > 0) {
 		queue_step_chunk_rects.push_back(chunk_rect);
 	}
 }
 
-void Grid::_step_prepare() {
+void Grid::step_prepare() {
 	set_tick(tick + 1);
 
 	clear_iters();
@@ -456,7 +469,7 @@ void Grid::_step_prepare() {
 	queue_step_chunk_rects.clear();
 }
 
-void Grid::_step_start() {
+void Grid::step_start() {
 	for (i32 i = 0; i < 3; i++) {
 		auto &pass = passes[i];
 
@@ -481,7 +494,7 @@ void Grid::_step_start() {
 	}
 }
 
-void Grid::_step_wait_to_finish() {
+void Grid::step_wait_to_finish() {
 	tp.wait_for_tasks();
 	force_step = false;
 }

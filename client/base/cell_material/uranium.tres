@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="CellMaterialData" load_steps=2 format=3 uid="uid://dmgaf7wsdi3s1"]
 
-[ext_resource type="Script" path="res://core/data/cell_material_data.gd" id="1_274id"]
+[ext_resource type="Script" path="res://core/data/cell_material.gd" id="1_274id"]
 
 [resource]
 script = ExtResource("1_274id")
