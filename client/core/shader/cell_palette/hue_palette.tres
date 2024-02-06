@@ -7,4 +7,3 @@ colors = PackedColorArray(1, 1, 1, 1, 1, 0, 0, 1, 0.0823529, 1, 0, 1, 0, 0.06666
 
 [resource]
 gradient = SubResource("Gradient_nayco")
-width = 16

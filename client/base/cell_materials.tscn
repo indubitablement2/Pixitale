@@ -1,0 +1,9 @@
+[gd_scene load_steps=2 format=3 uid="uid://32c58wa8r20q"]
+
+[ext_resource type="Script" path="res://core/data/cell_material_data.gd" id="1_jtobp"]
+
+[node name="Node" type="Node"]
+
+[node name="CellMaterial" type="Node" parent="."]
+script = ExtResource("1_jtobp")
+light_block = Color(1, 0, 0, 1)

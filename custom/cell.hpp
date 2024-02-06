@@ -23,6 +23,12 @@ enum Shifts {
 // hue: 24..28
 // value: 28..32
 // todo
+// material_idx: 0..14
+// updated: 14
+// active: 15
+// hue: 16..24
+// value: 24..32
+// --
 // x vel: 32..48
 // y vel: 48..64
 enum Masks {

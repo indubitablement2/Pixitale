@@ -6,4 +6,3 @@ colors = PackedColorArray(1, 1, 1, 1, 0.16, 0.16, 0.16, 1)
 
 [resource]
 gradient = SubResource("Gradient_q0tk8")
-width = 16

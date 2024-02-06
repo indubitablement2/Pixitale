@@ -33,7 +33,8 @@ func get_min_depth() -> float:
 		"anywhere":
 			return -999999.0
 		"cavern_and_lower":
-			return Game.CAVERN_START
+			#return Game.CAVERN_START
+			return 0.0
 		_:
 			return min_depth
 
