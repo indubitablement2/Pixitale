@@ -1,24 +1,17 @@
 extends Node
 ## Gdscript friendly api over Grid.
 
-## Editing Grid safely:
-## While it is safe to read from Grid at any time, it is not to modify it.
-## Instead use queue_edit. This also help ensure determinism.
-## Bad unless from queue_edit:
-## Grid.set_tick(123)
-## var iter = Grid.iter_rect(rect); iter.next(); iter.set_cell(0)
-## Always OK:
-## Grid.get_tick()
-## var iter = Grid.iter_rect(rect); iter.next(); iter.get_cell()
-## GridApi.queue_edit(&"my_method_to_edit_rect", [rect])
+# Editing Grid safely:
+# While it is safe to read from Grid at any time, it is not to modify it.
+# Instead use methods from ModEntry.grid_edits.
 
-## Randomness and determinism:
-## When generating chunk, use rand methods from GridChunkIter
-## to ensure the same chunk is generated for all peers and
-## regarless of time.
-##
-## When doing other deterministic edits, use rand methods from Grid
-## which change over time, but will be the same for all peers.
+# Randomness and determinism:
+# When generating chunk, use rand methods from GridChunkIter
+# to ensure the same chunk is generated for all peers and
+# regarless of time.
+#
+# When doing other deterministic edits, use rand methods from Grid
+# which change over time, but will be the same for all peers.
 
 var is_server := true
 
@@ -38,32 +31,17 @@ var cell_material_tags := {}
 ## - their original node order
 var generation_passes : Array[GenerationPass] = []
 
-var grid_edit_callables : Array[Callable] = []
-## StringName : int
-var grid_edit_idx := {}
-## tick(int) : Array of Array(args, method id)
-var queued_grid_edits := {}
-var next_grid_edits := []
+var _edit_callables : Array[Callable] = []
+## tick(int) : Array of Array(args..., callback idx)
+var _queued_edits := {}
+## [args..., callable_idx(int)]
+var _next_edits := []
 
 func find_cell_material(cell_material_name: StringName) -> CellMaterial:
 	return cell_material_names[cell_material_name]
 
 func find_cell_material_tag(tag: StringName) -> Array[CellMaterial]:
 	return cell_material_tags[tag]
-
-## Should only be called by the server.
-## Method called from this are called in deterministic order and networked.
-## It is only safe to edit the Grid through this.
-## args can be almost anything but not Object and Callable.
-## Uses var_to_bytes(args) internally.
-func queue_edit(method: StringName, args: Array) -> void:
-	assert(is_server)
-	args.push_back(grid_edit_idx[method])
-	next_grid_edits.push_back(args)
-
-@rpc("authority", "call_remote", "reliable", 1)
-func _queue_edit_peer(tick: int, bytes: PackedByteArray) -> void:
-	queued_grid_edits[tick] = bytes_to_var(bytes)
 
 func load_mods() -> void:
 	unload_mods()
@@ -130,12 +108,33 @@ func load_mods() -> void:
 	for gen_pass in generation_passes:
 		Grid.add_generation_pass(gen_pass)
 	
+	# Add grid edit methods
 	for entry in mod_entries:
-		entry.entry()
+		var script := entry.grid_edits
+		for method in script.get_script_method_list():
+			var method_name := method["name"] as String
+			if method_name.begins_with("_"):
+				continue
+			
+			var idx := _edit_callables.size()
+			script.set("_" + method_name.capitalize(), idx)
+			
+			var c := Callable(script, method_name)
+			if c.is_valid():
+				_edit_callables.push_back(c)
+			else:
+				push_error("invalid meta method: ", method_name)
+	
+	for entry in mod_entries:
+		if entry.entry_script:
+			if entry.entry_script.has_method(&"entry"):
+				entry.entry_script.entry()
 
 func unload_mods() -> void:
 	for entry in mod_entries:
-		entry.exit()
+		if entry.entry_script:
+			if entry.entry_script.has_method(&"exit"):
+				entry.entry_script.exit()
 	mod_entries = []
 	
 	Grid.clear()
@@ -152,31 +151,42 @@ func unload_mods() -> void:
 	for gen_pass in generation_passes:
 		gen_pass.queue_free()
 	generation_passes = []
+	
+	_edit_callables = []
+	_queued_edits = {}
+	_next_edits = []
+
+@rpc("authority", "call_remote", "reliable", 1)
+func _edit_peer(tick: int, bytes: PackedByteArray) -> void:
+	_queued_edits[tick] = bytes_to_var(bytes)
 
 func _ready() -> void:
-	#process_mode = Node.PROCESS_MODE_DISABLED
+	process_mode = Node.PROCESS_MODE_DISABLED
 	pass
 
 func _process(_delta: float) -> void:
 	if is_server:
 		# Send queued grid edits to peers
 		if multiplayer.has_multiplayer_peer():
-			_queue_edit_peer(Grid.get_tick(), var_to_bytes(next_grid_edits))
+			_edit_peer(Grid.get_tick(), var_to_bytes(_next_edits))
 		
-		queued_grid_edits[Grid.get_tick()] = next_grid_edits
-		next_grid_edits = []
+		_queued_edits[Grid.get_tick()] = _next_edits
+		_next_edits = []
 	
 	# Step up to 2 times if behind
 	for i in 2:
-		if queued_grid_edits.has(Grid.get_tick()):
-			var grid_edits := queued_grid_edits[Grid.get_tick()] as Array
-			queued_grid_edits.erase(Grid.get_tick())
+		if _queued_edits.has(Grid.get_tick()):
+			var edits := _queued_edits[Grid.get_tick()] as Array
+			_queued_edits.erase(Grid.get_tick())
 		
 			# Only after calling this it safe to modify the grid.
 			Grid.step_wait_to_finish()
 			
-			for args in grid_edits:
-				grid_edit_callables[args.pop_back()].callv(args)
+			for args in edits:
+				_edit_callables[args.pop_back()].callv(args)
 			
 			Grid.step_prepare()
+
+
+
 

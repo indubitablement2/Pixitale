@@ -15,5 +15,5 @@ func _generate(iter: GridChunkIter) -> void:
 
 [node name="Node" type="Node"]
 
-[node name="MakePlane" type="GenerationPass" parent="."]
+[node name="RockPlane" type="GenerationPass" parent="."]
 script = SubResource("GDScript_1t5jj")
