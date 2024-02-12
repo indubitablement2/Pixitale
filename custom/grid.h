@@ -51,6 +51,9 @@ private:
 	inline static void clear_iters();
 
 public:
+	// Any chunk last stepped before this will need to be force stepped.
+	inline static i64 last_modified_tick = 0;
+
 	// Set pointers to nullptr if no reaction between m1 and m2.
 	static void reactions_between(
 			CellReaction *&start,

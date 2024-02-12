@@ -329,7 +329,7 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 
 	chunk_api.center()->step_cell_updated_bitmask();
 
-	bool force_step = chunk_api.center()->last_step_tick != Grid::get_tick() - 1 || Grid::is_force_step();
+	bool force_step = chunk_api.center()->last_step_tick != Grid::last_modified_tick - 1 || Grid::is_force_step();
 
 	if (chunk_api.center()->is_inactive() && !force_step) {
 		// Nothing to do.

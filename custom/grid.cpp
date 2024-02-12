@@ -256,6 +256,8 @@ void Grid::clear_cell_reactions() {
 u64 Grid::add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probability) {
 	// TODO: check if mat idx are valid
 
+	last_modified_tick = tick;
+
 	bool swap = false;
 	u32 reaction_key = reations_key(in1, in2, swap);
 
@@ -292,6 +294,8 @@ u64 Grid::add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probabilit
 }
 
 bool Grid::remove_cell_reaction(u64 reaction_id) {
+	last_modified_tick = tick;
+
 	u32 key = u32(reaction_id & 0xFFFFFFFF);
 	u16 id = u16(reaction_id >> 32);
 
