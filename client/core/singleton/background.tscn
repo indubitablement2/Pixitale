@@ -9,9 +9,6 @@ process_priority = 11
 texture_repeat = 2
 script = ExtResource("1_jdl2j")
 
-[node name="GridBiomeScanner" type="GridBiomeScanner" parent="."]
-z_index = -100
-
 [node name="CanvasLayer" type="CanvasLayer" parent="."]
 layer = -50
 follow_viewport_enabled = true

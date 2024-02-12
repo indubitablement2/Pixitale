@@ -8,10 +8,10 @@ extends Node
 # Randomness and determinism:
 # When generating chunk, use rand methods from GridChunkIter
 # to ensure the same chunk is generated for all peers and
-# regarless of time.
+# regarless of Grid.tick.
 #
 # When doing other deterministic edits, use rand methods from Grid
-# which change over time, but will be the same for all peers.
+# which change each step, but will be the same for all peers.
 
 var is_server := true
 

@@ -1,0 +1,83 @@
+[gd_scene load_steps=13 format=3 uid="uid://cs41g41rbjtf3"]
+
+[ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
+[ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
+[ext_resource type="Script" path="res://core/game/light_pass.gd" id="2_uuur8"]
+[ext_resource type="Material" uid="uid://btwoiop8xxp15" path="res://core/shader/cell.material" id="2_wyvts"]
+[ext_resource type="Shader" path="res://core/shader/global_light.gdshader" id="3_76bqo"]
+[ext_resource type="Texture2D" uid="uid://dtd2c027i6e6p" path="res://icon.svg" id="4_66u3x"]
+[ext_resource type="PackedScene" uid="uid://5ojtd4d004ve" path="res://core/camera/free_camera.tscn" id="7_7jk4b"]
+
+[sub_resource type="Environment" id="Environment_bap7c"]
+background_mode = 3
+background_color = Color(1, 0, 0, 1)
+glow_enabled = true
+glow_levels/2 = 1.0
+glow_levels/5 = 0.0
+glow_intensity = 3.0
+glow_strength = 1.5
+glow_bloom = 1.0
+glow_blend_mode = 3
+
+[sub_resource type="World3D" id="World3D_54s67"]
+environment = SubResource("Environment_bap7c")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_sxpjy"]
+shader = ExtResource("3_76bqo")
+shader_parameter/light = Color(0.5, 0.5, 0.5, 1)
+shader_parameter/global_light_local_end = 0
+
+[sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_f00lt"]
+blend_mode = 3
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_5p4mp"]
+viewport_path = NodePath("LightPass")
+
+[node name="Game" type="Node"]
+script = ExtResource("1_bg66v")
+
+[node name="LightPass" type="SubViewport" parent="."]
+process_priority = 11
+world_3d = SubResource("World3D_54s67")
+script = ExtResource("2_uuur8")
+
+[node name="CellLight" type="Sprite2D" parent="LightPass"]
+editor_description = "Raw cell data to light."
+material = SubResource("ShaderMaterial_sxpjy")
+centered = false
+
+[node name="Icon" type="Sprite2D" parent="LightPass"]
+position = Vector2(161, 111)
+texture = ExtResource("4_66u3x")
+
+[node name="GridRender" type="Node2D" parent="."]
+process_priority = 10
+script = ExtResource("1_3cgdd")
+
+[node name="CellBackgroud" type="Sprite2D" parent="GridRender"]
+editor_description = "TODO: Raw cell data to background cell."
+visible = false
+z_index = -100
+z_as_relative = false
+centered = false
+
+[node name="Cell" type="Sprite2D" parent="GridRender"]
+editor_description = "Raw cell data to rendered foreground cell."
+z_index = 100
+z_as_relative = false
+material = ExtResource("2_wyvts")
+centered = false
+
+[node name="Light" type="Sprite2D" parent="GridRender"]
+editor_description = "Output from LightPass."
+z_index = 200
+z_as_relative = false
+material = SubResource("CanvasItemMaterial_f00lt")
+texture = SubResource("ViewportTexture_5p4mp")
+centered = false
+
+[node name="FreeCamera" parent="." instance=ExtResource("7_7jk4b")]
+
+[node name="Icon" type="Sprite2D" parent="."]
+position = Vector2(337, 200)
+texture = ExtResource("4_66u3x")
