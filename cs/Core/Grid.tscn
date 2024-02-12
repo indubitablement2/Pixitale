@@ -1,6 +1,0 @@
-[gd_scene load_steps=2 format=3 uid="uid://ryaws6fdhruf"]
-
-[ext_resource type="Script" path="res://Core/Grid.cs" id="1_0x0vj"]
-
-[node name="Grid" type="Node"]
-script = ExtResource("1_0x0vj")
