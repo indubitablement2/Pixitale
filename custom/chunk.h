@@ -13,19 +13,12 @@ public:
 	bool generated = false;
 
 	i64 last_step_tick = -1;
-	// Cell updated last time this chunk was stepped.
-	u32 current_cell_updated_bitmask = 0;
-	u32 next_cell_updated_bitmask = 1 << Cell::Shifts::SHIFT_UPDATED;
 
 	u32 active_rows = MAX_U32;
 	u32 active_columns = MAX_U32;
 
-	i32 num_background_cells = 0;
-	i32 num_particle_cells = 0;
-	// todo: background cells
-	u32 *background_cells = nullptr;
-	// todo: particles
-	u32 *particle_cells = nullptr;
+	Chunk *background = nullptr;
+	u32 *velocity = nullptr;
 
 	u32 cells[32 * 32];
 
@@ -50,12 +43,6 @@ public:
 		return Rect2i(
 				Vector2i(x_start, y_start),
 				Vector2i(x_end - x_start, y_end - y_start));
-	}
-
-	inline void step_cell_updated_bitmask() {
-		u32 temp = current_cell_updated_bitmask;
-		current_cell_updated_bitmask = next_cell_updated_bitmask;
-		next_cell_updated_bitmask = temp;
 	}
 
 	inline void bound_test(Vector2i coord) {
@@ -106,27 +93,16 @@ public:
 		active_columns = 0;
 	}
 
-	inline u32 get_updated_mask(i64 tick) {
-		if (last_step_tick == tick) {
-			// We have already stepped this chunk this tick.
-			return current_cell_updated_bitmask;
-		} else {
-			// We have not stepped this chunk this tick and likely will.
-			// Will prevent double stepping a cell.
-			return next_cell_updated_bitmask;
-		}
-	}
-
 	// Needs chunk and its 8 neighbors to exist in Grid::chunks,
 	// They will be generated if needed.
 	static void step_chunk(Vector2i chunk_coord);
 
 	~Chunk() {
-		if (background_cells != nullptr) {
-			delete[] background_cells;
+		if (background != nullptr) {
+			delete background;
 		}
-		if (particle_cells != nullptr) {
-			delete[] particle_cells;
+		if (velocity != nullptr) {
+			delete[] velocity;
 		}
 	}
 };

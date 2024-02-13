@@ -42,8 +42,6 @@ private:
 
 	inline static Rng temporal_rng = Rng(0);
 
-	inline static bool force_step = false;
-
 	// 3 passes of columns
 	// x : ys (ys may be duplicated and aren't sorted)
 	inline static std::unordered_map<i32, std::vector<i32>> passes[3] = { {}, {}, {} };
@@ -54,6 +52,9 @@ public:
 	// Any chunk last stepped before this will need to be force stepped.
 	inline static i64 last_modified_tick = 0;
 
+	// Current bitmask of updated cells.
+	inline static u32 cell_updated_bitmask = 0;
+
 	// Set pointers to nullptr if no reaction between m1 and m2.
 	static void reactions_between(
 			CellReaction *&start,
@@ -63,8 +64,6 @@ public:
 			bool &swap);
 
 	static void generate_chunk(Vector2i chunk_coord);
-
-	inline static bool is_force_step() { return force_step; }
 
 	// Return default if not found.
 	static CellMaterial &get_cell_material(u32 material_idx);
@@ -106,7 +105,7 @@ public: // godot api
 	static GridChunkIter *iter_chunk(Vector2i chunk_coord);
 	static GridRectIter *iter_rect(Rect2i rect);
 
-	static void set_force_step(bool value);
+	static void force_step();
 	static void queue_step_chunks(Rect2i chunk_rect);
 	// Part of step which can't be done async.
 	static void step_prepare();

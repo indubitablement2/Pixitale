@@ -114,8 +114,8 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("set_force_step", "value"),
-			&Grid::set_force_step);
+			D_METHOD("force_step"),
+			&Grid::force_step);
 	ClassDB::bind_static_method(
 			"Grid",
 			D_METHOD("queue_step_chunks", "chunk_rect"),
@@ -433,8 +433,8 @@ GridChunkIter *Grid::iter_chunk(Vector2i chunk_coord) {
 	return iter;
 }
 
-void Grid::set_force_step(bool value) {
-	force_step = value;
+void Grid::force_step() {
+	last_modified_tick = tick;
 }
 
 void Grid::queue_step_chunks(Rect2i chunk_rect) {
@@ -445,6 +445,8 @@ void Grid::queue_step_chunks(Rect2i chunk_rect) {
 
 void Grid::step_prepare() {
 	set_tick(tick + 1);
+
+	cell_updated_bitmask = ((tick % 3) + 1) << Cell::Shifts::SHIFT_UPDATED;
 
 	clear_iters();
 
@@ -500,7 +502,6 @@ void Grid::step_start() {
 
 void Grid::step_wait_to_finish() {
 	tp.wait_for_tasks();
-	force_step = false;
 }
 
 bool Grid::randb() {

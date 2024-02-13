@@ -15,7 +15,7 @@ extends Node
 
 var is_server := true
 
-var mod_names : Array[String] = ["base"]
+var mod_names : Array[String] = ["core", "base"]
 
 var mod_entries : Array[ModEntry] = []
 
@@ -56,9 +56,6 @@ func load_mods() -> void:
 			mod_entries.push_back(entry)
 		else:
 			push_error("ModEntry not found for ", mod_name)
-	
-	# Add empty cell material
-	cell_materials.push_back(CellMaterial.new())
 	
 	# Add cell materials
 	for entry in mod_entries:

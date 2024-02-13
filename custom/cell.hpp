@@ -54,10 +54,10 @@ enum Shifts {
 // value: 28..32
 // todo
 // material_idx: 0..14
-// updated: 14
-// active: 15
-// hue: 16..24
-// value: 24..32
+// updated: 14..16
+// alternate between 1,2 and 3. 0 is always not updated (default for new cell).
+// active: 16
+// color: 17..32
 // --
 // x vel: 32..48
 // y vel: 48..64

@@ -1,0 +1,10 @@
+[gd_resource type="Resource" script_class="ModEntry" load_steps=3 format=3 uid="uid://dfea1mff2ind6"]
+
+[ext_resource type="Script" path="res://core/data/mod_entry.gd" id="1_n5jqj"]
+[ext_resource type="Script" path="res://core/grid_edits.gd" id="1_wp8s5"]
+
+[resource]
+script = ExtResource("1_n5jqj")
+cell_materials = "res://core/cell_materials.tscn"
+generation_passes = null
+grid_edits = ExtResource("1_wp8s5")

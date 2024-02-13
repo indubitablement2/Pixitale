@@ -13,7 +13,6 @@
 // Coord is relative to top left cell of top left chunk unless otherwise specified.
 class ChunkApi {
 public:
-	u32 current_cell_updated_bitmask;
 	u32 cell;
 	u32 *cell_ptr;
 	Vector2i cell_coord;
@@ -121,9 +120,8 @@ public:
 		if (cell_material().density > other_cell_material.density) {
 			// todo: duplication on h movement
 
-			Cell::set_updated(other, current_cell_updated_bitmask);
-			current_cell_updated_bitmask = other_chunk_ptr->get_updated_mask(Grid::get_tick());
-			Cell::set_updated(cell, current_cell_updated_bitmask);
+			Cell::set_updated(other, Grid::cell_updated_bitmask);
+			Cell::set_updated(cell, Grid::cell_updated_bitmask);
 
 			*cell_ptr = other;
 			cell_ptr = other_cell_ptr;
@@ -173,7 +171,7 @@ public:
 					// todo: color
 					cell = Cell::build_cell(
 							cell_material_idx_out,
-							current_cell_updated_bitmask,
+							Grid::cell_updated_bitmask,
 							true);
 					activate_neightbors(cell_coord);
 				}
@@ -182,7 +180,7 @@ public:
 					// todo: color
 					*other_cell_ptr = Cell::build_cell(
 							other_material_idx_out,
-							other_chunk_ptr->get_updated_mask(Grid::get_tick()),
+							Grid::cell_updated_bitmask,
 							true);
 					activate_neightbors(other_coord);
 				}
@@ -194,14 +192,15 @@ public:
 		}
 	}
 
+	// TODO: FIGURE OUT UPDATED BITMASK
+
 	void step_cell(const Vector2i center_coord, bool force_step) {
 		cell_ptr = center()->get_cell_ptr(center_coord);
 		cell = *cell_ptr;
-		current_cell_updated_bitmask = center()->current_cell_updated_bitmask;
 		cell_coord = center_coord + Vector2i(32, 32);
 
 		if (force_step) {
-			if (Cell::is_updated(cell, current_cell_updated_bitmask)) {
+			if (Cell::is_updated(cell, Grid::cell_updated_bitmask)) {
 				if (Cell::is_active(cell)) {
 					center()->activate_point(center_coord, false);
 				}
@@ -212,13 +211,13 @@ public:
 				return;
 			}
 
-			if (Cell::is_updated(cell, current_cell_updated_bitmask)) {
+			if (Cell::is_updated(cell, Grid::cell_updated_bitmask)) {
 				center()->activate_point(center_coord, false);
 				return;
 			}
 		}
 
-		Cell::set_updated(cell, current_cell_updated_bitmask);
+		Cell::set_updated(cell, Grid::cell_updated_bitmask);
 		Cell::set_active(cell, false);
 
 		// Reactions
@@ -327,9 +326,9 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 		}
 	}
 
-	chunk_api.center()->step_cell_updated_bitmask();
+	bool force_step = chunk_api.center()->last_step_tick <= Grid::last_modified_tick;
 
-	bool force_step = chunk_api.center()->last_step_tick != Grid::last_modified_tick - 1 || Grid::is_force_step();
+	chunk_api.center()->last_step_tick = Grid::get_tick();
 
 	if (chunk_api.center()->is_inactive() && !force_step) {
 		// Nothing to do.

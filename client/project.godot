@@ -115,14 +115,3 @@ order=PackedStringArray("base")
 textures/canvas_textures/default_texture_filter=0
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)
 environment/defaults/default_environment="res://core/default_environment.tres"
-
-[shader_globals]
-
-cell_materials_data={
-"type": "sampler2D",
-"value": "res://core/shader/cell_materials_data.tres"
-}
-cell_modulate_palette={
-"type": "sampler2D",
-"value": "res://core/shader/cell_palette/cell_modulate_palette.tres"
-}

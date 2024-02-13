@@ -1,7 +1,7 @@
 extends Node
 class_name CellMaterial
 
-## Default values are what empty cell (name: "empty", idx: 0) uses.
+## Default values are what empty cell (always idx 0) uses.
 ## CellMaterial can not be added, removed or modified while in-game.
 
 @export var display_name := ""
