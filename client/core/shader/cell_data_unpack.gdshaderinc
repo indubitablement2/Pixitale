@@ -1,59 +1,118 @@
-const uint MASK_MATERIAL_IDX = 4095u;
+const uint MASK_MATERIAL_IDX = 16383u;
 
-const uint MASK_ACTIVE = 16384u;
+const uint MASK_ACTIVE = 65536u;
 
-const uint MASK_HUE = 7u;
-const uint SHIFT_HUE = 24u;
-const uint SHIFT_VALUE = 28u;
+const uint SHIFT_COLOR_RED = 17u;
+const uint SHIFT_COLOR_GREEN = 22u;
+const uint SHIFT_COLOR_BLUE = 27u;
+const uint MASK_COLOR_CHANNEL = 31u;
 
-const int CELL_DATA_BASE_COLOR = 0;
-const int CELL_DATA_GLOW = 1;
-const int CELL_DATA_LIGHT_BLOCK = 2;
-global uniform sampler2D cell_materials_data;
+const float COLOR_CHANNEL_RANGE = 31.0;
 
-global uniform sampler2D cell_modulate_palette;
+const uint CELL_DATA_BASE_COLOR_START = 0u;
+const uint CELL_DATA_BASE_COLOR_SIZE = 1u;
+const uint CELL_DATA_GLOW = 2u;
+const uint CELL_DATA_LIGHT_MODULATE = 3u;
+const uint CELL_DATA_SIZE = 4u;
+const uint CELL_MATERIALS_DATA_WIDTH = 512u;
+uniform sampler2D cell_materials_data;
+
+uniform sampler2D cell_materials_base_color;
 
 uint get_cell_data(sampler2D data_tex, ivec2 local_coords) {
 	return floatBitsToUint(texelFetch(data_tex, local_coords, 0).x);
 }
 
-vec4 get_cell_modulate(uint data) {
-	uint hue_idx = (data >> SHIFT_HUE) & MASK_HUE;
-	uint value_idx = (data >> SHIFT_VALUE);
+vec3 get_cell_color_modulate(uint data) {
+	return vec3(
+		float((data >> SHIFT_COLOR_RED) & MASK_COLOR_CHANNEL) / COLOR_CHANNEL_RANGE,
+		float((data >> SHIFT_COLOR_GREEN) & MASK_COLOR_CHANNEL) / COLOR_CHANNEL_RANGE,
+		float(data >> SHIFT_COLOR_BLUE) / COLOR_CHANNEL_RANGE
+	);
+}
+
+ivec2 _get_cell_base_color_start(uint material_idx) {
+	uint idx = material_idx * CELL_DATA_SIZE + CELL_DATA_BASE_COLOR_START;
 	
-	return texelFetch(
-		cell_modulate_palette,
-		ivec2(int(hue_idx), int(value_idx)),
+	ivec2 coord = ivec2(
+		int(idx % CELL_MATERIALS_DATA_WIDTH),
+		int(idx / CELL_MATERIALS_DATA_WIDTH)
+	);
+	
+	vec4 data = texelFetch(
+		cell_materials_data,
+		coord,
 		0
+	);
+	
+	return ivec2(
+		int(floatBitsToUint(data.x) | (floatBitsToUint(data.y) << 16u)),
+		int(floatBitsToUint(data.z) | (floatBitsToUint(data.w) << 16u))
+	);
+}
+
+ivec2 _get_cell_base_color_size(uint material_idx) {
+	uint idx = material_idx * CELL_DATA_SIZE + CELL_DATA_BASE_COLOR_SIZE;
+	
+	ivec2 coord = ivec2(
+		int(idx % CELL_MATERIALS_DATA_WIDTH),
+		int(idx / CELL_MATERIALS_DATA_WIDTH)
+	);
+	
+	vec4 data = texelFetch(
+		cell_materials_data,
+		coord,
+		0
+	);
+	
+	return ivec2(
+		int(floatBitsToUint(data.x) | (floatBitsToUint(data.y) << 16u)),
+		int(floatBitsToUint(data.z) | (floatBitsToUint(data.w) << 16u))
 	);
 }
 
 vec4 get_cell_base_color(uint data, ivec2 global_coords) {
-	uint material_idx = data & MASK_MATERIAL_IDX;
+	ivec2 start = _get_cell_base_color_start(data & MASK_MATERIAL_IDX);
+	ivec2 size = _get_cell_base_color_size(data & MASK_MATERIAL_IDX);
+	
+	ivec2 coord = start + ivec2(
+		global_coords.x % size.x,
+		global_coords.y % size.y
+	);
 	
 	return texelFetch(
-		cell_materials_data,
-		ivec2(int(material_idx), CELL_DATA_BASE_COLOR),
+		cell_materials_base_color,
+		coord,
 		0
 	);
 }
 
-vec4 get_cell_glow(uint data) {
-	uint material_idx = data & MASK_MATERIAL_IDX;
+vec4 get_cell_glow(uint material_idx) {
+	uint idx = material_idx * CELL_DATA_SIZE + CELL_DATA_GLOW;
+	
+	ivec2 coord = ivec2(
+		int(idx % CELL_MATERIALS_DATA_WIDTH),
+		int(idx / CELL_MATERIALS_DATA_WIDTH)
+	);
 	
 	return texelFetch(
 		cell_materials_data,
-		ivec2(int(material_idx), CELL_DATA_GLOW),
+		coord,
 		0
 	);
 }
 
-vec4 get_cell_light_block(uint data) {
-	uint material_idx = data & MASK_MATERIAL_IDX;
+vec4 get_cell_light_modulate(uint material_idx) {
+	uint idx = material_idx * CELL_DATA_SIZE + CELL_DATA_LIGHT_MODULATE;
+	
+	ivec2 coord = ivec2(
+		int(idx % CELL_MATERIALS_DATA_WIDTH),
+		int(idx / CELL_MATERIALS_DATA_WIDTH)
+	);
 	
 	return texelFetch(
 		cell_materials_data,
-		ivec2(int(material_idx), CELL_DATA_LIGHT_BLOCK),
+		coord,
 		0
 	);
 }

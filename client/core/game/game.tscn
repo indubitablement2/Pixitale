@@ -4,7 +4,7 @@
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
 [ext_resource type="Script" path="res://core/game/light_pass.gd" id="2_uuur8"]
 [ext_resource type="Material" uid="uid://btwoiop8xxp15" path="res://core/shader/cell.material" id="2_wyvts"]
-[ext_resource type="Shader" path="res://core/shader/global_light.gdshader" id="3_76bqo"]
+[ext_resource type="Shader" path="res://core/shader/cell_light.gdshader" id="3_7j3b5"]
 [ext_resource type="Texture2D" uid="uid://dtd2c027i6e6p" path="res://icon.svg" id="4_66u3x"]
 [ext_resource type="PackedScene" uid="uid://5ojtd4d004ve" path="res://core/camera/free_camera.tscn" id="7_7jk4b"]
 
@@ -23,7 +23,15 @@ glow_blend_mode = 3
 environment = SubResource("Environment_bap7c")
 
 [sub_resource type="ShaderMaterial" id="ShaderMaterial_sxpjy"]
-shader = ExtResource("3_76bqo")
+shader = ExtResource("3_7j3b5")
+shader_parameter/a_light_color = Color(0.5, 0.5, 0.5, 1)
+shader_parameter/a_raycast_light_color = Color(0.5, 0.5, 0.5, 1)
+shader_parameter/b_light_color = Color(0.5, 0.5, 0.5, 1)
+shader_parameter/b_raycast_light_color = Color(0.5, 0.5, 0.5, 1)
+shader_parameter/b_start = 0
+shader_parameter/raycast_light_enabled = false
+shader_parameter/raycast_light_origin_dir = Vector2(0, -1)
+shader_parameter/raycast_light_lenght = 32
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_f00lt"]
 blend_mode = 3

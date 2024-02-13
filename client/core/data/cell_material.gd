@@ -10,9 +10,10 @@ class_name CellMaterial
 @export var tags : Array[StringName] = [&"all"]
 
 @export_category("Render")
-## Static base color based on coordinates.
+## Base color based on coordinates.
 ## Keep as null to use base_color instead.
 @export var base_color_image : Image = null
+## Flat base color.
 @export var base_color := Color.TRANSPARENT
 
 ## Permanent glow/bloom. Alpha is not used.

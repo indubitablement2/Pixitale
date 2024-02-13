@@ -3,11 +3,16 @@ render_mode blend_add;
 
 #include "cell_data_unpack.gdshaderinc"
 
-uniform vec3 light : source_color = vec3(0.5, 0.5, 0.5);
+uniform vec3 a_light_color : source_color = vec3(0.5, 0.5, 0.5);
+uniform vec3 a_raycast_light_color : source_color = vec3(0.5, 0.5, 0.5);
+uniform vec3 b_light_color : source_color = vec3(0.5, 0.5, 0.5);
+uniform vec3 b_raycast_light_color : source_color = vec3(0.5, 0.5, 0.5);
 
-//uniform ivec2 global_origin;
+uniform int b_start = 0;
 
-uniform int global_light_local_end = 0;
+uniform bool raycast_light_enabled = false;
+uniform vec2 raycast_light_origin_dir = vec2(0.0, -1.0);
+uniform int raycast_light_lenght = 32;
 
 void fragment() {
 	ivec2 local_coords = ivec2(VERTEX);
@@ -18,18 +23,19 @@ void fragment() {
 //	COLOR = get_cell_base_color(data, ivec2(0));
 	
 	// Global light.
-	vec3 col = light;
+	//vec3 col = light;
+	vec3 col = vec3(0);
 	
-	vec4 light_block = get_cell_light_block(data);
-	col *= light_block.rgb;
-//	col *= 1.0 - light_block.a;
-	// It is already inverted.
-	col *= light_block.a;
-	
-	col *= float(local_coords.y < global_light_local_end);
-	
-	// Cell glow.
-	col += get_cell_glow(data).rgb;
+	//vec4 light_block = get_cell_light_block(data);
+	//col *= light_block.rgb;
+////	col *= 1.0 - light_block.a;
+	//// It is already inverted.
+	//col *= light_block.a;
+	//
+	//col *= float(local_coords.y < global_light_local_end);
+	//
+	//// Cell glow.
+	//col += get_cell_glow(data).rgb;
 	
 	COLOR = vec4(col, 1.0);
 	
