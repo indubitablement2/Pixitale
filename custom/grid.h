@@ -15,6 +15,12 @@
 #include <unordered_map>
 #include <vector>
 
+enum GridLayer {
+	GRID_LAYER_FOREGROUND = 0,
+	GRID_LAYER_MIDGROUND = 1,
+	GRID_LAYER_BACKGROUND = 2,
+};
+
 class Grid : public Object {
 	GDCLASS(Grid, Object);
 
@@ -100,7 +106,7 @@ public: // godot api
 
 	static Rect2i get_chunk_active_rect(Vector2i chunk_coord);
 
-	static Ref<Image> get_cell_buffer(Rect2i chunk_rect);
+	static Ref<Image> get_cell_buffers(Rect2i chunk_rect, GridLayer layer);
 
 	static GridChunkIter *iter_chunk(Vector2i chunk_coord);
 	static GridRectIter *iter_rect(Rect2i rect);
@@ -120,5 +126,6 @@ public: // godot api
 };
 
 VARIANT_ENUM_CAST(CellCollision);
+VARIANT_ENUM_CAST(GridLayer);
 
 #endif

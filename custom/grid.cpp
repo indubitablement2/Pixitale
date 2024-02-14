@@ -100,8 +100,8 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("get_cell_buffer", "chunk_rect"),
-			&Grid::get_cell_buffer);
+			D_METHOD("get_cell_buffers", "chunk_rect", "layer"),
+			&Grid::get_cell_buffers);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -158,6 +158,10 @@ void Grid::_bind_methods() {
 	BIND_ENUM_CONSTANT(CELL_COLLISION_SOLID);
 	BIND_ENUM_CONSTANT(CELL_COLLISION_PLATFORM);
 	BIND_ENUM_CONSTANT(CELL_COLLISION_LIQUID);
+
+	BIND_ENUM_CONSTANT(GRID_LAYER_FOREGROUND);
+	BIND_ENUM_CONSTANT(GRID_LAYER_MIDGROUND);
+	BIND_ENUM_CONSTANT(GRID_LAYER_BACKGROUND);
 }
 
 void Grid::clear_iters() {
@@ -374,7 +378,7 @@ Rect2i Grid::get_chunk_active_rect(Vector2i chunk_coord) {
 	}
 }
 
-Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect) {
+Ref<Image> Grid::get_cell_buffers(Rect2i chunk_rect, GridLayer layer) {
 	Vector2i image_size = chunk_rect.size * 32;
 
 	auto image_data = Vector<u8>();
@@ -389,6 +393,18 @@ Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect) {
 		Iter2D cell_iter = Iter2D(Vector2i(), Vector2i(32, 32));
 
 		Chunk *chunk = get_chunk(chunk_coord);
+		switch (layer) {
+			case GRID_LAYER_FOREGROUND:
+				break;
+			case GRID_LAYER_MIDGROUND:
+				chunk = nullptr;
+				break;
+			case GRID_LAYER_BACKGROUND:
+				if (chunk != nullptr) {
+					chunk = chunk->background;
+				}
+		}
+
 		if (chunk == nullptr) {
 			while (cell_iter.next()) {
 				Vector2i image_coord = image_offset + cell_iter.coord;
