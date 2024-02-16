@@ -40,6 +40,7 @@ void fragment() {
 		}
 	}
 	
+	color = vec4(1.0);
 	if (idx == 0) {
 		color = vec4(1.0, 0.0, 0.0, 0.5);
 	} else {

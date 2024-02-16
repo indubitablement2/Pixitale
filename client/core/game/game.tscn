@@ -98,6 +98,7 @@ texture = SubResource("ViewportTexture_5p4mp")
 centered = false
 
 [node name="FreeCamera" parent="." instance=ExtResource("7_7jk4b")]
+zoom = Vector2(4, 4)
 
 [node name="CellMaterialsBaseColor" type="Sprite2D" parent="."]
 position = Vector2(500, 0)

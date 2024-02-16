@@ -11,6 +11,7 @@
 #include "core/object/class_db.h"
 #include "core/object/ref_counted.h"
 #include "core/os/memory.h"
+#include "core/string/print_string.h"
 #include "core/templates/vector.h"
 #include "core/variant/array.h"
 #include "generation_pass.h"
@@ -225,7 +226,9 @@ Rng Grid::get_temporal_rng(Vector2i chunk_coord) {
 }
 
 u64 Grid::chunk_id(Vector2i chunk_coord) {
-	return (u64)chunk_coord.x | ((u64)chunk_coord.y << 32);
+	// Casting signed to larger unsigned use sign extends (movsx),
+	// so we cast to u32 then to u64 (mov).
+	return u64(u32(chunk_coord.x)) | (u64(u32(chunk_coord.y)) << 32);
 }
 
 Chunk *Grid::get_chunk(Vector2i chunk_coord) {
