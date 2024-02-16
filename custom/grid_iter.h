@@ -17,7 +17,7 @@ protected:
 
 public:
 	bool modified = false;
-	bool activate_on_destructor;
+	bool is_valid = false;
 
 	Iter2D cell_iter;
 	Vector2i _chunk_coord;
@@ -43,10 +43,8 @@ public:
 	f32 randf_range(f32 min, f32 max);
 	i32 randi_range(i32 min, i32 max);
 
-	// Just to make the compiler shut up. Don't use.
-	inline GridChunkIter(){};
-	GridChunkIter(Vector2i chunk_coord, bool p_activate_on_destructor);
-	~GridChunkIter();
+	void set_chunk(Vector2i chunk_coord);
+	void activate();
 };
 
 class GridRectIter : public Object {
@@ -57,6 +55,7 @@ protected:
 
 public:
 	bool modified = false;
+	bool is_valid = false;
 
 	IterChunk chunk_iter;
 	Iter2D cell_iter;
@@ -75,10 +74,8 @@ public:
 	Vector2i local_coord();
 	Vector2i coord();
 
-	// Just to make the compiler shut up. Don't use.
-	inline GridRectIter(){};
-	GridRectIter(Rect2i rect);
-	~GridRectIter();
+	void set_rect(Rect2i rect);
+	void activate();
 };
 
 // todo: bitmap iter, circle iter, line iter

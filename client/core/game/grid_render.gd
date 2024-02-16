@@ -17,15 +17,14 @@ var view := Rect2()
 var raw_cell_rect := Rect2i()
 var _last_raw_cell_size := Vector2i()
 
-## Raw cell data as taken from Grid.
-var raw_cell_texture := ImageTexture.new()
+@onready var cell_render_material : ShaderMaterial = $Foreground.material
+
+@onready var cell_raw_data_foreground : ImageTexture = $Foreground.texture
+@onready var cell_raw_data_midground : ImageTexture = $Midground.texture
+@onready var cell_raw_data_background : ImageTexture = $Backgroud.texture
 
 func _init() -> void:
 	node = self
-
-func _ready() -> void:
-	$CellBackgroud.texture = raw_cell_texture
-	$Cell.texture = raw_cell_texture
 
 func _process(_delta: float) -> void:
 	var ctrans := get_canvas_transform()
@@ -35,11 +34,11 @@ func _process(_delta: float) -> void:
 	
 	var grid_chunk_start := Vector2i(((view.position - cell_padding) / 32.0).floor())
 	var grid_chunk_end := Vector2i(((view.end + cell_padding) / 32.0).ceil())
-	var grid_chunk_rect := Rect2i(grid_chunk_start,grid_chunk_end - grid_chunk_start)
+	var grid_chunk_rect := Rect2i(grid_chunk_start, grid_chunk_end - grid_chunk_start)
 	grid_chunk_rect.size = grid_chunk_rect.size.clamp(Vector2i.ZERO, MAX_GRID_CHUNK_SIZE)
 	
 	raw_cell_rect = Rect2i(grid_chunk_rect.position * 32, grid_chunk_rect.size * 32)
-	# Avoid resizing cell texture when dif is small.
+	# Avoid resizing cell texture for small size difference.
 	if _last_raw_cell_size != raw_cell_rect.size:
 		if  _last_raw_cell_size.x >= raw_cell_rect.size.x && _last_raw_cell_size.y >= raw_cell_rect.size.y:
 			var dif := _last_raw_cell_size - raw_cell_rect.size
@@ -48,12 +47,20 @@ func _process(_delta: float) -> void:
 				grid_chunk_rect.size = _last_raw_cell_size / 32
 	_last_raw_cell_size = raw_cell_rect.size
 	
-	var cell_buffer := Grid.get_cell_buffer(grid_chunk_rect)
-	if raw_cell_rect.size != Vector2i(raw_cell_texture.get_size()):
-		raw_cell_texture.set_image(cell_buffer)
-		print("New cell texture size: ", raw_cell_rect.size)
+	var fg_buffer := Grid.get_cell_buffer(grid_chunk_rect, Grid.GRID_LAYER_FOREGROUND)
+	var mg_buffer := Grid.get_cell_buffer(grid_chunk_rect, Grid.GRID_LAYER_MIDGROUND)
+	var bg_buffer := Grid.get_cell_buffer(grid_chunk_rect, Grid.GRID_LAYER_BACKGROUND)
+	if raw_cell_rect.size != Vector2i(cell_raw_data_foreground.get_size()):
+		cell_raw_data_foreground.set_image(fg_buffer)
+		cell_raw_data_midground.set_image(mg_buffer)
+		cell_raw_data_background.set_image(bg_buffer)
+		print("New raw cell texture size: ", raw_cell_rect.size)
 	else:
-		raw_cell_texture.update(cell_buffer)
+		cell_raw_data_foreground.update(fg_buffer)
+		cell_raw_data_midground.update(mg_buffer)
+		cell_raw_data_background.update(bg_buffer)
+	
+	cell_render_material.set_shader_parameter(&"origin", raw_cell_rect.position)
 	
 	position = raw_cell_rect.position
 

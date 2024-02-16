@@ -6,7 +6,27 @@
 #include "preludes.h"
 #include "rng.hpp"
 
+void test_div_floor() {
+	i32 denominator = 3;
+	i32 in[10] = { 0, 1, 2, 3, 4, -1, -2, -3, -4, -5 };
+	i32 out[10] = { 0, 0, 0, 1, 1, -1, -1, -1, -2, -2 };
+	for (i32 i = 0; i < 10; i++) {
+		TEST_ASSERT(div_floor(in[i], denominator) == out[i], "div floor");
+	}
+}
+
+void test_mod_neg() {
+	i32 denominator = 3;
+	i32 in[10] = { 0, 1, 2, 3, 4, -1, -2, -3, -4, -5 };
+	i32 out[10] = { 0, 1, 2, 0, 1, 2, 1, 0, 2, 1 };
+	for (i32 i = 0; i < 10; i++) {
+		TEST_ASSERT(mod_neg(in[i], denominator) == out[i], "mod neg");
+	}
+}
+
 void test_iter2d() {
+	TEST_ASSERT(!Iter2D().next(), "empty constructor");
+
 	Iter2D iter = Iter2D(Vector2i(-10, -10), Vector2i(10, 10));
 	for (i32 y = -10; y != 10; y++) {
 		for (i32 x = -10; x != 10; x++) {
@@ -28,6 +48,8 @@ void test_iter2d() {
 	iter = Iter2D(Vector2i(1, 1), Vector2i(1, 8));
 	TEST_ASSERT(!iter.next(), "empty x");
 	iter = Iter2D(Vector2i(1, 1), Vector2i(8, 1));
+	TEST_ASSERT(!iter.next(), "empty y");
+	iter = Iter2D(Vector2i(0, 0), Vector2i(0, -1));
 	TEST_ASSERT(!iter.next(), "empty y");
 
 	iter = Iter2D(Vector2i(0, 0), Vector2i(32, 32));
@@ -200,6 +222,8 @@ void PixitaleTests::run_tests() {
 		return;
 	}
 
+	test_div_floor();
+	test_mod_neg();
 	test_iter2d();
 	test_int_coord();
 	test_iter_chunk();

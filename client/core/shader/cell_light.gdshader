@@ -1,7 +1,7 @@
 shader_type canvas_item;
 render_mode blend_add;
 
-#include "cell_data_unpack.gdshaderinc"
+#include "cell_raw_data_unpack.gdshaderinc"
 
 uniform vec3 a_light_color : source_color = vec3(0.5, 0.5, 0.5);
 uniform vec3 a_raycast_light_color : source_color = vec3(0.5, 0.5, 0.5);

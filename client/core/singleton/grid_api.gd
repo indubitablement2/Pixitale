@@ -19,6 +19,17 @@ var mod_names : Array[String] = ["core", "base"]
 
 var mod_entries : Array[ModEntry] = []
 
+# Automatically update texture when its image changes.
+var base_color_atlas_img := Image.new()
+var base_color_atlas := preload("res://core/shader/texture/cell_materials_data/base_color_atlas.tres")
+var base_color_rect_img := Image.new()
+var base_color_rect := preload("res://core/shader/texture/cell_materials_data/base_color_atlas_rect.tres")
+var glow_img := Image.new()
+var glow := preload("res://core/shader/texture/cell_materials_data/glow.tres")
+var light_modulate_img := Image.new()
+var light_modulate := preload("res://core/shader/texture/cell_materials_data/light_modulate.tres")
+var _img_changed : Array[Array] = []
+
 var cell_materials : Array[CellMaterial] = []
 ## StringName : CellMaterial
 var cell_material_names := {}
@@ -37,11 +48,73 @@ var _queued_edits := {}
 ## [args..., callable_idx(int)]
 var _next_edits := []
 
+var _step_thread := Thread.new()
+
+func _ready() -> void:
+	#process_mode = Node.PROCESS_MODE_DISABLED
+	
+	_img_changed = [
+		[false, base_color_atlas_img, base_color_atlas],
+		[false, base_color_rect_img, base_color_rect],
+		[false, glow_img, glow],
+		[false, light_modulate_img, light_modulate]
+	]
+	for img_idx in _img_changed.size():
+		_img_changed[img_idx][1].changed.connect(_on_img_changed.bind(img_idx))
+
+func _exit_tree() -> void:
+	if _step_thread.is_started():
+		_step_thread.wait_to_finish()
+	#unload_mods()
+
+func _process(_delta: float) -> void:
+	for img_arr in _img_changed:
+		if img_arr[0]:
+			img_arr[0] = false
+			var img := img_arr[1] as Image
+			var tex := img_arr[2] as ImageTexture
+			if Vector2i(tex.get_size()) != img.get_size():
+				tex.set_image(img)
+			else:
+				tex.update(img)
+	
+	if is_server:
+		# Send queued grid edits to peers
+		if multiplayer.has_multiplayer_peer():
+			_edit_peer(Grid.get_tick(), var_to_bytes(_next_edits))
+		
+		_queued_edits[Grid.get_tick()] = _next_edits
+		_next_edits = []
+	
+	# Step up to 2 times if behind
+	for i in 2:
+		if _queued_edits.has(Grid.get_tick()):
+			var edits := _queued_edits[Grid.get_tick()] as Array
+			_queued_edits.erase(Grid.get_tick())
+			
+			# It safe to modify the grid when not stepping.
+			if _step_thread.is_started():
+				_step_thread.wait_to_finish()
+			
+			for args in edits:
+				_edit_callables[args.pop_back()].callv(args)
+			
+			# During prepare, grid can't be read/write, so we block.
+			Grid.step_prepare()
+			# Can read, but not write to Grid now.
+			_step_thread.start(_step, Thread.PRIORITY_NORMAL)
+
 func find_cell_material(cell_material_name: StringName) -> CellMaterial:
 	return cell_material_names[cell_material_name]
 
 func find_cell_material_tag(tag: StringName) -> Array[CellMaterial]:
 	return cell_material_tags[tag]
+
+func add_grid_edit_method(m: Callable) -> int:
+	assert(m.is_valid())
+	var idx := _edit_callables.size()
+	_edit_callables.push_back(m)
+	return idx
 
 func load_mods() -> void:
 	unload_mods()
@@ -57,8 +130,11 @@ func load_mods() -> void:
 		else:
 			push_error("ModEntry not found for ", mod_name)
 	
-	# Add cell materials
+	# Add CellMaterial
 	for entry in mod_entries:
+		if !entry.cell_materials:
+			continue
+		
 		var root : Node = load(entry.cell_materials).instantiate()
 		for cell_material : CellMaterial in root.get_children():
 			root.remove_child(cell_material)
@@ -76,19 +152,69 @@ func load_mods() -> void:
 			else:
 				cell_material_tags[tag] = [cell_material]
 	
-	# Add cell materia name
+	# Add cell material name
 	for cell_material in cell_materials:
+		cell_material_names[cell_material.name] = cell_material
 		# Add name to tags as well
 		if cell_material_tags.has(cell_material.name):
 			push_error("CellMaterial name is not unique: ", CellMaterial.name)
 		cell_material_tags[cell_material.name] = [cell_material]
-		
-		cell_material_names[cell_material.name] = cell_material
+	
+	# Create cell materials data base color atlas
+	var base_color_images : Array[Image] = []
+	for cell_material in cell_materials:
+		if cell_material.base_color_image:
+			base_color_images.push_back(cell_material.base_color_image)
+		else:
+			var img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
+			img.set_pixel(0, 0, cell_material.base_color)
+			base_color_images.push_back(img)
+	var new_img := ImagePacker.pack(
+		base_color_images,
+		Image.FORMAT_RGBA8,
+		&"base_color_start")
+	base_color_atlas_img.set_data(
+		new_img.get_width(),
+		new_img.get_height(),
+		false,
+		Image.FORMAT_RGBA8,
+		new_img.get_data())
+	for cell_material in cell_materials:
+		cell_material.base_color_atlas_coord = base_color_images[cell_material.idx].get_meta(&"base_color_start")
+		base_color_images[cell_material.idx].remove_meta(&"base_color_start")
+	
+	# Create cell materials base color rect
+	var floats := PackedFloat32Array()
+	floats.resize(cell_materials.size() * 4)
+	for cell_material in cell_materials:
+		floats[cell_material.idx * 4] = cell_material.base_color_atlas_coord.x
+		floats[cell_material.idx * 4 + 1] = cell_material.base_color_atlas_coord.y
+		var size := base_color_images[cell_material.idx].get_size()
+		floats[cell_material.idx * 4 + 2] = size.x
+		floats[cell_material.idx * 4 + 3] = size.y
+	base_color_rect_img.set_data(
+		cell_materials.size(),
+		1,
+		false,
+		Image.FORMAT_RGBAF,
+		floats.to_byte_array())
+	
+	# Create other cell materials data
+	glow_img.set_data(1, 1, false, Image.FORMAT_RGBA8, [0, 0, 0, 0])
+	glow_img.resize(cell_materials.size(), 1, Image.INTERPOLATE_NEAREST)
+	light_modulate_img.set_data(1, 1, false, Image.FORMAT_RGBA8, [0, 0, 0, 0])
+	light_modulate_img.resize(cell_materials.size(), 1, Image.INTERPOLATE_NEAREST)
+	for cell_material in cell_materials:
+		cell_material.set_glow(cell_material.glow)
+		cell_material.set_light_modulate(cell_material.light_modulate)
 	
 	# TODO: Add cell reations
 	
 	# Add generation passes
 	for entry in mod_entries:
+		if !entry.generation_passes:
+			continue
+		
 		var root : Node = load(entry.generation_passes).instantiate()
 		for gen_pass : GenerationPass in root.get_children():
 			root.remove_child(gen_pass)
@@ -105,33 +231,16 @@ func load_mods() -> void:
 	for gen_pass in generation_passes:
 		Grid.add_generation_pass(gen_pass)
 	
-	# Add grid edit methods
-	for entry in mod_entries:
-		var script := entry.grid_edits
-		for method in script.get_script_method_list():
-			var method_name := method["name"] as String
-			if method_name.begins_with("_"):
-				continue
-			
-			var idx := _edit_callables.size()
-			script.set("_" + method_name.capitalize(), idx)
-			
-			var c := Callable(script, method_name)
-			if c.is_valid():
-				_edit_callables.push_back(c)
-			else:
-				push_error("invalid meta method: ", method_name)
-	
 	for entry in mod_entries:
 		if entry.entry_script:
-			if entry.entry_script.has_method(&"entry"):
-				entry.entry_script.entry()
+			if entry.entry_script.has_method(&"_entry"):
+				entry.entry_script._entry()
 
 func unload_mods() -> void:
 	for entry in mod_entries:
 		if entry.entry_script:
-			if entry.entry_script.has_method(&"exit"):
-				entry.entry_script.exit()
+			if entry.entry_script.has_method(&"_exit"):
+				entry.entry_script._exit()
 	mod_entries = []
 	
 	Grid.clear()
@@ -157,33 +266,9 @@ func unload_mods() -> void:
 func _edit_peer(tick: int, bytes: PackedByteArray) -> void:
 	_queued_edits[tick] = bytes_to_var(bytes)
 
-func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_DISABLED
-	pass
+func _step() -> void:
+	Grid.step()
 
-func _process(_delta: float) -> void:
-	if is_server:
-		# Send queued grid edits to peers
-		if multiplayer.has_multiplayer_peer():
-			_edit_peer(Grid.get_tick(), var_to_bytes(_next_edits))
-		
-		_queued_edits[Grid.get_tick()] = _next_edits
-		_next_edits = []
-	
-	# Step up to 2 times if behind
-	for i in 2:
-		if _queued_edits.has(Grid.get_tick()):
-			var edits := _queued_edits[Grid.get_tick()] as Array
-			_queued_edits.erase(Grid.get_tick())
-		
-			# Only after calling this it safe to modify the grid.
-			Grid.step_wait_to_finish()
-			
-			for args in edits:
-				_edit_callables[args.pop_back()].callv(args)
-			
-			Grid.step_prepare()
-
-
-
+func _on_img_changed(idx: int) -> void:
+	_img_changed[idx][0] = true
 

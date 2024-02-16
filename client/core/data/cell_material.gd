@@ -2,7 +2,8 @@ extends Node
 class_name CellMaterial
 
 ## Default values are what empty cell (always idx 0) uses.
-## CellMaterial can not be added, removed or modified while in-game.
+## CellMaterial can not be added or removed while in-game.
+## Some property can be modified.
 
 @export var display_name := ""
 
@@ -12,14 +13,44 @@ class_name CellMaterial
 @export_category("Render")
 ## Base color based on coordinates.
 ## Keep as null to use base_color instead.
+## Can be modified while in-game, 
+## but size has to stay the same and can not change to/from null.
+## If modifying the Image only,
+## call set_base_color_image for changes to take effect.
 @export var base_color_image : Image = null
-## Flat base color.
-@export var base_color := Color.TRANSPARENT
+func set_base_color_image(value: Image) -> void:
+	base_color_image = value
+	if idx != -1:
+		GridApi.base_color_atlas_img.blit_rect(
+			base_color_image,
+			Rect2i(Vector2i.ZERO, base_color_image.get_size()),
+			base_color_atlas_coord)
+## Flat base color. Has no effect if base_color_image is used.
+## Can be modified while in-game, if base_color_image is null.
+@export var base_color := Color.TRANSPARENT : set = set_base_color
+func set_base_color(value: Color) -> void:
+	base_color = value
+	if idx != -1:
+		GridApi.base_color_atlas_img.set_pixelv(
+			base_color_atlas_coord,
+			base_color)
+var base_color_atlas_coord := Vector2i.ZERO
 
 ## Permanent glow/bloom. Alpha is not used.
-@export var glow := Color.BLACK
+## Can be modified while in-game.
+@export var glow := Color.BLACK : set = set_glow
+func set_glow(value: Color) -> void:
+	glow = value
+	if idx != -1:
+		GridApi.glow_img.set_pixel(idx, 0, glow)
+	
 ## Light passing through this cell is blocked by alpha and tinted by rgb.
-@export var light_modulate := Color.TRANSPARENT
+## Can be modified while in-game.
+@export var light_modulate := Color.TRANSPARENT : set = set_light_modulate
+func set_light_modulate(value: Color) -> void:
+	light_modulate = value
+	if idx != -1:
+		GridApi.light_modulate_img.set_pixel(idx, 0, light_modulate)
 
 ## If this cell can be colored.
 @export var can_color := false
@@ -72,7 +103,7 @@ class_name CellMaterial
 # Chance/do what?
 @export var on_destroyed := false
 
-var idx := 0
+var idx := -1
 
 var num_reaction := 0
 ## [[probability: int, out1: int, out2: int]]
@@ -81,3 +112,5 @@ var reactions := []
 # Converted biome id to biome idx.
 var biome_idx := 0
 
+
+#func set_glo

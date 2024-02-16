@@ -1,5 +1,4 @@
 extends Object
-class_name Banana
 
 static var _BANANA := 0
 static func banana(num: int) -> void:

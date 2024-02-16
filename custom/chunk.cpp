@@ -192,8 +192,6 @@ public:
 		}
 	}
 
-	// TODO: FIGURE OUT UPDATED BITMASK
-
 	void step_cell(const Vector2i center_coord, bool force_step) {
 		cell_ptr = center()->get_cell_ptr(center_coord);
 		cell = *cell_ptr;

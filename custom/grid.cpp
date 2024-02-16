@@ -4,6 +4,7 @@
 #include "cell.hpp"
 #include "cell_material.h"
 #include "chunk.h"
+#include "core/error/error_macros.h"
 #include "core/io/image.h"
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
@@ -100,8 +101,8 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("get_cell_buffers", "chunk_rect", "layer"),
-			&Grid::get_cell_buffers);
+			D_METHOD("get_cell_buffer", "chunk_rect", "layer"),
+			&Grid::get_cell_buffer);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -126,12 +127,8 @@ void Grid::_bind_methods() {
 			&Grid::step_prepare);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("step_start"),
-			&Grid::step_start);
-	ClassDB::bind_static_method(
-			"Grid",
-			D_METHOD("step_wait_to_finish"),
-			&Grid::step_wait_to_finish);
+			D_METHOD("step"),
+			&Grid::step);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -166,20 +163,14 @@ void Grid::_bind_methods() {
 
 void Grid::clear_iters() {
 	for (auto &iter : chunk_iters) {
-		if (iter->next()) {
-			continue;
-		} else {
-			memdelete(iter);
-		}
+		iter->activate();
+		memdelete(iter);
 	}
 	chunk_iters.clear();
 
 	for (auto &iter : rect_iters) {
-		if (iter->next()) {
-			continue;
-		} else {
-			memdelete(iter);
-		}
+		iter->activate();
+		memdelete(iter);
 	}
 	rect_iters.clear();
 }
@@ -206,8 +197,8 @@ void Grid::reactions_between(
 }
 
 void Grid::generate_chunk(Vector2i chunk_coord) {
-	GridChunkIter *iter = new GridChunkIter(chunk_coord, false);
-	postinitialize_handler(iter);
+	auto iter = memnew(GridChunkIter);
+	iter->set_chunk(chunk_coord);
 
 	for (auto pass : generation_passes) {
 		iter->reset_iter();
@@ -325,7 +316,7 @@ void Grid::add_generation_pass(GenerationPass *value) {
 }
 
 void Grid::clear() {
-	step_wait_to_finish();
+	tp.wait_for_tasks();
 
 	clear_iters();
 	queue_step_chunk_rects = {};
@@ -378,19 +369,17 @@ Rect2i Grid::get_chunk_active_rect(Vector2i chunk_coord) {
 	}
 }
 
-Ref<Image> Grid::get_cell_buffers(Rect2i chunk_rect, GridLayer layer) {
+Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, GridLayer layer) {
 	Vector2i image_size = chunk_rect.size * 32;
 
 	auto image_data = Vector<u8>();
-	image_data.resize(image_size.x * image_size.y * 4);
+	image_data.resize(image_size.x * 4 * image_size.y);
 	auto image_buffer = reinterpret_cast<u32 *>(image_data.ptrw());
 
-	Iter2D chunk_iter = Iter2D(Vector2i(), chunk_rect.size);
+	Iter2D chunk_iter = Iter2D(chunk_rect.size);
 	while (chunk_iter.next()) {
 		Vector2i chunk_coord = chunk_rect.position + chunk_iter.coord;
 		Vector2i image_offset = chunk_iter.coord * 32;
-
-		Iter2D cell_iter = Iter2D(Vector2i(), Vector2i(32, 32));
 
 		Chunk *chunk = get_chunk(chunk_coord);
 		switch (layer) {
@@ -404,6 +393,8 @@ Ref<Image> Grid::get_cell_buffers(Rect2i chunk_rect, GridLayer layer) {
 					chunk = chunk->background;
 				}
 		}
+
+		Iter2D cell_iter = Iter2D(Vector2i(32, 32));
 
 		if (chunk == nullptr) {
 			while (cell_iter.next()) {
@@ -429,11 +420,11 @@ Ref<Image> Grid::get_cell_buffers(Rect2i chunk_rect, GridLayer layer) {
 
 GridRectIter *Grid::iter_rect(Rect2i rect) {
 	if (rect.size.x <= 0 || rect.size.y <= 0) {
-		return nullptr;
+		rect.size = Vector2i(0, 0);
 	}
 
-	GridRectIter *iter = new GridRectIter(rect);
-	postinitialize_handler(iter);
+	auto iter = memnew(GridRectIter);
+	iter->set_rect(rect);
 
 	rect_iters.push_back(iter);
 
@@ -441,8 +432,8 @@ GridRectIter *Grid::iter_rect(Rect2i rect) {
 }
 
 GridChunkIter *Grid::iter_chunk(Vector2i chunk_coord) {
-	GridChunkIter *iter = new GridChunkIter(chunk_coord, true);
-	postinitialize_handler(iter);
+	auto iter = memnew(GridChunkIter);
+	iter->set_chunk(chunk_coord);
 
 	chunk_iters.push_back(iter);
 
@@ -491,7 +482,7 @@ void Grid::step_prepare() {
 	queue_step_chunk_rects.clear();
 }
 
-void Grid::step_start() {
+void Grid::step() {
 	for (i32 i = 0; i < 3; i++) {
 		auto &pass = passes[i];
 
@@ -505,6 +496,7 @@ void Grid::step_start() {
 				// Iterate from bottom to top.
 				for (auto it = pair.second.rbegin(); it != pair.second.rend(); it++) {
 					if (y == *it) {
+						// Avoid duplicate chunk.
 						continue;
 					}
 					y = *it;
@@ -513,11 +505,9 @@ void Grid::step_start() {
 				}
 			});
 		}
-	}
-}
 
-void Grid::step_wait_to_finish() {
-	tp.wait_for_tasks();
+		tp.wait_for_tasks();
+	}
 }
 
 bool Grid::randb() {

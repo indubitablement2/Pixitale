@@ -5,7 +5,6 @@ func _ready() -> void:
 		PixitaleTests.run_tests()
 
 func _exit_tree() -> void:
-	Grid.clear()
 	print("Exiting...")
 
 static func asd(who: String) -> void:

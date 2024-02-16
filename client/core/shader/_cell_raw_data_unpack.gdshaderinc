@@ -17,8 +17,6 @@ const uint CELL_DATA_SIZE = 4u;
 const uint CELL_MATERIALS_DATA_WIDTH = 512u;
 uniform sampler2D cell_materials_data;
 
-uniform sampler2D cell_materials_base_color;
-
 uint get_cell_data(sampler2D data_tex, ivec2 local_coords) {
 	return floatBitsToUint(texelFetch(data_tex, local_coords, 0).x);
 }
@@ -46,8 +44,8 @@ ivec2 _get_cell_base_color_start(uint material_idx) {
 	);
 	
 	return ivec2(
-		int(floatBitsToUint(data.x) | (floatBitsToUint(data.y) << 16u)),
-		int(floatBitsToUint(data.z) | (floatBitsToUint(data.w) << 16u))
+		int(data.x * 255.0 * 255.0 + data.y * 255.0),
+		int(data.z * 255.0 * 255.0 + data.w * 255.0)
 	);
 }
 
@@ -66,12 +64,12 @@ ivec2 _get_cell_base_color_size(uint material_idx) {
 	);
 	
 	return ivec2(
-		int(floatBitsToUint(data.x) | (floatBitsToUint(data.y) << 16u)),
-		int(floatBitsToUint(data.z) | (floatBitsToUint(data.w) << 16u))
+		int(data.x * 255.0 * 255.0 + data.y * 255.0),
+		int(data.z * 255.0 * 255.0 + data.w * 255.0)
 	);
 }
 
-vec4 get_cell_base_color(uint data, ivec2 global_coords) {
+vec4 get_cell_base_color(uint data, ivec2 global_coords, sampler2D base_color_tex) {
 	ivec2 start = _get_cell_base_color_start(data & MASK_MATERIAL_IDX);
 	ivec2 size = _get_cell_base_color_size(data & MASK_MATERIAL_IDX);
 	
@@ -81,7 +79,7 @@ vec4 get_cell_base_color(uint data, ivec2 global_coords) {
 	);
 	
 	return texelFetch(
-		cell_materials_base_color,
+		base_color_tex,
 		coord,
 		0
 	);

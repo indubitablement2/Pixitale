@@ -3,14 +3,15 @@
 [sub_resource type="GDScript" id="GDScript_1t5jj"]
 script/source = "extends GenerationPass
 
-var rock := 0
-
-func _init() -> void:
-	rock = GridApi.find_cell_material(&\"Rock\").idx
-
 func _generate(iter: GridChunkIter) -> void:
+	#print(\"generating \", iter.chunk_coord())
+	
 	if iter.chunk_coord().y >= 0:
-		iter.fill_remaining(rock)
+		while iter.next():
+			iter.set_cell(iter.local_coord().y % 2)
+	else:
+		while iter.next():
+			iter.set_cell(iter.local_coord().x % 2)
 "
 
 [node name="Node" type="Node"]

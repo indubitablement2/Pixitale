@@ -61,57 +61,57 @@ inline i32 mod_neg(i32 numerator, i32 denominator) {
 	return mod >= 0 ? mod : mod + denominator;
 }
 
-// Handle end < start.
-struct Iter1D {
-	i32 _start;
-	i32 _end;
-	i32 _step;
+// // Handle end < start.
+// struct Iter1D {
+// 	i32 _start;
+// 	i32 _end;
+// 	i32 _step;
 
-	i32 current;
+// 	i32 current;
 
-	inline Iter1D(i32 p_start, i32 p_end, i32 p_step, i32 p_current) :
-			_start(p_start),
-			_end(p_end),
-			_step(p_step),
-			current(p_current) {}
+// 	inline Iter1D(i32 p_start, i32 p_end, i32 p_step, i32 p_current) :
+// 			_start(p_start),
+// 			_end(p_end),
+// 			_step(p_step),
+// 			current(p_current) {}
 
-	inline Iter1D(i32 start, i32 end) :
-			_start(start),
-			_end(end),
-			_step(end >= start ? 1 : -1),
-			current(start - _step) {}
+// 	inline Iter1D(i32 start, i32 end) :
+// 			_start(start),
+// 			_end(end),
+// 			_step(end >= start ? 1 : -1),
+// 			current(start - _step) {}
 
-	// Iterate from start to end (excluded).
-	// `[start..end[`.
-	inline static Iter1D exclusive(i32 start, i32 end) {
-		return Iter1D(start, end);
-	}
+// 	// Iterate from start to end (excluded).
+// 	// `[start..end[`.
+// 	inline static Iter1D exclusive(i32 start, i32 end) {
+// 		return Iter1D(start, end);
+// 	}
 
-	// Iterate from start to end (inclusive).
-	// `[start..end]`.
-	inline static Iter1D inclusive(i32 start, i32 end) {
-		i32 step = end >= start ? 1 : -1;
-		return Iter1D(start, end + step, step, start - step);
-	}
+// 	// Iterate from start to end (inclusive).
+// 	// `[start..end]`.
+// 	inline static Iter1D inclusive(i32 start, i32 end) {
+// 		i32 step = end >= start ? 1 : -1;
+// 		return Iter1D(start, end + step, step, start - step);
+// 	}
 
-	inline void restart() {
-		current = _start - _step;
-	}
+// 	inline void restart() {
+// 		current = _start - _step;
+// 	}
 
-	inline bool next() {
-		if (current == _end) {
-			return false;
-		}
+// 	inline bool next() {
+// 		if (current == _end) {
+// 			return false;
+// 		}
 
-		current += _step;
+// 		current += _step;
 
-		if (current == _end) {
-			return false;
-		} else {
-			return true;
-		}
-	}
-};
+// 		if (current == _end) {
+// 			return false;
+// 		} else {
+// 			return true;
+// 		}
+// 	}
+// };
 
 struct Iter2D {
 	Vector2i _start;
@@ -126,16 +126,38 @@ struct Iter2D {
 			_start(start),
 			_end(end),
 			_step(step),
-			coord(p_current) {}
+			coord(p_current) {
+		TEST_ASSERT(step.x == -1 || step.x == 1, "step.x is not -1 or 1");
+		TEST_ASSERT(step.y == -1 || step.y == 1, "step.y is not -1 or 1");
+		TEST_ASSERT(start != end, "start is equal to end");
+	}
 
+	// Only support positive step.
+	inline Iter2D(Vector2i size) :
+			_start(Vector2i(0, 0)),
+			_end(size),
+			_step(Vector2i(1, 1)),
+			coord(Vector2i(-1, 0)) {
+		if (_start.x == _end.x) {
+			_end.y = _start.y + 1;
+		}
+
+		TEST_ASSERT(_start.x <= _end.x, "start.x is not less than end.x");
+		TEST_ASSERT(_start.y <= _end.y, "start.y is not less or eq than end.y");
+	}
+
+	// Only support positive step.
 	inline Iter2D(Rect2i rect) :
 			_start(rect.position),
 			_end(rect.get_end()),
-			_step(Vector2i(_end.x >= _start.x ? 1 : -1, _end.y >= _start.y ? 1 : -1)),
+			_step(Vector2i(1, 1)),
 			coord(Vector2i(_start.x - _step.x, _start.y)) {
 		if (_start.x == _end.x) {
-			_end.y = _start.y;
+			_end.y = _start.y + 1;
 		}
+
+		TEST_ASSERT(_start.x <= _end.x, "start.x is not less than end.x");
+		TEST_ASSERT(_start.y <= _end.y, "start.y is not less or eq than end.y");
 	}
 
 	// Iterate from start to end (excluded).
@@ -145,8 +167,9 @@ struct Iter2D {
 			_end(end),
 			_step(Vector2i(end.x >= start.x ? 1 : -1, end.y >= start.y ? 1 : -1)),
 			coord(Vector2i(start.x - _step.x, start.y)) {
-		if (_start.x == _end.x) {
-			_end.y = _start.y;
+		if (_start.x == _end.x || _start.y == _end.y) {
+			_end.y = _start.y + _step.y;
+			_end.x = _start.x;
 		}
 	}
 
@@ -160,11 +183,8 @@ struct Iter2D {
 		coord = Vector2i(_start.x - _step.x, _start.y);
 	}
 
+	// Loop back to the start after returning false.
 	inline bool next() {
-		if (coord.y == _end.y) {
-			return false;
-		}
-
 		coord.x += _step.x;
 
 		if (coord.x == _end.x) {
@@ -172,6 +192,8 @@ struct Iter2D {
 			coord.y += _step.y;
 
 			if (coord.y == _end.y) {
+				coord.y = _start.y;
+				coord.x -= _step.x;
 				return false;
 			}
 		}
@@ -390,7 +412,7 @@ struct IterChunk {
 			_end(ChunkLocalCoord(rect.get_end())),
 			chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {
 		if (rect.size.x <= 0 || rect.size.y <= 0) {
-			chunk_coord.y = _end.chunk_coord.y + 1;
+			chunk_coord = _end.chunk_coord + Vector2i(1, 1);
 		}
 	}
 
@@ -403,18 +425,9 @@ struct IterChunk {
 		// }
 	}
 
-	// inline IterChunk(Vector2i p_chunk_coord) :
-	// 		_start(ChunkLocalCoord(p_chunk_coord, Vector2i(0, 0))),
-	// 		_end(ChunkLocalCoord(Vector2i(p_chunk_coord.x, p_chunk_coord.y + 1), Vector2i(32, 32))),
-	// 		chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {}
-
 	// Return true if there is a next chunk
 	// and update chunk_coord and local_coord_start/end.
 	inline bool next() {
-		if (chunk_coord.y > _end.chunk_coord.y) {
-			return false;
-		}
-
 		chunk_coord.x += 1;
 
 		if (chunk_coord.x > _end.chunk_coord.x) {
@@ -422,6 +435,8 @@ struct IterChunk {
 			chunk_coord.y += 1;
 
 			if (chunk_coord.y > _end.chunk_coord.y) {
+				chunk_coord.x -= 1;
+				chunk_coord.y -= _start.chunk_coord.y;
 				return false;
 			}
 		}

@@ -106,7 +106,7 @@ public: // godot api
 
 	static Rect2i get_chunk_active_rect(Vector2i chunk_coord);
 
-	static Ref<Image> get_cell_buffers(Rect2i chunk_rect, GridLayer layer);
+	static Ref<Image> get_cell_buffer(Rect2i chunk_rect, GridLayer layer);
 
 	static GridChunkIter *iter_chunk(Vector2i chunk_coord);
 	static GridRectIter *iter_rect(Rect2i rect);
@@ -115,8 +115,7 @@ public: // godot api
 	static void queue_step_chunks(Rect2i chunk_rect);
 	// Part of step which can't be done async.
 	static void step_prepare();
-	static void step_start();
-	static void step_wait_to_finish();
+	static void step();
 
 	static bool randb();
 	static bool randb_probability(f32 probability);

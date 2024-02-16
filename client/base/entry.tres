@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="ModEntry" load_steps=4 format=3 uid="uid://bswrf4ek3eu5d"]
 
-[ext_resource type="Script" path="res://base/grid_edits.gd" id="1_66cdc"]
-[ext_resource type="Script" path="res://base/entry_script.gd" id="1_73yub"]
+[ext_resource type="Script" path="res://base/base_edits.gd" id="1_66cdc"]
+[ext_resource type="Script" path="res://base/base.gd" id="1_73yub"]
 [ext_resource type="Script" path="res://core/data/mod_entry.gd" id="1_608ll"]
 
 [resource]
