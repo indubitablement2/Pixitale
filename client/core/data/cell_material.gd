@@ -21,7 +21,7 @@ class_name CellMaterial
 func set_base_color_image(value: Image) -> void:
 	base_color_image = value
 	if idx != -1:
-		GridApi.base_color_atlas_img.blit_rect(
+		GridApi.base_color_atlas.get_img_mut().blit_rect(
 			base_color_image,
 			Rect2i(Vector2i.ZERO, base_color_image.get_size()),
 			base_color_atlas_coord)
@@ -31,7 +31,7 @@ func set_base_color_image(value: Image) -> void:
 func set_base_color(value: Color) -> void:
 	base_color = value
 	if idx != -1:
-		GridApi.base_color_atlas_img.set_pixelv(
+		GridApi.base_color_atlas.get_img_mut().set_pixelv(
 			base_color_atlas_coord,
 			base_color)
 var base_color_atlas_coord := Vector2i.ZERO
@@ -42,7 +42,7 @@ var base_color_atlas_coord := Vector2i.ZERO
 func set_glow(value: Color) -> void:
 	glow = value
 	if idx != -1:
-		GridApi.glow_img.set_pixel(idx, 0, glow)
+		GridApi.glow.get_img_mut().set_pixel(idx, 0, glow)
 	
 ## Light passing through this cell is blocked by alpha and tinted by rgb.
 ## Can be modified while in-game.
@@ -50,7 +50,7 @@ func set_glow(value: Color) -> void:
 func set_light_modulate(value: Color) -> void:
 	light_modulate = value
 	if idx != -1:
-		GridApi.light_modulate_img.set_pixel(idx, 0, light_modulate)
+		GridApi.light_modulate.get_img_mut().set_pixel(idx, 0, light_modulate)
 
 ## If this cell can be colored.
 @export var can_color := false

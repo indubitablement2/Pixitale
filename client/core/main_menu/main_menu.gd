@@ -9,3 +9,4 @@ func _ready() -> void:
 	queue_free()
 	
 	get_parent().call_deferred(&"add_child", game_scene.instantiate())
+

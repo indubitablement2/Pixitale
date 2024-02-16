@@ -13,7 +13,6 @@ uniform sampler2D base_color_atlas_rect;
 uniform bool highlight_active = false;
 
 void fragment() {
-	//ivec2 local_coords = ivec2(VERTEX);
 	ivec2 local_coords = ivec2(UV.xy * vec2(textureSize(TEXTURE, 0)));
 	ivec2 global_coord = local_coords + origin;
 	
@@ -29,23 +28,22 @@ void fragment() {
 		wrapv(global_coord, base_color_size) + base_color_start,
 		0);
 	
-	vec3 color_modulate = get_cell_color_modulate(data);
+	//vec3 color_modulate = get_cell_color_modulate(data);
+	//
+	//color.rgb = color.rgb * (1.0 - COLOR_MODULATE_STRENGTH)
+		//+ (color.rgb * color_modulate * COLOR_MODULATE_STRENGTH);
 	
-	color.rgb = color.rgb * (1.0 - COLOR_MODULATE_STRENGTH)
-		+ (color.rgb * color_modulate * COLOR_MODULATE_STRENGTH);
+	//if (highlight_active) {
+		//if (is_cell_active(data)) {
+			//color += vec4(0.1, 0.1, 1.0, 1.0);
+		//}
+	//}
 	
-	if (highlight_active) {
-		if (is_cell_active(data)) {
-			color += vec4(0.1, 0.1, 1.0, 1.0);
-		}
-	}
-	
-	color = vec4(1.0);
-	if (idx == 0) {
-		color = vec4(1.0, 0.0, 0.0, 0.5);
-	} else {
-		color = vec4(0.0, 1.0, 0.0, 1.0);
-	}
+	//if (idx == 0) {
+		//color = vec4(1.0, 0.0, 0.0, 0.5);
+	//} else {
+		//color = vec4(0.0, 1.0, 0.0, 1.0);
+	//}
 	//color.rg = VERTEX / vec2(128.0);
 	//color.rg = UV;
 	//color.rg = vec2(wrapv(global_coord, ivec2(64))) / 64.0;

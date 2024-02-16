@@ -19,7 +19,7 @@ config/icon="res://icon.svg"
 [autoload]
 
 Init="res://core/singleton/init.gd"
-GridApi="*res://core/singleton/grid_api.gd"
+GridApi="*res://core/singleton/grid_api.tscn"
 
 [debug]
 

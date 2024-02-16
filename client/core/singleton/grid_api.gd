@@ -19,16 +19,10 @@ var mod_names : Array[String] = ["core", "base"]
 
 var mod_entries : Array[ModEntry] = []
 
-# Automatically update texture when its image changes.
-var base_color_atlas_img := Image.new()
-var base_color_atlas := preload("res://core/shader/texture/cell_materials_data/base_color_atlas.tres")
-var base_color_rect_img := Image.new()
-var base_color_rect := preload("res://core/shader/texture/cell_materials_data/base_color_atlas_rect.tres")
-var glow_img := Image.new()
-var glow := preload("res://core/shader/texture/cell_materials_data/glow.tres")
-var light_modulate_img := Image.new()
-var light_modulate := preload("res://core/shader/texture/cell_materials_data/light_modulate.tres")
-var _img_changed : Array[Array] = []
+@export var base_color_atlas : ImageAndTexture
+@export var base_color_atlas_rect: ImageAndTexture
+@export var glow: ImageAndTexture
+@export var light_modulate: ImageAndTexture
 
 var cell_materials : Array[CellMaterial] = []
 ## StringName : CellMaterial
@@ -52,15 +46,7 @@ var _step_thread := Thread.new()
 
 func _ready() -> void:
 	#process_mode = Node.PROCESS_MODE_DISABLED
-	
-	_img_changed = [
-		[false, base_color_atlas_img, base_color_atlas],
-		[false, base_color_rect_img, base_color_rect],
-		[false, glow_img, glow],
-		[false, light_modulate_img, light_modulate]
-	]
-	for img_idx in _img_changed.size():
-		_img_changed[img_idx][1].changed.connect(_on_img_changed.bind(img_idx))
+	pass
 
 func _exit_tree() -> void:
 	if _step_thread.is_started():
@@ -68,16 +54,6 @@ func _exit_tree() -> void:
 	#unload_mods()
 
 func _process(_delta: float) -> void:
-	for img_arr in _img_changed:
-		if img_arr[0]:
-			img_arr[0] = false
-			var img := img_arr[1] as Image
-			var tex := img_arr[2] as ImageTexture
-			if Vector2i(tex.get_size()) != img.get_size():
-				tex.set_image(img)
-			else:
-				tex.update(img)
-	
 	if is_server:
 		# Send queued grid edits to peers
 		if multiplayer.has_multiplayer_peer():
@@ -169,16 +145,10 @@ func load_mods() -> void:
 			var img := Image.create(1, 1, false, Image.FORMAT_RGBA8)
 			img.set_pixel(0, 0, cell_material.base_color)
 			base_color_images.push_back(img)
-	var new_img := ImagePacker.pack(
+	base_color_atlas.img = ImagePacker.pack(
 		base_color_images,
 		Image.FORMAT_RGBA8,
 		&"base_color_start")
-	base_color_atlas_img.set_data(
-		new_img.get_width(),
-		new_img.get_height(),
-		false,
-		Image.FORMAT_RGBA8,
-		new_img.get_data())
 	for cell_material in cell_materials:
 		cell_material.base_color_atlas_coord = base_color_images[cell_material.idx].get_meta(&"base_color_start")
 		base_color_images[cell_material.idx].remove_meta(&"base_color_start")
@@ -192,7 +162,7 @@ func load_mods() -> void:
 		var size := base_color_images[cell_material.idx].get_size()
 		floats[cell_material.idx * 4 + 2] = size.x
 		floats[cell_material.idx * 4 + 3] = size.y
-	base_color_rect_img.set_data(
+	base_color_atlas_rect.img = Image.create_from_data(
 		cell_materials.size(),
 		1,
 		false,
@@ -200,10 +170,8 @@ func load_mods() -> void:
 		floats.to_byte_array())
 	
 	# Create other cell materials data
-	glow_img.set_data(1, 1, false, Image.FORMAT_RGBA8, [0, 0, 0, 0])
-	glow_img.resize(cell_materials.size(), 1, Image.INTERPOLATE_NEAREST)
-	light_modulate_img.set_data(1, 1, false, Image.FORMAT_RGBA8, [0, 0, 0, 0])
-	light_modulate_img.resize(cell_materials.size(), 1, Image.INTERPOLATE_NEAREST)
+	glow.img = Image.create(cell_materials.size(), 1, false, Image.FORMAT_RGBA8)
+	light_modulate.img = Image.create(cell_materials.size(), 1, false, Image.FORMAT_RGBA8)
 	for cell_material in cell_materials:
 		cell_material.set_glow(cell_material.glow)
 		cell_material.set_light_modulate(cell_material.light_modulate)
@@ -268,7 +236,4 @@ func _edit_peer(tick: int, bytes: PackedByteArray) -> void:
 
 func _step() -> void:
 	Grid.step()
-
-func _on_img_changed(idx: int) -> void:
-	_img_changed[idx][0] = true
 

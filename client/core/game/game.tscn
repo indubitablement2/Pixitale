@@ -101,15 +101,11 @@ centered = false
 zoom = Vector2(4, 4)
 
 [node name="CellMaterialsBaseColor" type="Sprite2D" parent="."]
-position = Vector2(500, 0)
-scale = Vector2(16, 16)
+z_index = 4096
+z_as_relative = false
+position = Vector2(71, 3)
+scale = Vector2(32, 32)
 texture = ExtResource("11_4eirp")
-centered = false
-
-[node name="Icon" type="Sprite2D" parent="."]
-visible = false
-material = ExtResource("8_onaw1")
-texture = ExtResource("4_xxntp")
 centered = false
 
 [node name="Icon2" type="Sprite2D" parent="."]
