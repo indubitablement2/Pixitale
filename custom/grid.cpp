@@ -4,6 +4,7 @@
 #include "cell.hpp"
 #include "cell_material.h"
 #include "chunk.h"
+#include "core/error/error_macros.h"
 #include "core/io/image.h"
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
@@ -17,11 +18,16 @@
 #include "preludes.h"
 #include "rng.hpp"
 #include <algorithm>
+#include <atomic>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
 inline static BS::thread_pool tp = BS::thread_pool();
+
+inline static std::vector<std::vector<std::pair<Callable *, Vector2i>>> thread_vectors = {};
+inline static std::atomic_int32_t next_thread_idx = 0;
+thread_local u32 thread_idx = MAX_U32;
 
 u32 reations_key(const u32 m1, const u32 m2, bool &swap) {
 	if (m1 <= m2) {
@@ -49,7 +55,7 @@ void Grid::_bind_methods() {
 			&Grid::clear_cell_reactions);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("add_cell_reaction", "in1", "in2", "out1", "out2", "probability"),
+			D_METHOD("add_cell_reaction", "in1", "in2", "out1", "out2", "probability", "callback"),
 			&Grid::add_cell_reaction);
 	ClassDB::bind_static_method(
 			"Grid",
@@ -174,6 +180,16 @@ void Grid::clear_iters() {
 	rect_iters.clear();
 }
 
+std::vector<std::pair<Callable *, Vector2i>> &Grid::get_reaction_callback_vector() {
+	if (thread_idx == MAX_U32) {
+		thread_idx = next_thread_idx.fetch_add(1, std::memory_order_relaxed);
+	}
+
+	TEST_ASSERT(thread_idx < thread_vectors.size(), "thread vector bug");
+
+	return thread_vectors[thread_idx];
+}
+
 void Grid::reactions_between(
 		CellReaction *&start,
 		CellReaction *&end,
@@ -249,8 +265,23 @@ void Grid::clear_cell_reactions() {
 	cell_reactions.clear();
 }
 
-u64 Grid::add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probability) {
-	// TODO: check if mat idx are valid
+u64 Grid::add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probability, Callable callback) {
+	ERR_FAIL_COND_V_MSG(
+			in1 >= cell_materials.size(),
+			0,
+			"unknow cell material idx for in1");
+	ERR_FAIL_COND_V_MSG(
+			in2 >= cell_materials.size(),
+			0,
+			"unknow cell material idx for in2");
+	ERR_FAIL_COND_V_MSG(
+			out1 >= cell_materials.size(),
+			0,
+			"unknow cell material idx for out1");
+	ERR_FAIL_COND_V_MSG(
+			out2 >= cell_materials.size(),
+			0,
+			"unknow cell material idx for out2");
 
 	last_modified_tick = tick;
 
@@ -272,7 +303,7 @@ u64 Grid::add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probabilit
 		reaction.mat_idx_out2 = out2;
 	}
 
-	reaction.callback = nullptr;
+	reaction.callback = callback;
 
 	reaction.reaction_id = 0;
 
@@ -286,7 +317,7 @@ u64 Grid::add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probabilit
 		cell_reactions[reaction_key] = { reaction };
 	}
 
-	return reaction_key | (u64(reaction.reaction_id) << 32);
+	return u64(reaction_key) | (u64(reaction.reaction_id) << 32);
 }
 
 bool Grid::remove_cell_reaction(u64 reaction_id) {
@@ -484,6 +515,11 @@ void Grid::step_prepare() {
 }
 
 void Grid::step() {
+	if (thread_vectors.size() != tp.get_thread_count()) {
+		thread_vectors.resize(tp.get_thread_count());
+		next_thread_idx = 0;
+	}
+
 	for (i32 i = 0; i < 3; i++) {
 		auto &pass = passes[i];
 
@@ -509,6 +545,20 @@ void Grid::step() {
 
 		tp.wait_for_tasks();
 	}
+
+	auto &first_vec = thread_vectors[0];
+	for (u32 i = 1; i < thread_vectors.size(); i++) {
+		auto &vec = thread_vectors[i];
+		first_vec.insert(first_vec.end(), vec.begin(), vec.end());
+		vec.clear();
+	}
+	std::sort(first_vec.begin(), first_vec.end(), [](auto &a, auto &b) {
+		return a.second < b.second;
+	});
+	for (auto &[callable, coord] : first_vec) {
+		callable->call(coord);
+	}
+	first_vec.clear();
 }
 
 bool Grid::randb() {

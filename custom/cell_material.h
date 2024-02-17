@@ -28,8 +28,7 @@ struct CellReaction {
 
 	u16 reaction_id;
 
-	// todo: optional gdscript function
-	void *callback;
+	Callable callback;
 
 	inline bool try_react(Rng &rng) {
 		return rng.gen_probability_u32(probability, CELL_REACTION_PROBABILITY_RANGE);

@@ -1,0 +1,11 @@
+[gd_scene load_steps=2 format=3 uid="uid://bkwg61l2dv4oa"]
+
+[ext_resource type="Script" path="res://core/data/cell_reaction.gd" id="1_0fuql"]
+
+[node name="Node" type="Node"]
+
+[node name="WaterRock_Empty" type="Node" parent="."]
+script = ExtResource("1_0fuql")
+in1_tag = &"Water"
+in2_tag = &"Rock"
+probability = 0.011

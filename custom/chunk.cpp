@@ -18,6 +18,7 @@ public:
 	Vector2i cell_coord;
 	Rng rng;
 	Chunk *chunks[9];
+	std::vector<std::pair<Callable *, Vector2i>> &reaction_callbacks = Grid::get_reaction_callback_vector();
 
 	ChunkApi(Vector2i chunk_coord) :
 			rng(Grid::get_temporal_rng(chunk_coord)) {
@@ -183,6 +184,10 @@ public:
 							Grid::cell_updated_bitmask,
 							true);
 					activate_neightbors(other_coord);
+				}
+
+				if (!reaction->callback.is_null()) {
+					reaction_callbacks.push_back({ &reaction->callback, cell_coord });
 				}
 
 				break;

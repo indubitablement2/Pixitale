@@ -13,6 +13,7 @@
 #include "preludes.h"
 #include "rng.hpp"
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 enum GridLayer {
@@ -61,6 +62,8 @@ public:
 	// Current bitmask of updated cells.
 	inline static u32 cell_updated_bitmask = 0;
 
+	static std::vector<std::pair<Callable *, Vector2i>> &get_reaction_callback_vector();
+
 	// Set pointers to nullptr if no reaction between m1 and m2.
 	static void reactions_between(
 			CellReaction *&start,
@@ -87,7 +90,13 @@ public: // godot api
 	static void add_cell_material(Object *obj);
 
 	static void clear_cell_reactions();
-	static u64 add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probability);
+	static u64 add_cell_reaction(
+			u32 in1,
+			u32 in2,
+			u32 out1,
+			u32 out2,
+			f64 probability,
+			Callable callback);
 	static bool remove_cell_reaction(u64 reaction_id);
 
 	static void clear_generation_passes();

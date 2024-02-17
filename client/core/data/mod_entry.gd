@@ -9,6 +9,8 @@ static func entry_path(mod_name: String) -> String:
 
 @export_file("*.tscn") var cell_materials
 
+@export_file("*.tscn") var cell_reactions
+
 @export_file("*.tscn") var generation_passes
 
 ## Optional entry/exit script.

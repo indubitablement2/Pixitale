@@ -8,10 +8,10 @@ func _generate(iter: GridChunkIter) -> void:
 	
 	if iter.chunk_coord().y >= 0:
 		while iter.next():
-			iter.set_cell(iter.local_coord().y % 2)
+			iter.set_cell(iter.local_coord().y % GridApi.cell_materials.size())
 	else:
 		while iter.next():
-			iter.set_cell(iter.local_coord().x % 2)
+			iter.set_cell(iter.local_coord().x % GridApi.cell_materials.size())
 "
 
 [node name="Node" type="Node"]

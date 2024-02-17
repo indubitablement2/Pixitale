@@ -8,7 +8,7 @@ static func _entry() -> void:
 	print("core added")
 
 ## Called before mod is removed.
-## Any change that could be permanent made by _entry should be undone here.
+## Any change made by _entry that could be permanent should be undone here.
 static func _exit() -> void:
 	print("core removed")
 

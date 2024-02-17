@@ -30,6 +30,9 @@ var cell_material_names := {}
 ## StringName : Array[CellMaterial]
 var cell_material_tags := {}
 
+## StringName : CellReaction
+var cell_reactions := {}
+
 ## Ordered in this order
 ## - process_priority
 ## - which mod they are part of
@@ -51,7 +54,7 @@ func _ready() -> void:
 func _exit_tree() -> void:
 	if _step_thread.is_started():
 		_step_thread.wait_to_finish()
-	#unload_mods()
+	unload_mods()
 
 func _process(_delta: float) -> void:
 	if is_server:
@@ -126,7 +129,8 @@ func load_mods() -> void:
 			if cell_material_tags.has(tag):
 				cell_material_tags[tag].push_back(cell_material)
 			else:
-				cell_material_tags[tag] = [cell_material]
+				var arr : Array[CellMaterial] = [cell_material]
+				cell_material_tags[tag] = arr
 	
 	# Add cell material name
 	for cell_material in cell_materials:
@@ -134,7 +138,8 @@ func load_mods() -> void:
 		# Add name to tags as well
 		if cell_material_tags.has(cell_material.name):
 			push_error("CellMaterial name is not unique: ", CellMaterial.name)
-		cell_material_tags[cell_material.name] = [cell_material]
+		var arr : Array[CellMaterial] = [cell_material]
+		cell_material_tags[cell_material.name] = arr
 	
 	# Create cell materials data base color atlas
 	var base_color_images : Array[Image] = []
@@ -176,7 +181,20 @@ func load_mods() -> void:
 		cell_material.set_glow(cell_material.glow)
 		cell_material.set_light_modulate(cell_material.light_modulate)
 	
-	# TODO: Add cell reations
+	# Add cell reations
+	for entry in mod_entries:
+		if !entry.cell_reactions:
+			continue
+		
+		var root : Node = load(entry.cell_reactions).instantiate()
+		for cell_reaction : CellReaction in root.get_children():
+			if cell_reactions.has(cell_reaction.name):
+				push_error("Duplicate CellReaction name: ", cell_reaction.name)
+				continue
+			root.remove_child(cell_reaction)
+			cell_reaction.add()
+			cell_reactions[cell_reaction.name] = cell_reaction
+		root.queue_free()
 	
 	# Add generation passes
 	for entry in mod_entries:
@@ -221,6 +239,9 @@ func unload_mods() -> void:
 	cell_materials = []
 	cell_material_names = {}
 	cell_material_tags = {}
+	
+	for cell_reaction : CellReaction in cell_reactions.values():
+		cell_reaction.queue_free()
 	
 	for gen_pass in generation_passes:
 		gen_pass.queue_free()

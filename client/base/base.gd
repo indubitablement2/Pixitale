@@ -1,12 +1,16 @@
-extends Node
+extends Object
 class_name Base
 
 static var ROCK : CellMaterial
 static var ROCK_IDX := 0
+static var WATER : CellMaterial
+static var WATER_IDX := 0
 
 static func _entry() -> void:
 	ROCK = GridApi.find_cell_material(&"Rock")
 	ROCK_IDX = ROCK.idx
+	WATER = GridApi.find_cell_material(&"Water")
+	WATER_IDX = WATER.idx
 	
 	_BANANA = GridApi.add_grid_edit_method(Callable(Base, &"_banana"))
 	

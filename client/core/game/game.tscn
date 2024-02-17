@@ -1,4 +1,4 @@
-[gd_scene load_steps=17 format=3 uid="uid://cs41g41rbjtf3"]
+[gd_scene load_steps=19 format=3 uid="uid://cs41g41rbjtf3"]
 
 [ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
@@ -11,6 +11,8 @@
 [ext_resource type="Texture2D" uid="uid://bnteua3rjglbi" path="res://core/shader/texture/cell_raw_data/midground.tres" id="8_7sqlw"]
 [ext_resource type="Material" uid="uid://btwoiop8xxp15" path="res://core/shader/cell_render.material" id="8_onaw1"]
 [ext_resource type="Texture2D" uid="uid://b5c5qksfr7hk4" path="res://core/shader/texture/cell_materials_data/base_color_atlas.tres" id="11_4eirp"]
+[ext_resource type="Texture2D" uid="uid://t50h32apl4gq" path="res://core/shader/texture/cell_materials_data/glow.tres" id="11_rdegm"]
+[ext_resource type="Texture2D" uid="uid://clehnwi7vgea5" path="res://core/shader/texture/cell_materials_data/light_modulate.tres" id="13_lh32a"]
 
 [sub_resource type="Environment" id="Environment_bap7c"]
 background_mode = 3
@@ -100,11 +102,23 @@ centered = false
 [node name="FreeCamera" parent="." instance=ExtResource("7_7jk4b")]
 zoom = Vector2(4, 4)
 
+[node name="LightModulate" type="Sprite2D" parent="."]
+position = Vector2(0, 64)
+scale = Vector2(16, 16)
+texture = ExtResource("13_lh32a")
+centered = false
+
+[node name="Glow" type="Sprite2D" parent="."]
+position = Vector2(0, 96)
+scale = Vector2(16, 16)
+texture = ExtResource("11_rdegm")
+centered = false
+
 [node name="CellMaterialsBaseColor" type="Sprite2D" parent="."]
 z_index = 4096
 z_as_relative = false
-position = Vector2(71, 3)
-scale = Vector2(32, 32)
+position = Vector2(0, 128)
+scale = Vector2(16, 16)
 texture = ExtResource("11_4eirp")
 centered = false
 
