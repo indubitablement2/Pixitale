@@ -12,8 +12,8 @@ func callback(coord: Vector2i) -> void:
 
 [node name="Node" type="Node" parent="."]
 script = SubResource("GDScript_pd1m6")
-in1_tag = &"Water"
-in2_tag = &"Lava"
-out1_name = &"Water"
-out2_name = &"Lava"
-probability = 0.0005
+in1_tag = &"Lava"
+in2_tag = &"Water"
+out1_name = &"Lava"
+out2_name = &"Water"
+probability = 0.001

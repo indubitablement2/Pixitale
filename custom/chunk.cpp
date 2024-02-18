@@ -15,14 +15,16 @@ class ChunkApi {
 public:
 	u32 cell;
 	u32 *cell_ptr;
+	// Coord of the current cell relative to cell_coord_origin.
 	Vector2i cell_coord;
+	// Coord of the top left cell of top left chunk.
 	Vector2i cell_coord_origin;
 	Rng rng;
 	std::vector<std::pair<Callable *, Vector2i>> &reaction_callbacks = Grid::get_reaction_callback_vector();
 	Chunk *chunks[9];
 
 	ChunkApi(Vector2i chunk_coord) :
-			cell_coord_origin(chunk_coord * 32),
+			cell_coord_origin((chunk_coord - Vector2i(1, 1)) * 32),
 			rng(Grid::get_temporal_rng(chunk_coord)) {
 	}
 
@@ -170,6 +172,25 @@ public:
 					other_material_idx_out = reaction->mat_idx_out2;
 				}
 
+				if (!reaction->callback.is_null()) {
+					Vector2i trigger_coord = cell_coord_origin;
+					// if (swap && reaction->callback_swap) {
+					// 	trigger_coord += cell_coord;
+					// } else if (!swap && reaction->callback_swap) {
+					// 	trigger_coord += other_coord;
+					// } else if (swap && !reaction->callback_swap) {
+					// 	trigger_coord += other_coord;
+					// } else {
+					// 	trigger_coord += cell_coord;
+					// }
+					if (swap == reaction->callback_swap) {
+						trigger_coord += cell_coord;
+					} else {
+						trigger_coord += other_coord;
+					}
+					reaction_callbacks.push_back({ &reaction->callback, trigger_coord });
+				}
+
 				if (cell_material_idx() != cell_material_idx_out) {
 					// todo: color
 					cell = Cell::build_cell(
@@ -186,10 +207,6 @@ public:
 							Grid::cell_updated_bitmask,
 							true);
 					activate_neightbors(other_coord);
-				}
-
-				if (!reaction->callback.is_null()) {
-					reaction_callbacks.push_back({ &reaction->callback, cell_coord + cell_coord_origin });
 				}
 
 				break;

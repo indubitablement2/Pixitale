@@ -6,6 +6,9 @@ class_name CellReaction
 ## If extra logic is needed after a reaction trigger, 
 ## create a new script which extend CellReaction and add:
 ## func callback(coord: Vector2i) -> void:
+## coord will be at in1.
+## This will be called at the very end of step
+## which gives full exclusive read/write access to Grid.
 
 ## Tag which can also be a name.
 @export var in1_tag : StringName = &""

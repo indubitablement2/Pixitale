@@ -301,6 +301,7 @@ u64 Grid::add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probabilit
 			0.0,
 			(f64)(CELL_REACTION_PROBABILITY_RANGE)));
 
+	reaction.callback_swap = swap;
 	if (swap) {
 		reaction.mat_idx_out1 = out2;
 		reaction.mat_idx_out2 = out1;

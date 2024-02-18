@@ -26,7 +26,9 @@ struct CellReaction {
 	// If eq in2 does not change material.
 	u32 mat_idx_out2;
 
-	u32 reaction_id;
+	u16 reaction_id;
+
+	bool callback_swap;
 
 	Callable callback;
 
