@@ -50,7 +50,7 @@ var _delete_node : Node = null
 var _step_thread := Thread.new()
 
 func _ready() -> void:
-	process_mode = Node.PROCESS_MODE_DISABLED
+	#process_mode = Node.PROCESS_MODE_DISABLED
 	pass
 
 func _exit_tree() -> void:
@@ -119,11 +119,10 @@ func load_mods() -> void:
 			continue
 		
 		var root : Node = load(entry.cell_materials).instantiate()
+		_delete_node.add_child(root)
 		for cell_material : CellMaterial in root.get_children():
-			cell_material.reparent(_delete_node)
 			cell_material.idx = cell_materials.size()
 			cell_materials.push_back(cell_material)
-		root.queue_free()
 	
 	# Add cell material tags
 	for cell_material in cell_materials:
@@ -191,14 +190,13 @@ func load_mods() -> void:
 			continue
 		
 		var root : Node = load(entry.cell_reactions).instantiate()
+		_delete_node.add_child(root)
 		for cell_reaction : CellReaction in root.get_children():
 			if cell_reactions.has(cell_reaction.name):
 				push_error("Duplicate CellReaction name: ", cell_reaction.name)
 				continue
-			cell_reaction.reparent(_delete_node)
 			cell_reactions[cell_reaction.name] = cell_reaction
 			cell_reaction.add()
-		root.queue_free()
 	
 	# Add generation passes
 	for entry in mod_entries:
@@ -206,8 +204,8 @@ func load_mods() -> void:
 			continue
 		
 		var root : Node = load(entry.generation_passes).instantiate()
+		_delete_node.add_child(root)
 		for gen_pass : GenerationPass in root.get_children():
-			gen_pass.reparent(_delete_node)
 			var gen_pass_idx := 0
 			while true:
 				if gen_pass_idx >= generation_passes.size():
@@ -217,7 +215,6 @@ func load_mods() -> void:
 					generation_passes.insert(gen_pass_idx, gen_pass)
 					break
 				gen_pass_idx += 1
-		root.queue_free()
 	for gen_pass in generation_passes:
 		Grid.add_generation_pass(gen_pass)
 	
