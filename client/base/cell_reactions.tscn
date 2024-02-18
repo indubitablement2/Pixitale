@@ -1,11 +1,19 @@
 [gd_scene load_steps=2 format=3 uid="uid://bkwg61l2dv4oa"]
 
-[ext_resource type="Script" path="res://core/data/cell_reaction.gd" id="1_0fuql"]
+[sub_resource type="GDScript" id="GDScript_pd1m6"]
+script/source = "extends CellReaction
+
+
+func callback(coord: Vector2i) -> void:
+	print(coord)
+"
 
 [node name="Node" type="Node"]
 
-[node name="WaterRock_Empty" type="Node" parent="."]
-script = ExtResource("1_0fuql")
-in1_tag = &"Water"
-in2_tag = &"Rock"
-probability = 0.011
+[node name="Node" type="Node" parent="."]
+script = SubResource("GDScript_pd1m6")
+in1_tag = &"Rock"
+in2_tag = &"Empty"
+out1_name = &"Rock"
+out2_name = &"Rock"
+probability = 1e-05

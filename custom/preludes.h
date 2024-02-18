@@ -48,6 +48,8 @@ const i64 MAX_I64 = INT64_MAX;
 
 // Round toward negative infinity instead of 0.
 inline i32 div_floor(i32 numerator, i32 denominator) {
+	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
+
 	if (numerator >= 0) {
 		return numerator / denominator;
 	} else {
@@ -57,6 +59,8 @@ inline i32 div_floor(i32 numerator, i32 denominator) {
 
 // Modulo which handle negative numbers instead of returning the remainder.
 inline i32 mod_neg(i32 numerator, i32 denominator) {
+	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
+
 	i32 mod = numerator % denominator;
 	return mod >= 0 ? mod : mod + denominator;
 }

@@ -66,6 +66,17 @@ public:
 		*get_cell_ptr(coord) = cell;
 	}
 
+	inline void activate_all(bool activate_cells) {
+		active_rows = MAX_U32;
+		active_columns = MAX_U32;
+
+		if (activate_cells) {
+			for (u32 i = 0; i < 32 * 32; i++) {
+				Cell::set_active(cells[i]);
+			}
+		}
+	}
+
 	// Activate an area in bulk.
 	// Rect needs to be within bound of this chunk.
 	// Does not set cells to activated.

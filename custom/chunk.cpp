@@ -16,11 +16,13 @@ public:
 	u32 cell;
 	u32 *cell_ptr;
 	Vector2i cell_coord;
+	Vector2i cell_coord_origin;
 	Rng rng;
-	Chunk *chunks[9];
 	std::vector<std::pair<Callable *, Vector2i>> &reaction_callbacks = Grid::get_reaction_callback_vector();
+	Chunk *chunks[9];
 
 	ChunkApi(Vector2i chunk_coord) :
+			cell_coord_origin(chunk_coord * 32),
 			rng(Grid::get_temporal_rng(chunk_coord)) {
 	}
 
@@ -187,7 +189,7 @@ public:
 				}
 
 				if (!reaction->callback.is_null()) {
-					reaction_callbacks.push_back({ &reaction->callback, cell_coord });
+					reaction_callbacks.push_back({ &reaction->callback, cell_coord + cell_coord_origin });
 				}
 
 				break;

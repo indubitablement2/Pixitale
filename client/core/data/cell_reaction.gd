@@ -17,7 +17,7 @@ class_name CellReaction
 @export var out2_name : StringName = &"Empty"
 ## Chance for the reaction to trigger per in1-in2 pair per tick.
 ## 0 probability should be avoided as the cells will stay active forever.
-@export_range(0.0, 1.0) var probability := 1.0
+@export_range(0.0000001, 1.0, 0.0000001) var probability := 1.0
 
 var reactions_id := PackedInt64Array()
 
@@ -30,7 +30,6 @@ func add() -> void:
 		var callback := Callable()
 		if has_method(&"callback"):
 			callback = Callable(self, &"callback")
-			print_debug("founnd cb: ", callback)
 		
 		for in1 in GridApi.find_cell_material_tag(in1_tag):
 			for in2 in GridApi.find_cell_material_tag(in2_tag):

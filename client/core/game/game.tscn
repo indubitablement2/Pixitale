@@ -123,6 +123,7 @@ texture = ExtResource("11_4eirp")
 centered = false
 
 [node name="Icon2" type="Sprite2D" parent="."]
+visible = false
 modulate = Color(1, 1, 1, 0.462745)
 z_index = 2885
 texture = ExtResource("4_66u3x")

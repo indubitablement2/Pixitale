@@ -8,7 +8,7 @@ static var node : Game
 func _init() -> void:
 	node = self
 
-func _process(_delta: float) -> void:
-	Core.queue_step_chunks(Rect2i(
-		Vector2i(-5, -1),
-		Vector2i(10, 2)))
+#func _process(_delta: float) -> void:
+	#Core.queue_step_chunks(Rect2i(
+		#Vector2i(-1, -1),
+		#Vector2i(2, 2)))

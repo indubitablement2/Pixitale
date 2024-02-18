@@ -15,18 +15,18 @@ enum CellCollision {
 	CELL_COLLISION_LIQUID,
 };
 
-const u32 CELL_REACTION_PROBABILITY_RANGE = 1 << 16;
+const u32 CELL_REACTION_PROBABILITY_RANGE = 2147483648u;
 
 struct CellReaction {
-	// Chance for reaction to happen out of CELL_REACTION_PROBABILITY_RANGE.
-	u16 probability;
+	// Chance for reaction to happen out of MAX_U32.
+	u32 probability;
 
 	// If eq in1 does not change material.
-	u16 mat_idx_out1;
+	u32 mat_idx_out1;
 	// If eq in2 does not change material.
-	u16 mat_idx_out2;
+	u32 mat_idx_out2;
 
-	u16 reaction_id;
+	u32 reaction_id;
 
 	Callable callback;
 

@@ -40,7 +40,6 @@ private:
 	inline static u64 seed = 0;
 
 	inline static std::unordered_map<u64, Chunk *> chunks = {};
-	inline static std::unordered_map<u64, u32> active_chunks = {};
 
 	inline static std::vector<GridChunkIter *> chunk_iters = {};
 	inline static std::vector<GridRectIter *> rect_iters = {};

@@ -216,9 +216,11 @@ void Grid::generate_chunk(Vector2i chunk_coord) {
 	iter->set_chunk(chunk_coord);
 
 	for (auto pass : generation_passes) {
-		iter->reset_iter();
 		pass->generate(iter);
+		iter->reset_iter();
 	}
+
+	iter->chunk->activate_all(true);
 
 	memdelete(iter);
 }
@@ -290,10 +292,10 @@ u64 Grid::add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probabilit
 
 	CellReaction reaction = {};
 
-	reaction.probability = u16(CLAMP(
+	reaction.probability = u32(CLAMP(
 			probability * (f64)CELL_REACTION_PROBABILITY_RANGE,
 			0.0,
-			(f64)(MAX_U16)));
+			(f64)(CELL_REACTION_PROBABILITY_RANGE)));
 
 	if (swap) {
 		reaction.mat_idx_out1 = out2;
@@ -324,7 +326,7 @@ bool Grid::remove_cell_reaction(u64 reaction_id) {
 	last_modified_tick = tick;
 
 	u32 key = u32(reaction_id & 0xFFFFFFFF);
-	u16 id = u16(reaction_id >> 32);
+	u32 id = u32(reaction_id >> 32);
 
 	if (auto it = cell_reactions.find(key); it != cell_reactions.end()) {
 		auto &reactions = it->second;
@@ -348,8 +350,6 @@ void Grid::add_generation_pass(GenerationPass *value) {
 }
 
 void Grid::clear() {
-	tp.wait_for_tasks();
-
 	clear_iters();
 	queue_step_chunk_rects = {};
 
@@ -358,15 +358,13 @@ void Grid::clear() {
 	}
 	chunks = {};
 
-	active_chunks = {};
-
 	tick = 0;
 	seed = 0;
 }
 
 void Grid::set_tick(i64 value) {
 	tick = value;
-	temporal_rng = Rng(seed + tick);
+	temporal_rng = Rng(tick + seed);
 }
 
 i64 Grid::get_tick() {
@@ -375,7 +373,6 @@ i64 Grid::get_tick() {
 
 void Grid::set_seed(u64 value) {
 	seed = value;
-	temporal_rng = Rng(seed + tick);
 }
 
 u64 Grid::get_seed() {
@@ -485,7 +482,7 @@ void Grid::queue_step_chunks(Rect2i chunk_rect) {
 void Grid::step_prepare() {
 	set_tick(tick + 1);
 
-	cell_updated_bitmask = ((tick % 3) + 1) << Cell::Shifts::SHIFT_UPDATED;
+	cell_updated_bitmask = (u32(tick % 3) + 1u) << Cell::Shifts::SHIFT_UPDATED;
 
 	clear_iters();
 
@@ -495,9 +492,7 @@ void Grid::step_prepare() {
 
 	for (auto chunk_rect : queue_step_chunk_rects) {
 		// Add to-be-generated chunks.
-		Iter2D chunk_iter = Iter2D(
-				chunk_rect.position - Vector2i(1, 1),
-				chunk_rect.get_end() + Vector2i(2, 2));
+		Iter2D chunk_iter = Iter2D(chunk_rect.grow(1));
 		while (chunk_iter.next()) {
 			auto added = chunks.emplace(chunk_id(chunk_iter.coord), nullptr);
 			if (added.second) {
@@ -515,9 +510,8 @@ void Grid::step_prepare() {
 }
 
 void Grid::step() {
-	if (thread_vectors.size() != tp.get_thread_count()) {
+	if (thread_vectors.size() < tp.get_thread_count()) {
 		thread_vectors.resize(tp.get_thread_count());
-		next_thread_idx = 0;
 	}
 
 	for (i32 i = 0; i < 3; i++) {

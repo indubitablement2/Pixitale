@@ -45,10 +45,12 @@ var _queued_edits := {}
 ## [args..., callable_idx(int)]
 var _next_edits := []
 
+var _delete_node : Node = null
+
 var _step_thread := Thread.new()
 
 func _ready() -> void:
-	#process_mode = Node.PROCESS_MODE_DISABLED
+	process_mode = Node.PROCESS_MODE_DISABLED
 	pass
 
 func _exit_tree() -> void:
@@ -97,6 +99,8 @@ func add_grid_edit_method(m: Callable) -> int:
 
 func load_mods() -> void:
 	unload_mods()
+	_delete_node = Node.new()
+	add_child(_delete_node)
 	
 	# TODO: 
 	is_server = true
@@ -116,7 +120,7 @@ func load_mods() -> void:
 		
 		var root : Node = load(entry.cell_materials).instantiate()
 		for cell_material : CellMaterial in root.get_children():
-			root.remove_child(cell_material)
+			cell_material.reparent(_delete_node)
 			cell_material.idx = cell_materials.size()
 			cell_materials.push_back(cell_material)
 		root.queue_free()
@@ -191,9 +195,9 @@ func load_mods() -> void:
 			if cell_reactions.has(cell_reaction.name):
 				push_error("Duplicate CellReaction name: ", cell_reaction.name)
 				continue
-			root.remove_child(cell_reaction)
-			cell_reaction.add()
+			cell_reaction.reparent(_delete_node)
 			cell_reactions[cell_reaction.name] = cell_reaction
+			cell_reaction.add()
 		root.queue_free()
 	
 	# Add generation passes
@@ -203,7 +207,7 @@ func load_mods() -> void:
 		
 		var root : Node = load(entry.generation_passes).instantiate()
 		for gen_pass : GenerationPass in root.get_children():
-			root.remove_child(gen_pass)
+			gen_pass.reparent(_delete_node)
 			var gen_pass_idx := 0
 			while true:
 				if gen_pass_idx >= generation_passes.size():
@@ -234,17 +238,13 @@ func unload_mods() -> void:
 	Grid.clear_cell_reactions()
 	Grid.clear_cell_materials()
 	
-	for cell_material in cell_materials:
-		cell_material.queue_free()
+	if _delete_node:
+		_delete_node.queue_free()
+	
 	cell_materials = []
 	cell_material_names = {}
 	cell_material_tags = {}
 	
-	for cell_reaction : CellReaction in cell_reactions.values():
-		cell_reaction.queue_free()
-	
-	for gen_pass in generation_passes:
-		gen_pass.queue_free()
 	generation_passes = []
 	
 	_edit_callables = []
