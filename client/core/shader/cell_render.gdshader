@@ -33,11 +33,11 @@ void fragment() {
 	//color.rgb = color.rgb * (1.0 - COLOR_MODULATE_STRENGTH)
 		//+ (color.rgb * color_modulate * COLOR_MODULATE_STRENGTH);
 	
-	//if (highlight_active) {
-		//if (is_cell_active(data)) {
-			//color += vec4(0.1, 0.1, 1.0, 1.0);
-		//}
-	//}
+	if (highlight_active) {
+		if (is_cell_active(data)) {
+			color += vec4(0.1, 0.1, 1.0, 1.0);
+		}
+	}
 	
 	//if (idx == 0) {
 		//color = vec4(1.0, 0.0, 0.0, 0.5);

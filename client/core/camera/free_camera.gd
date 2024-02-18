@@ -1,6 +1,6 @@
 extends Camera2D
 
-const ZOOM_MAX := 4.0
+const ZOOM_MAX := 16.0
 const ZOOM_MIN := 0.125
 
 var wish_zoom := 1.0

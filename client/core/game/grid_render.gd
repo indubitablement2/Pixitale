@@ -54,7 +54,7 @@ func _process(_delta: float) -> void:
 		cell_raw_data_foreground.set_image(fg_buffer)
 		cell_raw_data_midground.set_image(mg_buffer)
 		cell_raw_data_background.set_image(bg_buffer)
-		print("New raw cell texture size: ", raw_cell_rect.size)
+		#print("New raw cell texture size: ", raw_cell_rect.size)
 	else:
 		cell_raw_data_foreground.update(fg_buffer)
 		cell_raw_data_midground.update(mg_buffer)

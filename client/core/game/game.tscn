@@ -1,4 +1,4 @@
-[gd_scene load_steps=19 format=3 uid="uid://cs41g41rbjtf3"]
+[gd_scene load_steps=21 format=3 uid="uid://cs41g41rbjtf3"]
 
 [ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
@@ -13,6 +13,22 @@
 [ext_resource type="Texture2D" uid="uid://b5c5qksfr7hk4" path="res://core/shader/texture/cell_materials_data/base_color_atlas.tres" id="11_4eirp"]
 [ext_resource type="Texture2D" uid="uid://t50h32apl4gq" path="res://core/shader/texture/cell_materials_data/glow.tres" id="11_rdegm"]
 [ext_resource type="Texture2D" uid="uid://clehnwi7vgea5" path="res://core/shader/texture/cell_materials_data/light_modulate.tres" id="13_lh32a"]
+
+[sub_resource type="GDScript" id="GDScript_kfpdw"]
+script/source = "extends Label
+
+
+func _process(_delta: float) -> void:
+	text = GridApi.cell_materials[Grid.get_cell_material_idx(Game.mouse_position)].display_name
+"
+
+[sub_resource type="GDScript" id="GDScript_qfjca"]
+script/source = "extends Label
+
+
+func _process(_delta: float) -> void:
+	text = str(Game.mouse_position.floor())
+"
 
 [sub_resource type="Environment" id="Environment_bap7c"]
 background_mode = 3
@@ -47,6 +63,46 @@ viewport_path = NodePath("LightPass")
 
 [node name="Game" type="Node"]
 script = ExtResource("1_bg66v")
+
+[node name="GUI" type="CanvasLayer" parent="."]
+
+[node name="MarginContainer" type="MarginContainer" parent="GUI"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 16
+theme_override_constants/margin_top = 16
+theme_override_constants/margin_right = 16
+theme_override_constants/margin_bottom = 16
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GUI/MarginContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 8
+
+[node name="MouseCell" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="GUI/MarginContainer/VBoxContainer/MouseCell"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "Water"
+script = SubResource("GDScript_kfpdw")
+
+[node name="MouseCoord" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="GUI/MarginContainer/VBoxContainer/MouseCoord"]
+layout_mode = 2
+text = "Coord:"
+
+[node name="Label2" type="Label" parent="GUI/MarginContainer/VBoxContainer/MouseCoord"]
+layout_mode = 2
+text = "(0, 0)"
+script = SubResource("GDScript_qfjca")
 
 [node name="LightPass" type="SubViewport" parent="."]
 process_priority = 11

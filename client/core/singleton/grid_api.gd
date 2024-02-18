@@ -222,6 +222,8 @@ func load_mods() -> void:
 		if entry.entry_script:
 			if entry.entry_script.has_method(&"_entry"):
 				entry.entry_script._entry()
+	
+	Grid.print_reactions()
 
 func unload_mods() -> void:
 	for entry in mod_entries:

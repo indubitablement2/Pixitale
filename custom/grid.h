@@ -97,6 +97,7 @@ public: // godot api
 			f64 probability,
 			Callable callback);
 	static bool remove_cell_reaction(u64 reaction_id);
+	static void print_reactions();
 
 	static void clear_generation_passes();
 	static void add_generation_pass(GenerationPass *value);

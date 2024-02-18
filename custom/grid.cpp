@@ -61,6 +61,10 @@ void Grid::_bind_methods() {
 			"Grid",
 			D_METHOD("remove_cell_reaction", "reaction_id"),
 			&Grid::remove_cell_reaction);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("print_reactions"),
+			&Grid::print_reactions);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -339,6 +343,22 @@ bool Grid::remove_cell_reaction(u64 reaction_id) {
 	}
 
 	return false;
+}
+
+void Grid::print_reactions() {
+	for (auto &[key, reactions] : cell_reactions) {
+		u32 in1 = key & 0xFFFF;
+		u32 in2 = key >> 16;
+		print_line("reactions between:", in1, "and", in2);
+		for (auto &reaction : reactions) {
+			print_line("	id:", u64(key) | (u64(reaction.reaction_id) << 32));
+			print_line("	probability:", f64(reaction.probability) / f64(CELL_REACTION_PROBABILITY_RANGE));
+			print_line("	out1:", reaction.mat_idx_out1);
+			print_line("	out2:", reaction.mat_idx_out2);
+			print_line("	callback:", !reaction.callback.is_null());
+			print_line("	callback valid:", reaction.callback.is_valid());
+		}
+	}
 }
 
 void Grid::clear_generation_passes() {
