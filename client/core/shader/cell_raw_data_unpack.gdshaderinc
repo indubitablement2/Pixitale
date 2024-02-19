@@ -1,6 +1,6 @@
-const uint MASK_MATERIAL_IDX = 16383u;
+const uint MASK_MATERIAL_IDX = 4095u;
 
-const uint MASK_ACTIVE = 65536u;
+const uint MASK_ACTIVE = 8192u;
 
 const uint SHIFT_COLOR_RED = 17u;
 const uint SHIFT_COLOR_GREEN = 22u;

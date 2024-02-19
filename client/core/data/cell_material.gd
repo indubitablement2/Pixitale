@@ -8,6 +8,7 @@ class_name CellMaterial
 @export var display_name := ""
 
 ## Used in CellReaction to refer to a group of CellMaterial.
+## Name use PascalCase. Tags use snake_case.
 @export var tags : Array[StringName] = [&"all"]
 
 @export_category("Render")

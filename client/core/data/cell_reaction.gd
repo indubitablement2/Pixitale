@@ -11,8 +11,10 @@ class_name CellReaction
 ## which gives full exclusive read/write access to Grid.
 
 ## Tag which can also be a name.
+## Name use PascalCase. Tags use snake_case.
 @export var in1_tag : StringName = &""
 ## Tag which can also be a name.
+## Name use PascalCase. Tags use snake_case.
 @export var in2_tag : StringName = &""
 ## When the reaction trigger, what should in1 becomes.
 @export var out1_name : StringName = &"Empty"

@@ -3,5 +3,6 @@
 [ext_resource type="Script" path="res://core/camera/free_camera.gd" id="1_3di8u"]
 
 [node name="FreeCamera" type="Camera2D"]
+process_mode = 3
 position_smoothing_speed = 20.0
 script = ExtResource("1_3di8u")

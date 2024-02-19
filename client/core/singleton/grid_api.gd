@@ -59,7 +59,7 @@ func _exit_tree() -> void:
 	unload_mods()
 
 func _process(_delta: float) -> void:
-	if is_server:
+	if is_server && !_next_edits.is_empty():
 		# Send queued grid edits to peers
 		if multiplayer.has_multiplayer_peer():
 			_edit_peer(Grid.get_tick(), var_to_bytes(_next_edits))
