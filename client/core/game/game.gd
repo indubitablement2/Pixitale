@@ -6,10 +6,6 @@ class_name Game
 static var node : Game
 
 
-# TODO: 
-static var server := false
-
-
 static func is_paused() -> bool:
 	return node.process_mode == Node.PROCESS_MODE_DISABLED
 

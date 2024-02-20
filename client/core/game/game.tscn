@@ -1,4 +1,4 @@
-[gd_scene load_steps=26 format=3 uid="uid://cs41g41rbjtf3"]
+[gd_scene load_steps=28 format=3 uid="uid://cs41g41rbjtf3"]
 
 [ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
@@ -77,6 +77,15 @@ func _pressed() -> void:
 	Core.set_paused(false)
 "
 
+[sub_resource type="GDScript" id="GDScript_xdcdo"]
+script/source = "extends Button
+
+@export var active_rect_node : Node2D
+
+func _pressed() -> void:
+	active_rect_node.set_visible(!active_rect_node.is_visible())
+"
+
 [sub_resource type="Environment" id="Environment_bap7c"]
 background_mode = 3
 background_color = Color(1, 0, 0, 1)
@@ -107,6 +116,35 @@ blend_mode = 1
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_5p4mp"]
 viewport_path = NodePath("LightPass")
+
+[sub_resource type="GDScript" id="GDScript_f8hf2"]
+script/source = "extends Node2D
+
+# Draw the active rect of visible chunks.
+# Deactivate itself when hidden.
+
+func _ready() -> void:
+	set_process(is_visible())
+
+func _process(_delta: float) -> void:
+	queue_redraw()
+
+func _draw() -> void:
+	var p := GridRender.raw_cell_rect.position / 32
+	var s := GridRender.raw_cell_rect.size / 32
+	
+	for y in s.y:
+		for x in s.x:
+			var r := Grid.get_chunk_active_rect(p + Vector2i(x, y))
+			if r.has_area():
+				draw_rect(
+					Rect2(Vector2i(x, y) * 32 + r.position, r.size),
+					Color.ALICE_BLUE,
+					false)
+
+func _on_visibility_changed() -> void:
+	set_process(is_visible())
+"
 
 [node name="Game" type="Node"]
 script = ExtResource("1_bg66v")
@@ -197,6 +235,15 @@ size_flags_vertical = 0
 text = "Step"
 script = SubResource("GDScript_e0md8")
 
+[node name="Rendering" type="VBoxContainer" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
+layout_mode = 2
+
+[node name="ActiveRect" type="Button" parent="GUI/MarginContainer/DebugMenu/VBoxContainer/Rendering" node_paths=PackedStringArray("active_rect_node")]
+layout_mode = 2
+text = "Active Rect"
+script = SubResource("GDScript_xdcdo")
+active_rect_node = NodePath("../../../../../../GridRender/ActiveRect")
+
 [node name="LightPass" type="SubViewport" parent="."]
 process_priority = 11
 world_3d = SubResource("World3D_54s67")
@@ -248,6 +295,12 @@ material = SubResource("CanvasItemMaterial_f00lt")
 texture = SubResource("ViewportTexture_5p4mp")
 centered = false
 
+[node name="ActiveRect" type="Node2D" parent="GridRender"]
+process_priority = 10
+z_index = 500
+z_as_relative = false
+script = SubResource("GDScript_f8hf2")
+
 [node name="FreeCamera" parent="." instance=ExtResource("7_7jk4b")]
 zoom = Vector2(4, 4)
 
@@ -276,3 +329,5 @@ visible = false
 modulate = Color(1, 1, 1, 0.462745)
 z_index = 2885
 texture = ExtResource("4_66u3x")
+
+[connection signal="visibility_changed" from="GridRender/ActiveRect" to="GridRender/ActiveRect" method="_on_visibility_changed"]

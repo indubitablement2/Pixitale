@@ -12,10 +12,11 @@ const MAX_GRID_CHUNK_SIZE := Vector2i(64, 64)
 var cell_padding := Vector2(32.0, 32.0)
 
 ## What the camera sees.
-var view := Rect2()
+static var view := Rect2()
 ## Part of the grid which is rendered.
-var raw_cell_rect := Rect2i()
-var _last_raw_cell_size := Vector2i()
+## Always mutiple of 32.
+static var raw_cell_rect := Rect2i()
+static var _last_raw_cell_size := Vector2i()
 
 @onready var cell_render_material : ShaderMaterial = $Foreground.material
 

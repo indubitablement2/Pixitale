@@ -412,10 +412,10 @@ u32 Grid::get_cell_material_idx(Vector2i coord) {
 
 Rect2i Grid::get_chunk_active_rect(Vector2i chunk_coord) {
 	Chunk *chunk = get_chunk(chunk_coord);
-	if (chunk != nullptr) {
-		return chunk->active_rect();
-	} else {
+	if (chunk == nullptr) {
 		return Rect2i();
+	} else {
+		return chunk->active_rect();
 	}
 }
 

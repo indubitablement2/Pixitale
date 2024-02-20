@@ -16,4 +16,4 @@ in1_tag = &"Lava"
 in2_tag = &"Water"
 out1_name = &"Lava"
 out2_name = &"Lava"
-probability = 0.001
+probability = 0.1
