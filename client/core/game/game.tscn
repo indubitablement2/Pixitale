@@ -1,4 +1,4 @@
-[gd_scene load_steps=28 format=3 uid="uid://cs41g41rbjtf3"]
+[gd_scene load_steps=29 format=3 uid="uid://cs41g41rbjtf3"]
 
 [ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
@@ -84,6 +84,19 @@ script/source = "extends Button
 
 func _pressed() -> void:
 	active_rect_node.set_visible(!active_rect_node.is_visible())
+"
+
+[sub_resource type="GDScript" id="GDScript_nlogk"]
+script/source = "extends Button
+
+@export var cell_render_material : ShaderMaterial
+
+
+func _pressed() -> void:
+	cell_render_material.set_shader_parameter(
+		&\"highlight_active\",
+		!cell_render_material.get_shader_parameter(&\"highlight_active\"))
+	
 "
 
 [sub_resource type="Environment" id="Environment_bap7c"]
@@ -243,6 +256,12 @@ layout_mode = 2
 text = "Active Rect"
 script = SubResource("GDScript_xdcdo")
 active_rect_node = NodePath("../../../../../../GridRender/ActiveRect")
+
+[node name="ActiveCell" type="Button" parent="GUI/MarginContainer/DebugMenu/VBoxContainer/Rendering"]
+layout_mode = 2
+text = "Active Cell"
+script = SubResource("GDScript_nlogk")
+cell_render_material = ExtResource("8_onaw1")
 
 [node name="LightPass" type="SubViewport" parent="."]
 process_priority = 11
