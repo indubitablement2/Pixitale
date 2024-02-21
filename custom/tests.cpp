@@ -117,6 +117,8 @@ void test_iter_chunk() {
 	while (c.next()) {
 		// print_line(c.chunk_coord, ": ", c.local_coord_start, " - ", c.local_coord_end);
 
+		TEST_ASSERT(c.local_rect().has_area(), "local_rect has no area");
+
 		TEST_ASSERT(c.chunk_coord.x >= START_CHUNK, "chunk coord oob");
 		TEST_ASSERT(c.chunk_coord.x < END_CHUNK, "chunk coord oob");
 		TEST_ASSERT(c.chunk_coord.y >= START_CHUNK, "chunk coord oob");

@@ -11,5 +11,5 @@ var time := 0.0
 
 func _process(delta: float) -> void:
 	mouse_position = get_global_mouse_position()
-	mouse_coord = Vector2i(mouse_position)
+	mouse_coord = Vector2i(mouse_position.floor())
 	time += delta

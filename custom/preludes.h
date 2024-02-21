@@ -380,7 +380,7 @@ public:
 	}
 };
 
-// Transform global coord to chunk coord + local coord (`[0..32]`).
+// Transform global coord to chunk coord + local coord (`[0..32[`).
 struct ChunkLocalCoord {
 	Vector2i chunk_coord;
 	Vector2i local_coord;
@@ -415,18 +415,22 @@ struct IterChunk {
 			_start(ChunkLocalCoord(rect.position)),
 			_end(ChunkLocalCoord(rect.get_end())),
 			chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {
-		if (rect.size.x <= 0 || rect.size.y <= 0) {
-			chunk_coord = _end.chunk_coord + Vector2i(1, 1);
-		}
-	}
-
-	inline IterChunk(Vector2i start, Vector2i end) :
-			_start(ChunkLocalCoord(start)),
-			_end(ChunkLocalCoord(end)),
-			chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {
 		// if (rect.size.x <= 0 || rect.size.y <= 0) {
-		// 	chunk_coord.y = _end.chunk_coord.y + 1;
+		// 	chunk_coord = _end.chunk_coord + Vector2i(1, 1);
 		// }
+
+		if (_end.local_coord.x == 0) {
+			_end.chunk_coord.x -= 1;
+			_end.local_coord.x = 32;
+		}
+		if (_end.local_coord.y == 0) {
+			_end.chunk_coord.y -= 1;
+			_end.local_coord.y = 32;
+		}
+
+		if (_start.chunk_coord == _end.chunk_coord && _start.local_coord >= _end.local_coord) {
+			_end.chunk_coord = _start.chunk_coord - Vector2i(1, 1);
+		}
 	}
 
 	// Return true if there is a next chunk

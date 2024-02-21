@@ -4,6 +4,7 @@
 #include "core/math/rect2.h"
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
+#include "core/string/print_string.h"
 #include "grid.h"
 #include "preludes.h"
 
@@ -119,6 +120,7 @@ void GridChunkIter::activate() {
 				continue;
 			}
 
+			TEST_ASSERT(_chunk_iter.local_rect().has_area(), "local_rect has no area");
 			c->activate_rect(_chunk_iter.local_rect());
 
 			Iter2D _cell_iter = _chunk_iter.local_iter();
@@ -172,14 +174,14 @@ bool GridRectIter::next() {
 void GridRectIter::set_cell(u32 value) {
 	ERR_FAIL_COND_MSG(!is_valid, "next should return true before using iter");
 
-	chunk->set_cell(cell_iter.coord, value);
+	chunk->set_cell(local_coord(), value);
 	modified = true;
 }
 
 u32 GridRectIter::get_cell() {
 	ERR_FAIL_COND_V_MSG(!is_valid, 0, "next should return true before using iter");
 
-	return chunk->get_cell(cell_iter.coord);
+	return chunk->get_cell(local_coord());
 }
 
 void GridRectIter::fill_remaining(u32 value) {
@@ -189,7 +191,7 @@ void GridRectIter::fill_remaining(u32 value) {
 }
 
 void GridRectIter::reset_iter() {
-	chunk_iter = IterChunk(chunk_iter._start.coord(), chunk_iter._end.coord());
+	chunk_iter.reset();
 	cell_iter = Iter2D();
 	chunk = nullptr;
 	is_valid = false;
@@ -221,9 +223,10 @@ void GridRectIter::set_rect(Rect2i rect) {
 
 void GridRectIter::activate() {
 	if (modified) {
-		IterChunk _chunk_iter = IterChunk(
-				chunk_iter._start.coord() - Vector2i(1, 1),
-				chunk_iter._end.coord() + Vector2i(1, 1));
+		Vector2i start = chunk_iter._start.coord() - Vector2i(1, 1);
+		IterChunk _chunk_iter = IterChunk(Rect2i(
+				start,
+				chunk_iter._end.coord() + Vector2i(1, 1) - start));
 
 		while (_chunk_iter.next()) {
 			Chunk *c = Grid::get_chunk(_chunk_iter.chunk_coord);
@@ -231,10 +234,23 @@ void GridRectIter::activate() {
 				continue;
 			}
 
+			if (!_chunk_iter.local_rect().has_area()) {
+				print_line(_chunk_iter.local_rect());
+				print_line(_chunk_iter._start.chunk_coord);
+				print_line(_chunk_iter._start.local_coord);
+				print_line(_chunk_iter._end.chunk_coord);
+				print_line(_chunk_iter._end.local_coord);
+			}
+
+			TEST_ASSERT(_chunk_iter.local_rect().has_area(), "local_rect has no area");
 			c->activate_rect(_chunk_iter.local_rect());
 
 			Iter2D _cell_iter = _chunk_iter.local_iter();
 			while (_cell_iter.next()) {
+				TEST_ASSERT(_cell_iter.coord.x >= 0, "coord.x is negative");
+				TEST_ASSERT(_cell_iter.coord.y >= 0, "coord.y is negative");
+				TEST_ASSERT(_cell_iter.coord.x < 32, "coord.x is too large");
+				TEST_ASSERT(_cell_iter.coord.y < 32, "coord.y is too large");
 				u32 cell = c->get_cell(_cell_iter.coord);
 				Cell::set_active(cell, true);
 				c->set_cell(_cell_iter.coord, cell);

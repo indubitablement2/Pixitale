@@ -35,7 +35,7 @@ void fragment() {
 	
 	if (highlight_active) {
 		if (is_cell_active(data)) {
-			color += vec4(0.1, 0.1, 0.1, 1.0);
+			color += vec4(0.1, 0.1, 0.1, 0.3);
 		}
 	}
 	

@@ -5,6 +5,7 @@ class_name Core
 static func _entry() -> void:
 	_QUEUE_STEP_CHUNKS = GridApi.add_grid_edit_method(Callable(Core, &"_queue_step_chunks"))
 	_SET_PAUSED = GridApi.add_grid_edit_method(Callable(Core, &"_set_paused"))
+	_SET_CELL_RECT = GridApi.add_grid_edit_method(Callable(Core, &"_set_cell_rect"))
 	
 	print("core added")
 
@@ -33,3 +34,13 @@ static var _SET_PAUSED := 0
 static func set_paused(paused: bool) -> void:
 	if GridApi.is_server:
 		GridApi._next_edits.push_back([paused, _SET_PAUSED])
+
+static func _set_cell_rect(cell_material_idx: int, rect: Rect2i) -> void:
+	var iter := Grid.iter_rect(rect)
+	while iter.next():
+		iter.set_cell(cell_material_idx)
+static var _SET_CELL_RECT := 0
+static func set_cell_rect(cell_material_idx: int, rect: Rect2i) -> void:
+	if GridApi.is_server:
+		GridApi._next_edits.push_back([cell_material_idx, rect, _SET_CELL_RECT])
+

@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=3 uid="uid://cs41g41rbjtf3"]
+[gd_scene load_steps=31 format=3 uid="uid://cs41g41rbjtf3"]
 
 [ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
@@ -14,36 +14,45 @@
 [ext_resource type="Texture2D" uid="uid://t50h32apl4gq" path="res://core/shader/texture/cell_materials_data/glow.tres" id="11_rdegm"]
 [ext_resource type="Texture2D" uid="uid://clehnwi7vgea5" path="res://core/shader/texture/cell_materials_data/light_modulate.tres" id="13_lh32a"]
 
-[sub_resource type="GDScript" id="GDScript_kfpdw"]
-script/source = "extends Label
+[sub_resource type="GDScript" id="GDScript_x0xfk"]
+script/source = "extends Node2D
 
+@export var item_list : ItemList
+@export var color_picker : ColorPicker
+@export var brush_size_range : Range
 
-func _process(_delta: float) -> void:
-	text = GridApi.cell_materials[Grid.get_cell_material_idx(Global.mouse_coord)].display_name
-"
+var draw_mat_idx := 0
+var pressed := false
 
-[sub_resource type="GDScript" id="GDScript_qfjca"]
-script/source = "extends Label
+func _ready() -> void:
+	for mat in GridApi.cell_materials:
+		item_list.add_item(mat.name)
+	item_list.select(0)
+	item_list.item_selected.connect(_on_item_selected)
 
-
-func _process(_delta: float) -> void:
-	text = str(Global.mouse_coord)
-"
-
-[sub_resource type="GDScript" id="GDScript_r6x6c"]
-script/source = "extends Label
-
-
-func _process(_delta: float) -> void:
-	text = str(Game.tick)
-"
-
-[sub_resource type="GDScript" id="GDScript_6sk05"]
-script/source = "extends Label
-
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action(\"primary\"):
+		pressed = event.is_pressed()
 
 func _process(_delta: float) -> void:
-	text = str(Grid.get_tick())
+	if pressed:
+		Core.set_cell_rect(
+			draw_mat_idx, 
+		Rect2i(Global.mouse_coord, Vector2i.ONE).grow(int(brush_size_range.value)))
+	
+	#queue_redraw()
+
+
+#func _draw() -> void:
+	#draw_multiline()
+
+func _on_item_selected(idx: int) -> void:
+	draw_mat_idx = idx
+
+
+func _on_visibility_changed() -> void:
+	set_process_input(visible)
+	set_process(visible)
 "
 
 [sub_resource type="GDScript" id="GDScript_qtqv4"]
@@ -97,6 +106,47 @@ func _pressed() -> void:
 		&\"highlight_active\",
 		!cell_render_material.get_shader_parameter(&\"highlight_active\"))
 	
+"
+
+[sub_resource type="GDScript" id="GDScript_kfpdw"]
+script/source = "extends Label
+
+
+func _process(_delta: float) -> void:
+	text = GridApi.cell_materials[Grid.get_cell_material_idx(Global.mouse_coord)].display_name
+"
+
+[sub_resource type="GDScript" id="GDScript_qfjca"]
+script/source = "extends Label
+
+
+func _process(_delta: float) -> void:
+	text = str(Global.mouse_coord)
+"
+
+[sub_resource type="GDScript" id="GDScript_r6x6c"]
+script/source = "extends Label
+
+
+func _process(_delta: float) -> void:
+	text = str(Game.tick)
+"
+
+[sub_resource type="GDScript" id="GDScript_6sk05"]
+script/source = "extends Label
+
+
+func _process(_delta: float) -> void:
+	text = str(Grid.get_tick())
+"
+
+[sub_resource type="GDScript" id="GDScript_d36ir"]
+script/source = "extends Button
+
+@export var debug_menu : CanvasItem
+
+func _pressed() -> void:
+	debug_menu.set_visible(!debug_menu.is_visible())
 "
 
 [sub_resource type="Environment" id="Environment_bap7c"]
@@ -162,6 +212,15 @@ func _on_visibility_changed() -> void:
 [node name="Game" type="Node"]
 script = ExtResource("1_bg66v")
 
+[node name="Draw" type="Node2D" parent="." node_paths=PackedStringArray("item_list", "color_picker", "brush_size_range")]
+process_mode = 3
+z_index = 300
+z_as_relative = false
+script = SubResource("GDScript_x0xfk")
+item_list = NodePath("../GUI/MarginContainer/DebugMenu/ItemList")
+color_picker = NodePath("../GUI/MarginContainer/DebugMenu/VBoxContainer/ColorPicker")
+brush_size_range = NodePath("../GUI/MarginContainer/DebugMenu/VBoxContainer/HSlider")
+
 [node name="GUI" type="CanvasLayer" parent="."]
 process_mode = 3
 
@@ -175,6 +234,73 @@ theme_override_constants/margin_left = 16
 theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
+
+[node name="DebugMenu" type="HBoxContainer" parent="GUI/MarginContainer"]
+layout_mode = 2
+
+[node name="ScrollContainer" type="ScrollContainer" parent="GUI/MarginContainer/DebugMenu"]
+layout_mode = 2
+size_flags_horizontal = 0
+horizontal_scroll_mode = 0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GUI/MarginContainer/DebugMenu/ScrollContainer"]
+layout_mode = 2
+
+[node name="ServerOnly" type="VBoxContainer" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+script = SubResource("GDScript_qtqv4")
+
+[node name="Pause" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/ServerOnly"]
+layout_mode = 2
+size_flags_horizontal = 4
+text = "Toggle Pause"
+script = SubResource("GDScript_6ddpr")
+
+[node name="Step" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/ServerOnly"]
+layout_mode = 2
+size_flags_vertical = 0
+text = "Step"
+script = SubResource("GDScript_e0md8")
+
+[node name="Rendering" type="VBoxContainer" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ActiveRect" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering" node_paths=PackedStringArray("active_rect_node")]
+layout_mode = 2
+text = "Active Rect"
+script = SubResource("GDScript_xdcdo")
+active_rect_node = NodePath("../../../../../../../GridRender/ActiveRect")
+
+[node name="ActiveCell" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering"]
+layout_mode = 2
+text = "Active Cell"
+script = SubResource("GDScript_nlogk")
+cell_render_material = ExtResource("8_onaw1")
+
+[node name="ItemList" type="ItemList" parent="GUI/MarginContainer/DebugMenu"]
+custom_minimum_size = Vector2(90, 0)
+layout_mode = 2
+size_flags_vertical = 0
+auto_height = true
+
+[node name="VBoxContainer" type="VBoxContainer" parent="GUI/MarginContainer/DebugMenu"]
+layout_mode = 2
+
+[node name="HSlider" type="HSlider" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
+layout_mode = 2
+max_value = 32.0
+rounded = true
+
+[node name="ColorPicker" type="ColorPicker" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+edit_alpha = false
+deferred_mode = true
+sampler_visible = false
+color_modes_visible = false
+sliders_visible = false
+hex_visible = false
 
 [node name="VBoxContainer" type="VBoxContainer" parent="GUI/MarginContainer"]
 layout_mode = 2
@@ -224,46 +350,15 @@ text = "Grid Tick:"
 layout_mode = 2
 script = SubResource("GDScript_6sk05")
 
-[node name="DebugMenu" type="ScrollContainer" parent="GUI/MarginContainer"]
+[node name="DebugMenu" type="Button" parent="GUI/MarginContainer/VBoxContainer" node_paths=PackedStringArray("debug_menu")]
 layout_mode = 2
 size_flags_horizontal = 0
-horizontal_scroll_mode = 0
-
-[node name="VBoxContainer" type="VBoxContainer" parent="GUI/MarginContainer/DebugMenu"]
-layout_mode = 2
-
-[node name="ServerOnly" type="VBoxContainer" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
-layout_mode = 2
-script = SubResource("GDScript_qtqv4")
-
-[node name="Pause" type="Button" parent="GUI/MarginContainer/DebugMenu/VBoxContainer/ServerOnly"]
-layout_mode = 2
-size_flags_horizontal = 4
-text = "Toggle Pause"
-script = SubResource("GDScript_6ddpr")
-
-[node name="Step" type="Button" parent="GUI/MarginContainer/DebugMenu/VBoxContainer/ServerOnly"]
-layout_mode = 2
-size_flags_vertical = 0
-text = "Step"
-script = SubResource("GDScript_e0md8")
-
-[node name="Rendering" type="VBoxContainer" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
-layout_mode = 2
-
-[node name="ActiveRect" type="Button" parent="GUI/MarginContainer/DebugMenu/VBoxContainer/Rendering" node_paths=PackedStringArray("active_rect_node")]
-layout_mode = 2
-text = "Active Rect"
-script = SubResource("GDScript_xdcdo")
-active_rect_node = NodePath("../../../../../../GridRender/ActiveRect")
-
-[node name="ActiveCell" type="Button" parent="GUI/MarginContainer/DebugMenu/VBoxContainer/Rendering"]
-layout_mode = 2
-text = "Active Cell"
-script = SubResource("GDScript_nlogk")
-cell_render_material = ExtResource("8_onaw1")
+text = "Debug Menu"
+script = SubResource("GDScript_d36ir")
+debug_menu = NodePath("../../DebugMenu")
 
 [node name="LightPass" type="SubViewport" parent="."]
+process_mode = 3
 process_priority = 11
 world_3d = SubResource("World3D_54s67")
 script = ExtResource("2_uuur8")
@@ -279,6 +374,7 @@ visible = false
 texture = ExtResource("4_66u3x")
 
 [node name="GridRender" type="Node2D" parent="."]
+process_mode = 3
 process_priority = 10
 script = ExtResource("1_3cgdd")
 
@@ -343,10 +439,5 @@ scale = Vector2(16, 16)
 texture = ExtResource("11_4eirp")
 centered = false
 
-[node name="Icon2" type="Sprite2D" parent="."]
-visible = false
-modulate = Color(1, 1, 1, 0.462745)
-z_index = 2885
-texture = ExtResource("4_66u3x")
-
+[connection signal="visibility_changed" from="Draw" to="Draw" method="_on_visibility_changed"]
 [connection signal="visibility_changed" from="GridRender/ActiveRect" to="GridRender/ActiveRect" method="_on_visibility_changed"]

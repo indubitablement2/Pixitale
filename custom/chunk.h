@@ -82,10 +82,10 @@ public:
 	// Does not set cells to activated.
 	inline void activate_rect(Rect2i rect) {
 		bound_test(rect.position);
-		bound_test(rect.get_end());
+		bound_test(rect.get_end() - Vector2i(1, 1));
 
-		active_rows |= ((1u << rect.size.y) - 1u) << rect.position.y;
-		active_columns |= ((1u << rect.size.x) - 1u) << rect.position.x;
+		active_rows |= u32((1ull << rect.size.y) - 1ull) << rect.position.y;
+		active_columns |= u32((1ull << rect.size.x) - 1ull) << rect.position.x;
 	}
 
 	inline void activate_point(Vector2i coord, bool activate_cell) {
