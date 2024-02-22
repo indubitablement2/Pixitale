@@ -20,7 +20,7 @@ func _generate(iter: GridChunkIter) -> void:
 			#iter.set_cell(iter.local_coord().x % GridApi.cell_materials.size())
 "
 
-[node name="Node" type="Node"]
+[node name="BaseGeneration" type="Node"]
 
 [node name="RockPlane" type="GenerationPass" parent="."]
 script = SubResource("GDScript_1t5jj")

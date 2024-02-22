@@ -9,6 +9,8 @@ class_name CellReaction
 ## coord will be at in1.
 ## This will be called at the very end of step
 ## which gives full exclusive read/write access to Grid.
+## All properties can be modified while in-game.
+## For changes to take effect, call add().
 
 ## Tag which can also be a name.
 ## Name use PascalCase. Tags use snake_case.
@@ -45,6 +47,8 @@ func add() -> void:
 					out2.idx,
 					probability,
 					callback))
+	else:
+		push_error(out1, "or ", out2, " not found for", name)
 
 func remove() -> void:
 	for reaction_id in reactions_id:

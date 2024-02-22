@@ -8,7 +8,7 @@ script/source = "extends CellReaction
 	#print(coord)
 "
 
-[node name="Node" type="Node"]
+[node name="BaseCellReaction" type="Node"]
 
 [node name="Node" type="Node" parent="."]
 script = SubResource("GDScript_pd1m6")
@@ -16,4 +16,4 @@ in1_tag = &"Lava"
 in2_tag = &"Water"
 out1_name = &"Lava"
 out2_name = &"Lava"
-probability = 0.1
+probability = 0.001

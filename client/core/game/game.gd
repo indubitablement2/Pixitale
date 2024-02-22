@@ -37,6 +37,7 @@ func _init() -> void:
 func _process(_delta: float) -> void:
 	tick += 1
 	
-	Core.queue_step_chunks(Rect2i(
-		Vector2i(-1, -1),
-		Vector2i(2, 2)))
+	#Core.queue_step_chunks(Rect2i(
+		#Vector2i(-1, -1),
+		#Vector2i(2, 2)))
+	Core.queue_step_chunks(GridRender.raw_cell_rect_chunk)

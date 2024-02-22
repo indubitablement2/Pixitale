@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://core/data/cell_material.gd" id="1_1217u"]
 
-[node name="CellMaterials" type="Node"]
+[node name="CoreCellMaterial" type="Node"]
 
 [node name="Empty" type="Node" parent="."]
 script = ExtResource("1_1217u")

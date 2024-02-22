@@ -234,13 +234,13 @@ void GridRectIter::activate() {
 				continue;
 			}
 
-			if (!_chunk_iter.local_rect().has_area()) {
-				print_line(_chunk_iter.local_rect());
-				print_line(_chunk_iter._start.chunk_coord);
-				print_line(_chunk_iter._start.local_coord);
-				print_line(_chunk_iter._end.chunk_coord);
-				print_line(_chunk_iter._end.local_coord);
-			}
+			// if (!_chunk_iter.local_rect().has_area()) {
+			// 	print_line(_chunk_iter.local_rect());
+			// 	print_line(_chunk_iter._start.chunk_coord);
+			// 	print_line(_chunk_iter._start.local_coord);
+			// 	print_line(_chunk_iter._end.chunk_coord);
+			// 	print_line(_chunk_iter._end.local_coord);
+			// }
 
 			TEST_ASSERT(_chunk_iter.local_rect().has_area(), "local_rect has no area");
 			c->activate_rect(_chunk_iter.local_rect());

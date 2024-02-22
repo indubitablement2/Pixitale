@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://core/data/cell_material.gd" id="1_jtobp"]
 
-[node name="Node" type="Node"]
+[node name="BaseCellMaterial" type="Node"]
 
 [node name="Rock" type="Node" parent="."]
 script = ExtResource("1_jtobp")
