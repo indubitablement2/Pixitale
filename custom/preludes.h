@@ -57,12 +57,36 @@ inline i32 div_floor(i32 numerator, i32 denominator) {
 	}
 }
 
+inline Vector2i div_floor(Vector2i numerator, Vector2i denominator) {
+	return Vector2i(
+			div_floor(numerator.x, denominator.x),
+			div_floor(numerator.y, denominator.y));
+}
+
+inline Vector2i div_floor(Vector2i numerator, i32 denominator) {
+	return Vector2i(
+			div_floor(numerator.x, denominator),
+			div_floor(numerator.y, denominator));
+}
+
 // Modulo which handle negative numbers instead of returning the remainder.
 inline i32 mod_neg(i32 numerator, i32 denominator) {
 	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
 
 	i32 mod = numerator % denominator;
 	return mod >= 0 ? mod : mod + denominator;
+}
+
+inline Vector2i mod_neg(Vector2i numerator, Vector2i denominator) {
+	return Vector2i(
+			mod_neg(numerator.x, denominator.x),
+			mod_neg(numerator.y, denominator.y));
+}
+
+inline Vector2i mod_neg(Vector2i numerator, i32 denominator) {
+	return Vector2i(
+			mod_neg(numerator.x, denominator),
+			mod_neg(numerator.y, denominator));
 }
 
 // // Handle end < start.
@@ -388,8 +412,8 @@ struct ChunkLocalCoord {
 	inline ChunkLocalCoord(){};
 
 	inline ChunkLocalCoord(Vector2i coord) :
-			chunk_coord(Vector2i(div_floor(coord.x, 32), div_floor(coord.y, 32))),
-			local_coord(Vector2i(mod_neg(coord.x, 32), mod_neg(coord.y, 32))) {}
+			chunk_coord(div_floor(coord, Vector2i(32, 32))),
+			local_coord(mod_neg(coord, Vector2i(32, 32))) {}
 
 	inline ChunkLocalCoord(Vector2i p_chunk_coord, Vector2i p_local_coord) :
 			chunk_coord(p_chunk_coord),

@@ -2,6 +2,7 @@
 #include "core/object/class_db.h"
 #include "generation_pass.h"
 #include "grid.h"
+#include "grid_body.h"
 #include "grid_iter.h"
 #include "image_packer.h"
 #include "tests.h"
@@ -19,7 +20,7 @@ void initialize_custom_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<GridChunkIter>();
 	ClassDB::register_class<GridRectIter>();
 
-	// ClassDB::register_class<GridCharacterBody>();
+	ClassDB::register_class<GridBody>();
 	// ClassDB::register_class<GridBiomeScanner>();
 }
 
