@@ -1,12 +1,6 @@
 #ifndef PRELUDES_HPP
 #define PRELUDES_HPP
 
-// todo:
-// // add reactions property
-// // add cell material image property
-// rename all godot class with Pixitale prefix
-// // remove prints from tests
-
 #include "core/error/error_macros.h"
 #include "core/math/rect2i.h"
 #include "core/math/vector2.h"

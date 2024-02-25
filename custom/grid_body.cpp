@@ -14,8 +14,11 @@ const f32 SMALL_VALUE = 0.04f;
 
 // Coords are relative to top left cell of top left chunk.
 struct GridBodyApi {
+	i32 max_step_height;
+
 	Vector2 true_pos;
 	Vector2 true_velocity;
+
 	Vector2 wish_move;
 
 	f32 top;
@@ -32,7 +35,8 @@ struct GridBodyApi {
 	Vector2i chunks_size;
 	Chunk **chunks;
 
-	inline GridBodyApi(Vector2 pos, Vector2 vel, f32 dt, Vector2 half_size, f32 max_step_height) :
+	inline GridBodyApi(Vector2 pos, Vector2 vel, f32 dt, Vector2 half_size, i32 p_max_step_height) :
+			max_step_height(p_max_step_height),
 			true_pos(pos),
 			true_velocity(vel),
 			wish_move(vel * dt) {
@@ -40,7 +44,7 @@ struct GridBodyApi {
 		rect = rect.merge(Rect2((pos + vel) - half_size, half_size * 2.0f));
 
 		rect.grow_by(4.0f);
-		rect = rect.grow_side(SIDE_TOP, Math::abs(vel.x) * max_step_height);
+		rect = rect.grow_side(SIDE_TOP, Math::abs(vel.x) * f32(p_max_step_height));
 
 		Vector2i chunks_start = div_floor(Vector2i(rect.position.floor()), 32);
 		Vector2i chunks_end = div_floor(Vector2i((rect.position + rect.size).floor()), 32) + Vector2i(1, 1);
@@ -61,6 +65,23 @@ struct GridBodyApi {
 		bot = pos.y + half_size.y - originf.y;
 		left = pos.x - half_size.x - originf.x;
 		right = pos.x + half_size.x - originf.x;
+	}
+
+	inline GridBodyApi(const GridBodyApi &other) :
+			max_step_height(other.max_step_height),
+			true_pos(other.true_pos),
+			true_velocity(other.true_velocity),
+			wish_move(other.wish_move),
+			top(other.top),
+			bot(other.bot),
+			left(other.left),
+			right(other.right),
+			start(other.start),
+			end(other.end),
+			originf(other.originf),
+			origini(other.origini),
+			chunks_size(other.chunks_size),
+			chunks(other.chunks) {
 	}
 
 	inline void del() {
@@ -126,7 +147,7 @@ struct GridBodyApi {
 
 			wish_move.y = 0.0f;
 
-			return true;
+			return false;
 		} else {
 			true_pos.y += dif;
 			bot += dif;
@@ -134,7 +155,7 @@ struct GridBodyApi {
 
 			wish_move.y -= dif;
 
-			return false;
+			return true;
 		}
 	}
 
@@ -176,7 +197,7 @@ struct GridBodyApi {
 
 			wish_move.y = 0.0f;
 
-			return true;
+			return false;
 		} else {
 			true_pos.y += dif;
 			bot += dif;
@@ -184,7 +205,7 @@ struct GridBodyApi {
 
 			wish_move.y -= dif;
 
-			return false;
+			return true;
 		}
 	}
 
@@ -208,6 +229,78 @@ struct GridBodyApi {
 		true_pos.y += dif;
 		bot += dif;
 		top = new_top;
+
+		return keep_going;
+	}
+
+	inline bool clamp_right() {
+		start = i32(Math::floor(top));
+		end = i32(Math::ceil(bot));
+
+		f32 new_right = Math::ceil(right) - SMALL_VALUE;
+		f32 dif = new_right - right;
+
+		if (dif > wish_move.x) {
+			true_pos.x += wish_move.x;
+			right += wish_move.x;
+			left += wish_move.x;
+
+			wish_move.x = 0.0f;
+
+			return false;
+		} else {
+			true_pos.x += dif;
+			right += dif;
+			left += dif;
+
+			wish_move.x -= dif;
+
+			return true;
+		}
+	}
+
+	inline bool step_right() {
+		f32 dif = 1.0f;
+		bool keep_going = true;
+		if (dif > wish_move.x) {
+			dif = wish_move.x;
+			keep_going = false;
+		}
+
+		f32 new_right = right + dif;
+		i32 wish_step = is_column_blocked(
+				Math::floor(new_right),
+				CellCollision::CELL_COLLISION_SOLID);
+		if (wish_step != 0) {
+			if (wish_step <= max_step_height) {
+				GridBodyApi api = GridBodyApi(*this);
+				api.wish_move.y = Math::fract(bot) - f32(wish_step - 1);
+				api.true_velocity.y = -1.0f;
+				if (api.clamp_up()) {
+					while (api.step_up()) {
+					}
+				}
+				if (api.true_velocity.y != 0.0f) {
+					// success
+					true_velocity.y = MIN(0.0f, true_velocity.y);
+					true_pos.y = api.true_pos.y;
+					top = api.top;
+					bot = api.bot;
+				} else {
+					// faillure
+					true_velocity.x = 0.0f;
+					return false;
+				}
+			} else {
+				true_velocity.x = 0.0f;
+				return false;
+			}
+		}
+
+		wish_move.x -= dif;
+		true_pos.x += dif;
+		right = new_right;
+		left += dif;
 
 		return keep_going;
 	}
@@ -503,17 +596,28 @@ void GridBody::move_and_slide() {
 			i32(max_step_height));
 
 	if (api.wish_move.y > SMALL_VALUE) {
-		// Move down
-		if (!api.clamp_down()) {
+		if (api.clamp_down()) {
 			while (api.step_down()) {
 			}
 		}
 	} else if (api.wish_move.y < -SMALL_VALUE) {
-		// Move up
-		if (!api.clamp_up()) {
+		if (api.clamp_up()) {
 			while (api.step_up()) {
 			}
 		}
+	}
+
+	if (api.wish_move.x > SMALL_VALUE) {
+		if (api.clamp_right()) {
+			while (api.step_right()) {
+			}
+		}
+	} else if (api.wish_move.x < -SMALL_VALUE) {
+		// // Move up
+		// if (!api.clamp_up()) {
+		// 	while (api.step_up()) {
+		// 	}
+		// }
 	}
 
 	set_velocity(api.true_velocity);

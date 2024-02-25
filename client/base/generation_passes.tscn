@@ -1,7 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://dwifqm8gdteve"]
+[gd_scene load_steps=3 format=3 uid="uid://dwifqm8gdteve"]
 
 [sub_resource type="GDScript" id="GDScript_1t5jj"]
 script/source = "extends GenerationPass
+
+@export var hill_noise : FastNoiseLite
 
 func _generate(iter: GridChunkIter) -> void:
 	#print(\"generating \", iter.chunk_coord())
@@ -13,12 +15,23 @@ func _generate(iter: GridChunkIter) -> void:
 			#iter.set_cell(Base.WATER_IDX)
 	
 	if iter.chunk_coord().y >= 1:
-		iter.fill_remaining(Base.ROCK_IDX)
+		if iter.chunk_coord().y == 1:
+			while iter.next():
+				var h := int(absf(hill_noise.get_noise_1d(iter.coord().x)) * 32.0)
+				if iter.local_coord().y > h:
+					iter.set_cell(Base.ROCK_IDX)
+		else:
+			iter.fill_remaining(Base.ROCK_IDX)
 	elif iter.chunk_coord().y <= -5:
 		iter.fill_remaining(Base.ROCK_IDX)
 "
+
+[sub_resource type="FastNoiseLite" id="FastNoiseLite_rat6d"]
+noise_type = 0
+frequency = 0.001
 
 [node name="BaseGeneration" type="Node"]
 
 [node name="RockPlane" type="GenerationPass" parent="."]
 script = SubResource("GDScript_1t5jj")
+hill_noise = SubResource("FastNoiseLite_rat6d")
