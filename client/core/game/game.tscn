@@ -146,6 +146,10 @@ script/source = "extends Button
 
 @export var debug_menu : CanvasItem
 
+func _unhandled_input(event: InputEvent) -> void:
+	if event.is_action_pressed(&\"secondary\"):
+		_pressed()
+
 func _pressed() -> void:
 	debug_menu.set_visible(!debug_menu.is_visible())
 "
@@ -237,6 +241,7 @@ theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
 [node name="DebugMenu" type="HBoxContainer" parent="GUI/MarginContainer"]
+visible = false
 layout_mode = 2
 
 [node name="ScrollContainer" type="ScrollContainer" parent="GUI/MarginContainer/DebugMenu"]

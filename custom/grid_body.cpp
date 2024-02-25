@@ -11,12 +11,11 @@
 #include "preludes.h"
 
 const f32 SMALL_VALUE = 0.04f;
-const f32 VERY_SMALL_VALUE = 0.002f;
 
 // Coords are relative to top left cell of top left chunk.
 struct GridBodyApi {
 	Vector2 true_pos;
-	Vector2 velocity;
+	Vector2 true_velocity;
 	Vector2 wish_move;
 
 	f32 top;
@@ -33,10 +32,10 @@ struct GridBodyApi {
 	Vector2i chunks_size;
 	Chunk **chunks;
 
-	inline GridBodyApi(Vector2 pos, Vector2 vel, Vector2 half_size, f32 max_step_height) :
+	inline GridBodyApi(Vector2 pos, Vector2 vel, f32 dt, Vector2 half_size, f32 max_step_height) :
 			true_pos(pos),
-			velocity(vel),
-			wish_move(vel) {
+			true_velocity(vel),
+			wish_move(vel * dt) {
 		Rect2 rect = Rect2(pos - half_size, half_size * 2.0f);
 		rect = rect.merge(Rect2((pos + vel) - half_size, half_size * 2.0f));
 
@@ -64,11 +63,6 @@ struct GridBodyApi {
 		right = pos.x + half_size.x - originf.x;
 	}
 
-	// inline GridBodyApi(GridBodyApi &other) :
-	// 		chunks_start(other.chunks_start),
-	// 		chunks_size(other.chunks_size),
-	// 		chunks(other.chunks) {}
-
 	inline void del() {
 		delete[] chunks;
 	}
@@ -80,12 +74,11 @@ struct GridBodyApi {
 		TEST_ASSERT(coord.y < chunks_size.y * 32, "oob");
 
 		Chunk *chunk = chunks[(coord.y >> 5) * chunks_size.x + (coord.x >> 5)];
-
 		if (chunk == nullptr) {
 			return false;
 		}
 
-		u32 cell = chunk->get_cell(Vector2i(coord.x & 5, coord.y & 5));
+		u32 cell = chunk->get_cell(Vector2i(coord.x & 31, coord.y & 31));
 		u32 mat_idx = Cell::material_idx(cell);
 
 		if (mat_idx == 0) {
@@ -119,22 +112,6 @@ struct GridBodyApi {
 		return 0;
 	}
 
-	inline bool is_up_blocked() {
-		return false;
-	}
-
-	inline bool is_down_blocked() {
-		return false;
-	}
-
-	inline i32 is_left_blocked() {
-		return 0;
-	}
-
-	inline i32 is_right_blocked() {
-		return 0;
-	}
-
 	inline bool clamp_down() {
 		start = i32(Math::floor(left));
 		end = i32(Math::ceil(right));
@@ -142,34 +119,39 @@ struct GridBodyApi {
 		f32 new_bot = Math::ceil(bot) - SMALL_VALUE;
 		f32 dif = new_bot - bot;
 
-		bool done = false;
 		if (dif > wish_move.y) {
-			dif = wish_move.y;
-			done = true;
+			true_pos.y += wish_move.y;
+			bot += wish_move.y;
+			top += wish_move.y;
+
+			wish_move.y = 0.0f;
+
+			return true;
+		} else {
+			true_pos.y += dif;
+			bot += dif;
+			top += dif;
+
+			wish_move.y -= dif;
+
+			return false;
 		}
-
-		wish_move.y -= dif;
-		true_pos.y += dif;
-		bot += dif;
-		top += dif;
-
-		return done;
 	}
 
 	inline bool step_down() {
 		f32 dif = 1.0f;
-		bool done = false;
+		bool keep_going = true;
 		if (dif > wish_move.y) {
 			dif = wish_move.y;
-			done = true;
+			keep_going = false;
 		}
 
 		f32 new_bot = bot + dif;
 		if (is_row_blocked(
 					i32(Math::floor(new_bot)),
 					CellCollision::CELL_COLLISION_SOLID)) {
-			velocity.y = 0.0f;
-			return true;
+			true_velocity.y = 0.0f;
+			return false;
 		}
 
 		wish_move.y -= dif;
@@ -177,30 +159,57 @@ struct GridBodyApi {
 		bot = new_bot;
 		top += dif;
 
-		return done;
+		return keep_going;
 	}
 
-	inline void move(f32 x, f32 y) {
-		left += x;
-		right += x;
-		top += y;
-		bot += y;
+	inline bool clamp_up() {
+		start = i32(Math::floor(left));
+		end = i32(Math::ceil(right));
+
+		f32 new_top = Math::floor(top) + SMALL_VALUE;
+		f32 dif = new_top - top;
+
+		if (dif < wish_move.y) {
+			true_pos.y += wish_move.y;
+			bot += wish_move.y;
+			top += wish_move.y;
+
+			wish_move.y = 0.0f;
+
+			return true;
+		} else {
+			true_pos.y += dif;
+			bot += dif;
+			top += dif;
+
+			wish_move.y -= dif;
+
+			return false;
+		}
 	}
 
-	inline void move_up() {
-	}
+	inline bool step_up() {
+		f32 dif = -1.0f;
+		bool keep_going = true;
+		if (dif < wish_move.y) {
+			dif = wish_move.y;
+			keep_going = false;
+		}
 
-	inline void move_down() {
-	}
+		f32 new_top = top + dif;
+		if (is_row_blocked(
+					i32(Math::floor(new_top)),
+					CellCollision::CELL_COLLISION_SOLID)) {
+			true_velocity.y = 0.0f;
+			return false;
+		}
 
-	inline void move_left() {
-	}
+		wish_move.y -= dif;
+		true_pos.y += dif;
+		bot += dif;
+		top = new_top;
 
-	inline void move_right() {
-	}
-
-	inline bool step_right() {
-		return false;
+		return keep_going;
 	}
 };
 
@@ -405,7 +414,7 @@ i32 is_column_blocked(const i32 start, i32 lenght, const i32 x) {
 void GridBody::_notification(i32 p_what) {
 	switch (p_what) {
 		case NOTIFICATION_DRAW: {
-			if (Engine::get_singleton()->is_editor_hint()) {
+			if (Engine::get_singleton()->is_editor_hint() || true) {
 				draw_rect(
 						Rect2(-half_size, half_size * 2.0f),
 						Color(1.0f, 0.0f, 0.0f, 0.5f),
@@ -460,7 +469,7 @@ void GridBody::_bind_methods() {
 void GridBody::set_half_size(Vector2 value) {
 	half_size = value.abs();
 
-	if (Engine::get_singleton()->is_editor_hint()) {
+	if (Engine::get_singleton()->is_editor_hint() || true) {
 		queue_redraw();
 	}
 }
@@ -486,21 +495,28 @@ i32 GridBody::get_max_step_height() const {
 }
 
 void GridBody::move_and_slide() {
-	f32 dt = get_process_delta_time();
+	GridBodyApi api = GridBodyApi(
+			get_position(),
+			velocity,
+			get_process_delta_time(),
+			half_size,
+			i32(max_step_height));
 
-	GridBodyApi api = GridBodyApi(get_position(), velocity * dt, half_size, i32(max_step_height));
-
-	if (api.wish_move.y > VERY_SMALL_VALUE) {
+	if (api.wish_move.y > SMALL_VALUE) {
 		// Move down
 		if (!api.clamp_down()) {
-			while (api.wish_move.y > VERY_SMALL_VALUE) {
-				if (api.step_down()) {
-					break;
-				}
+			while (api.step_down()) {
+			}
+		}
+	} else if (api.wish_move.y < -SMALL_VALUE) {
+		// Move up
+		if (!api.clamp_up()) {
+			while (api.step_up()) {
 			}
 		}
 	}
 
+	set_velocity(api.true_velocity);
 	set_position(api.true_pos);
 
 	api.del();

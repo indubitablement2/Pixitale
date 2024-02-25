@@ -14,6 +14,8 @@ func _generate(iter: GridChunkIter) -> void:
 	
 	if iter.chunk_coord().y >= 1:
 		iter.fill_remaining(Base.ROCK_IDX)
+	elif iter.chunk_coord().y <= -5:
+		iter.fill_remaining(Base.ROCK_IDX)
 "
 
 [node name="BaseGeneration" type="Node"]
