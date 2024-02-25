@@ -1,0 +1,12 @@
+[gd_scene load_steps=3 format=3 uid="uid://b7fwx4nr02qhh"]
+
+[ext_resource type="Texture2D" uid="uid://dtd2c027i6e6p" path="res://icon.svg" id="1_754fi"]
+[ext_resource type="Script" path="res://DELETE.gd" id="1_csg1f"]
+
+[node name="GridBody" type="GridBody"]
+half_size = Vector2(16, 16)
+script = ExtResource("1_csg1f")
+
+[node name="Icon" type="Sprite2D" parent="."]
+scale = Vector2(0.25, 0.25)
+texture = ExtResource("1_754fi")

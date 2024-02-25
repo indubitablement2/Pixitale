@@ -44,7 +44,7 @@ struct GridBodyApi {
 		rect = rect.grow_side(SIDE_TOP, Math::abs(vel.x) * max_step_height);
 
 		Vector2i chunks_start = div_floor(Vector2i(rect.position.floor()), 32);
-		Vector2i chunks_end = div_floor(Vector2i((rect.position + rect.size).floor()), 32);
+		Vector2i chunks_end = div_floor(Vector2i((rect.position + rect.size).floor()), 32) + Vector2i(1, 1);
 
 		origini = chunks_start * 32;
 
@@ -169,7 +169,7 @@ struct GridBodyApi {
 					i32(Math::floor(new_bot)),
 					CellCollision::CELL_COLLISION_SOLID)) {
 			velocity.y = 0.0f;
-			done = true;
+			return true;
 		}
 
 		wish_move.y -= dif;
@@ -500,6 +500,8 @@ void GridBody::move_and_slide() {
 			}
 		}
 	}
+
+	set_position(api.true_pos);
 
 	api.del();
 }

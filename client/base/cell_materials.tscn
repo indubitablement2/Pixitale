@@ -10,6 +10,7 @@ display_name = "Rock"
 base_color = Color(0.411765, 0.411765, 0.411765, 1)
 light_modulate = Color(1, 1, 1, 1)
 can_color = true
+collision_type = 1
 
 [node name="Water" type="Node" parent="."]
 script = ExtResource("1_jtobp")
@@ -17,6 +18,7 @@ display_name = "Water"
 base_color = Color(0, 0.298039, 0.631373, 0.988235)
 light_modulate = Color(0, 0, 1, 0.717647)
 movement_vertical_step = 1
+collision_type = 4
 
 [node name="Lava" type="Node" parent="."]
 script = ExtResource("1_jtobp")
@@ -24,3 +26,4 @@ display_name = "Lava"
 base_color = Color(0.905882, 0.192157, 0, 0.976471)
 glow = Color(0.701961, 0.321569, 0, 1)
 light_modulate = Color(0.788235, 0.141176, 0.141176, 0.87451)
+collision_type = 4

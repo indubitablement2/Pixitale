@@ -6,18 +6,14 @@ script/source = "extends GenerationPass
 func _generate(iter: GridChunkIter) -> void:
 	#print(\"generating \", iter.chunk_coord())
 	
-	while iter.next():
-		if iter.coord() == Vector2i(5, 5):
-			iter.set_cell(Base.LAVA_IDX)
-		else:
-			iter.set_cell(Base.WATER_IDX)
+	#while iter.next():
+		#if iter.coord() == Vector2i(5, 5):
+			#iter.set_cell(Base.LAVA_IDX)
+		#else:
+			#iter.set_cell(Base.WATER_IDX)
 	
-	#if iter.chunk_coord().y >= 0:
-		#while iter.next():
-			#iter.set_cell(iter.local_coord().y % GridApi.cell_materials.size())
-	#else:
-		#while iter.next():
-			#iter.set_cell(iter.local_coord().x % GridApi.cell_materials.size())
+	if iter.chunk_coord().y >= 1:
+		iter.fill_remaining(Base.ROCK_IDX)
 "
 
 [node name="BaseGeneration" type="Node"]

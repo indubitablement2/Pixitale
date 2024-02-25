@@ -1,4 +1,4 @@
-[gd_scene load_steps=31 format=3 uid="uid://cs41g41rbjtf3"]
+[gd_scene load_steps=32 format=3 uid="uid://cs41g41rbjtf3"]
 
 [ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
@@ -13,6 +13,7 @@
 [ext_resource type="Texture2D" uid="uid://b5c5qksfr7hk4" path="res://core/shader/texture/cell_materials_data/base_color_atlas.tres" id="11_4eirp"]
 [ext_resource type="Texture2D" uid="uid://t50h32apl4gq" path="res://core/shader/texture/cell_materials_data/glow.tres" id="11_rdegm"]
 [ext_resource type="Texture2D" uid="uid://clehnwi7vgea5" path="res://core/shader/texture/cell_materials_data/light_modulate.tres" id="13_lh32a"]
+[ext_resource type="PackedScene" uid="uid://b7fwx4nr02qhh" path="res://DELETE.tscn" id="14_a3qr0"]
 
 [sub_resource type="GDScript" id="GDScript_x0xfk"]
 script/source = "extends Node2D
@@ -438,6 +439,9 @@ position = Vector2(0, 128)
 scale = Vector2(16, 16)
 texture = ExtResource("11_4eirp")
 centered = false
+
+[node name="GridBody" parent="." instance=ExtResource("14_a3qr0")]
+position = Vector2(79, -105)
 
 [connection signal="visibility_changed" from="Draw" to="Draw" method="_on_visibility_changed"]
 [connection signal="visibility_changed" from="GridRender/ActiveRect" to="GridRender/ActiveRect" method="_on_visibility_changed"]

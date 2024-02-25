@@ -1,6 +1,7 @@
 #include "cell_material.h"
 #include "core/math/vector2i.h"
 #include "core/object/object.h"
+#include "core/variant/binder_common.h"
 #include "preludes.h"
 #include "rng.hpp"
 #include <vector>
@@ -28,5 +29,6 @@ u32 CellMaterial::get_hue_at(const Vector2i coord, Rng &rng) {
 }
 
 CellMaterial::CellMaterial(Object *obj) {
-	// todo
+	collision = CellCollision(i32(obj->get("collision_type", nullptr)));
+	// collision = VariantCaster<CellCollision>::cast(obj->get("collision_type", nullptr));
 }
