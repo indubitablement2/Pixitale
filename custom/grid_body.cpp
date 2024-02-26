@@ -274,7 +274,7 @@ struct GridBodyApi {
 		if (wish_step != 0) {
 			if (wish_step <= max_step_height) {
 				GridBodyApi api = GridBodyApi(*this);
-				api.wish_move.y = Math::fract(bot) - f32(wish_step - 1);
+				api.wish_move.y = -Math::fract(bot) - f32(wish_step - 1) - SMALL_VALUE;
 				api.true_velocity.y = -1.0f;
 				if (api.clamp_up()) {
 					while (api.step_up()) {
@@ -304,79 +304,80 @@ struct GridBodyApi {
 
 		return keep_going;
 	}
+
+	inline bool clamp_left() {
+		start = i32(Math::floor(top));
+		end = i32(Math::ceil(bot));
+
+		f32 new_left = Math::floor(left) + SMALL_VALUE;
+		f32 dif = new_left - left;
+
+		if (dif < wish_move.x) {
+			true_pos.x += wish_move.x;
+			right += wish_move.x;
+			left += wish_move.x;
+
+			wish_move.x = 0.0f;
+
+			return false;
+		} else {
+			true_pos.x += dif;
+			right += dif;
+			left += dif;
+
+			wish_move.x -= dif;
+
+			return true;
+		}
+	}
+
+	inline bool step_left() {
+		f32 dif = -1.0f;
+		bool keep_going = true;
+		if (dif < wish_move.x) {
+			dif = wish_move.x;
+			keep_going = false;
+		}
+
+		f32 new_left = left + dif;
+		i32 wish_step = is_column_blocked(
+				Math::floor(new_left),
+				CellCollision::CELL_COLLISION_SOLID);
+		if (wish_step != 0) {
+			if (wish_step <= max_step_height) {
+				GridBodyApi api = GridBodyApi(*this);
+				f32 step_by = -Math::fract(bot) - f32(wish_step - 1) - SMALL_VALUE;
+				api.wish_move.y = step_by;
+				api.true_velocity.y = -1.0f;
+				if (api.clamp_up()) {
+					while (api.step_up()) {
+					}
+				}
+				if (api.true_velocity.y != 0.0f) {
+					// success
+					true_velocity.y = MIN(0.0f, true_velocity.y);
+					true_pos.y = api.true_pos.y;
+					top = api.top;
+					bot = api.bot;
+				} else {
+					// faillure
+					true_velocity.x = 0.0f;
+					return false;
+				}
+			} else {
+				true_velocity.x = 0.0f;
+				return false;
+			}
+		}
+
+		wish_move.x -= dif;
+		true_pos.x += dif;
+		right += dif;
+		left = new_left;
+
+		return keep_going;
+	}
 };
-
-bool is_row_blocked(const i32 start, i32 lenght, const i32 y, const bool blocking_platform) {
-	i32 collision_bitmask = CellCollision::CELL_COLLISION_SOLID;
-	if (blocking_platform) {
-		collision_bitmask |= CellCollision::CELL_COLLISION_PLATFORM;
-	}
-
-	ChunkLocalCoord coord = ChunkLocalCoord(Vector2i(start, y));
-
-	while (lenght > 0) {
-		Chunk *chunk = Grid::get_chunk(coord.chunk_coord);
-		i32 inc = MIN(32 - coord.local_coord.x, lenght);
-		lenght -= inc;
-		if (chunk == nullptr) {
-			continue;
-		}
-
-		u32 *cell_ptr = chunk->get_cell_ptr(coord.local_coord);
-		for (i32 i = 0; i < inc; i++) {
-			TEST_ASSERT(coord.local_coord.x + i < 32, "bug");
-
-			u32 mat_idx = Cell::material_idx(*(cell_ptr + i));
-			if (mat_idx == 0) {
-				continue;
-			}
-
-			auto mat = Grid::get_cell_material(mat_idx);
-			if (mat.collision & collision_bitmask) {
-				return true;
-			}
-		}
-
-		coord.chunk_coord.x += 1;
-		coord.local_coord.x = 0;
-	}
-
-	return false;
-}
-
-// Return the number of remaining cells to the collision.
-i32 is_column_blocked(const i32 start, i32 lenght, const i32 x) {
-	ChunkLocalCoord coord = ChunkLocalCoord(Vector2i(x, start));
-
-	while (lenght > 0) {
-		Chunk *chunk = Grid::get_chunk(coord.chunk_coord);
-		i32 inc = MIN(32 - coord.local_coord.y, lenght);
-		lenght -= inc;
-		if (chunk == nullptr) {
-			continue;
-		}
-
-		u32 *cell_ptr = chunk->get_cell_ptr(coord.local_coord);
-		for (i32 i = 0; i < inc; i++) {
-			TEST_ASSERT(coord.local_coord.y + i < 32, "bug");
-
-			u32 mat_idx = Cell::material_idx(*(cell_ptr + i * 32));
-			if (mat_idx == 0) {
-				continue;
-			}
-
-			auto mat = Grid::get_cell_material(mat_idx);
-			if (mat.collision == CellCollision::CELL_COLLISION_SOLID) {
-				return lenght + inc - i;
-			}
-		}
-
-		coord.chunk_coord.y += 1;
-		coord.local_coord.y = 0;
-	}
-
-	return 0;
-}
 
 // bool is_blocking(i32 x, i32 y) {
 // 	u32 cell = Grid::get_cell_checked(x, y);
@@ -613,11 +614,10 @@ void GridBody::move_and_slide() {
 			}
 		}
 	} else if (api.wish_move.x < -SMALL_VALUE) {
-		// // Move up
-		// if (!api.clamp_up()) {
-		// 	while (api.step_up()) {
-		// 	}
-		// }
+		if (api.clamp_left()) {
+			while (api.step_left()) {
+			}
+		}
 	}
 
 	set_velocity(api.true_velocity);

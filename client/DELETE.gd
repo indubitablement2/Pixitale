@@ -18,8 +18,6 @@ func _process(delta: float) -> void:
 	else:
 		velocity.x += (Input.get_action_strength(&"right") - Input.get_action_strength(&"left")) * 5.0
 	
-	velocity.x = maxf(velocity.x, 0.0)
-	
 	velocity.y += 5.0
 	move_and_slide()
 	velocity *= pow(0.5, delta)
