@@ -5,6 +5,7 @@
 #include "core/math/rect2i.h"
 #include "core/math/vector2.h"
 #include "core/math/vector2i.h"
+#include <limits>
 
 using u8 = uint8_t;
 using u16 = uint16_t;
@@ -32,6 +33,9 @@ const i32 MIN_I32 = INT32_MIN;
 const i32 MAX_I32 = INT32_MAX;
 const i64 MIN_I64 = INT64_MIN;
 const i64 MAX_I64 = INT64_MAX;
+
+const f32 INF_F32 = std::numeric_limits<f32>::infinity();
+const f32 NEG_INF_F32 = -std::numeric_limits<f32>::infinity();
 
 /// Crash if condition is false.
 #ifdef TOOLS_ENABLED
@@ -68,7 +72,12 @@ inline i32 mod_neg(i32 numerator, i32 denominator) {
 	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
 
 	i32 mod = numerator % denominator;
-	return mod >= 0 ? mod : mod + denominator;
+	// return mod >= 0 ? mod : mod + denominator;
+	if (mod >= 0) {
+		return mod;
+	} else {
+		return mod + denominator;
+	}
 }
 
 inline Vector2i mod_neg(Vector2i numerator, Vector2i denominator) {
@@ -406,8 +415,8 @@ struct ChunkLocalCoord {
 	inline ChunkLocalCoord(){};
 
 	inline ChunkLocalCoord(Vector2i coord) :
-			chunk_coord(div_floor(coord, Vector2i(32, 32))),
-			local_coord(mod_neg(coord, Vector2i(32, 32))) {}
+			chunk_coord(div_floor(coord, 32)),
+			local_coord(mod_neg(coord, 32)) {}
 
 	inline ChunkLocalCoord(Vector2i p_chunk_coord, Vector2i p_local_coord) :
 			chunk_coord(p_chunk_coord),

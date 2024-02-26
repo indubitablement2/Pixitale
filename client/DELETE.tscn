@@ -10,3 +10,13 @@ script = ExtResource("1_csg1f")
 [node name="Icon" type="Sprite2D" parent="."]
 scale = Vector2(0.25, 0.25)
 texture = ExtResource("1_754fi")
+
+[node name="Label" type="Label" parent="."]
+offset_top = -101.0
+offset_right = 40.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "a
+b
+c
+d"

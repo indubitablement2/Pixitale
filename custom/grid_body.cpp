@@ -6,6 +6,7 @@
 #include "core/math/rect2.h"
 #include "core/math/vector2.h"
 #include "core/math/vector2i.h"
+#include "core/object/class_db.h"
 #include "core/typedefs.h"
 #include "grid.h"
 #include "preludes.h"
@@ -16,8 +17,13 @@ const f32 SMALL_VALUE = 0.04f;
 struct GridBodyApi {
 	i32 max_step_height;
 
+	// In global space.
 	Vector2 true_pos;
 	Vector2 true_velocity;
+	bool is_on_floor;
+	bool is_on_ceiling;
+	bool is_on_left_wall;
+	bool is_on_right_wall;
 
 	Vector2 wish_move;
 
@@ -39,6 +45,10 @@ struct GridBodyApi {
 			max_step_height(p_max_step_height),
 			true_pos(pos),
 			true_velocity(vel),
+			is_on_floor(false),
+			is_on_ceiling(false),
+			is_on_left_wall(false),
+			is_on_right_wall(false),
 			wish_move(vel * dt) {
 		Rect2 rect = Rect2(pos - half_size, half_size * 2.0f);
 		rect = rect.merge(Rect2((pos + vel) - half_size, half_size * 2.0f));
@@ -71,6 +81,10 @@ struct GridBodyApi {
 			max_step_height(other.max_step_height),
 			true_pos(other.true_pos),
 			true_velocity(other.true_velocity),
+			is_on_floor(other.is_on_floor),
+			is_on_ceiling(other.is_on_ceiling),
+			is_on_left_wall(other.is_on_left_wall),
+			is_on_right_wall(other.is_on_right_wall),
 			wish_move(other.wish_move),
 			top(other.top),
 			bot(other.bot),
@@ -124,6 +138,7 @@ struct GridBodyApi {
 
 	// Return the number of cells from end. Eg. the step height.
 	inline i32 is_column_blocked(i32 x, u32 collision_bitmask) {
+		// todo: could be faster
 		for (i32 y = start; y < end; y++) {
 			if (is_blocked(Vector2i(x, y), collision_bitmask)) {
 				return end - y;
@@ -172,6 +187,7 @@ struct GridBodyApi {
 					i32(Math::floor(new_bot)),
 					CellCollision::CELL_COLLISION_SOLID)) {
 			true_velocity.y = 0.0f;
+			is_on_floor = true;
 			return false;
 		}
 
@@ -222,6 +238,7 @@ struct GridBodyApi {
 					i32(Math::floor(new_top)),
 					CellCollision::CELL_COLLISION_SOLID)) {
 			true_velocity.y = 0.0f;
+			is_on_ceiling = true;
 			return false;
 		}
 
@@ -274,7 +291,8 @@ struct GridBodyApi {
 		if (wish_step != 0) {
 			if (wish_step <= max_step_height) {
 				GridBodyApi api = GridBodyApi(*this);
-				api.wish_move.y = -Math::fract(bot) - f32(wish_step - 1) - SMALL_VALUE;
+				f32 step_by = -Math::fract(bot) - f32(wish_step - 1) - SMALL_VALUE;
+				api.wish_move.y = step_by;
 				api.true_velocity.y = -1.0f;
 				if (api.clamp_up()) {
 					while (api.step_up()) {
@@ -282,17 +300,19 @@ struct GridBodyApi {
 				}
 				if (api.true_velocity.y != 0.0f) {
 					// success
-					true_velocity.y = MIN(0.0f, true_velocity.y);
-					true_pos.y = api.true_pos.y;
-					top = api.top;
-					bot = api.bot;
+					f32 new_velocity = MIN(0.0f, true_velocity.y);
+					*this = api;
+					is_on_floor = true;
+					true_velocity.y = new_velocity;
 				} else {
 					// faillure
 					true_velocity.x = 0.0f;
+					is_on_right_wall = true;
 					return false;
 				}
 			} else {
 				true_velocity.x = 0.0f;
+				is_on_right_wall = true;
 				return false;
 			}
 		}
@@ -355,17 +375,19 @@ struct GridBodyApi {
 				}
 				if (api.true_velocity.y != 0.0f) {
 					// success
-					true_velocity.y = MIN(0.0f, true_velocity.y);
-					true_pos.y = api.true_pos.y;
-					top = api.top;
-					bot = api.bot;
+					f32 new_velocity = MIN(0.0f, true_velocity.y);
+					*this = api;
+					is_on_floor = true;
+					true_velocity.y = new_velocity;
 				} else {
 					// faillure
 					true_velocity.x = 0.0f;
+					is_on_left_wall = true;
 					return false;
 				}
 			} else {
 				true_velocity.x = 0.0f;
+				is_on_left_wall = true;
 				return false;
 			}
 		}
@@ -379,136 +401,10 @@ struct GridBodyApi {
 	}
 };
 
-// bool is_blocking(i32 x, i32 y) {
-// 	u32 cell = Grid::get_cell_checked(x, y);
-// 	u32 mat_idx = Cell::material_idx(cell);
-
-// 	if (mat_idx == 0) {
-// 		// Empty cell.
-// 		return false;
-// 	}
-
-// 	auto mat_ptr = CellMaterial::materials[mat_idx];
-// 	if (mat_ptr.collision == Cell::Collision::COLLISION_SOLID) {
-// 		return true;
-// 	}
-
-// 	return false;
-// }
-
-// bool is_row_blocked(
-// 		i32 left,
-// 		i32 right,
-// 		i32 y) {
-// 	for (i32 x = left; x <= right; x++) {
-// 		if (is_blocking(x, y)) {
-// 			return true;
-// 		}
-// 	}
-
-// 	return false;
-// }
-
-// bool block_or_step_left(
-// 		i32 &left,
-// 		i32 &right,
-// 		i32 &top,
-// 		i32 &bot,
-// 		Vector2 &new_position,
-// 		f32 &step_offset,
-// 		i32 max_steps_height) {
-// 	bool blocked = false;
-
-// 	i32 floor = (bot - top) + 1;
-// 	for (i32 y = top; y <= bot; y++) {
-// 		floor--;
-
-// 		if (is_blocking(left, y)) {
-// 			if (floor <= max_steps_height) {
-// 				// Try to step up.
-// 				for (i32 y_step = 1; y_step <= floor; y_step++) {
-// 					for (i32 x = left; x < right; x++) {
-// 						if (is_blocking(x, top - y_step)) {
-// 							blocked = true;
-// 							break;
-// 						}
-// 					}
-// 					if (blocked) {
-// 						break;
-// 					}
-// 				}
-
-// 				if (!blocked) {
-// 					top -= floor;
-// 					bot -= floor;
-// 					f32 pre_step_y = new_position.y;
-// 					new_position.y = std::floor(new_position.y - f32(floor)) - 0.02f;
-
-// 					step_offset -= new_position.y - pre_step_y;
-// 				}
-// 			} else {
-// 				blocked = true;
-// 			}
-
-// 			break;
-// 		}
-// 	}
-
-// 	return blocked;
-// }
-
-// bool block_or_step_right(
-// 		i32 &left,
-// 		i32 &right,
-// 		i32 &top,
-// 		i32 &bot,
-// 		Vector2 &new_position,
-// 		f32 &step_offset,
-// 		i32 max_steps_height) {
-// 	bool blocked = false;
-
-// 	i32 floor = (bot - top) + 1;
-// 	for (i32 y = top; y <= bot; y++) {
-// 		floor--;
-
-// 		if (is_blocking(right, y)) {
-// 			if (floor <= max_steps_height) {
-// 				// Try to step up.
-// 				for (i32 y_step = 1; y_step <= floor; y_step++) {
-// 					for (i32 x = left + 1; x <= right; x++) {
-// 						if (is_blocking(x, top - y_step)) {
-// 							blocked = true;
-// 							break;
-// 						}
-// 					}
-// 					if (blocked) {
-// 						break;
-// 					}
-// 				}
-
-// 				if (!blocked) {
-// 					top -= floor;
-// 					bot -= floor;
-// 					f32 pre_step_y = new_position.y;
-// 					new_position.y = std::floor(new_position.y - f32(floor)) - 0.02f;
-
-// 					step_offset -= new_position.y - pre_step_y;
-// 				}
-// 			} else {
-// 				blocked = true;
-// 			}
-
-// 			break;
-// 		}
-// 	}
-
-// 	return blocked;
-// }
-
 void GridBody::_notification(i32 p_what) {
 	switch (p_what) {
 		case NOTIFICATION_DRAW: {
-			if (Engine::get_singleton()->is_editor_hint() || true) {
+			if (Engine::get_singleton()->is_editor_hint() || draw_half_size) {
 				draw_rect(
 						Rect2(-half_size, half_size * 2.0f),
 						Color(1.0f, 0.0f, 0.0f, 0.5f),
@@ -556,14 +452,73 @@ void GridBody::_bind_methods() {
 			"get_max_step_height");
 
 	ClassDB::bind_method(
+			D_METHOD("set_draw_half_size", "value"),
+			&GridBody::set_draw_half_size);
+	ClassDB::bind_method(
+			D_METHOD("get_draw_half_size"),
+			&GridBody::get_draw_half_size);
+	ADD_PROPERTY(
+			PropertyInfo(Variant::BOOL,
+					"draw_half_size"),
+			"set_draw_half_size",
+			"get_draw_half_size");
+
+	ClassDB::bind_method(
+			D_METHOD("set_stick_to_floor", "value"),
+			&GridBody::set_stick_to_floor);
+	ClassDB::bind_method(
+			D_METHOD("get_stick_to_floor"),
+			&GridBody::get_stick_to_floor);
+	ADD_PROPERTY(
+			PropertyInfo(Variant::BOOL,
+					"stick_to_floor"),
+			"set_stick_to_floor",
+			"get_stick_to_floor");
+
+	ClassDB::bind_method(
+			D_METHOD("set_collision", "value"),
+			&GridBody::set_collision);
+	ClassDB::bind_method(
+			D_METHOD("get_collision"),
+			&GridBody::get_collision);
+	ADD_PROPERTY(
+			PropertyInfo(Variant::BOOL,
+					"collision"),
+			"set_collision",
+			"get_collision");
+
+	ClassDB::bind_method(
+			D_METHOD("was_on_floor"),
+			&GridBody::get_was_on_floor);
+	ClassDB::bind_method(
+			D_METHOD("is_on_floor"),
+			&GridBody::get_is_on_floor);
+	ClassDB::bind_method(
+			D_METHOD("is_on_ceiling"),
+			&GridBody::get_is_on_ceiling);
+	ClassDB::bind_method(
+			D_METHOD("is_on_left_wall"),
+			&GridBody::get_is_on_left_wall);
+	ClassDB::bind_method(
+			D_METHOD("is_on_right_wall"),
+			&GridBody::get_is_on_right_wall);
+	ClassDB::bind_method(
+			D_METHOD("is_on_wall"),
+			&GridBody::get_is_on_wall);
+
+	ClassDB::bind_method(
 			D_METHOD("move_and_slide"),
 			&GridBody::move_and_slide);
+
+	ClassDB::bind_method(
+			D_METHOD("get_floor_cell"),
+			&GridBody::get_floor_cell);
 }
 
 void GridBody::set_half_size(Vector2 value) {
 	half_size = value.abs();
 
-	if (Engine::get_singleton()->is_editor_hint() || true) {
+	if (Engine::get_singleton()->is_editor_hint() || draw_half_size) {
 		queue_redraw();
 	}
 }
@@ -588,7 +543,72 @@ i32 GridBody::get_max_step_height() const {
 	return max_step_height;
 }
 
+void GridBody::set_draw_half_size(bool value) {
+	draw_half_size = value;
+
+	if (draw_half_size) {
+		queue_redraw();
+	}
+}
+
+bool GridBody::get_draw_half_size() const {
+	return draw_half_size;
+}
+
+void GridBody::set_stick_to_floor(bool value) {
+	stick_to_floor = value;
+}
+
+bool GridBody::get_stick_to_floor() const {
+	return stick_to_floor;
+}
+
+void GridBody::set_collision(bool value) {
+	collision = value;
+}
+
+bool GridBody::get_collision() const {
+	return collision;
+}
+
+bool GridBody::get_was_on_floor() const {
+	return was_on_floor;
+}
+
+bool GridBody::get_is_on_floor() const {
+	return is_on_floor;
+}
+
+bool GridBody::get_is_on_ceiling() const {
+	return is_on_ceiling;
+}
+
+bool GridBody::get_is_on_left_wall() const {
+	return is_on_left_wall;
+}
+
+bool GridBody::get_is_on_right_wall() const {
+	return is_on_right_wall;
+}
+
+bool GridBody::get_is_on_wall() const {
+	return is_on_left_wall || is_on_right_wall;
+}
+
 void GridBody::move_and_slide() {
+	was_on_floor = is_on_floor;
+	is_on_floor = false;
+	is_on_ceiling = false;
+	is_on_left_wall = false;
+	is_on_right_wall = false;
+
+	step_offset *= 0.65f;
+
+	if (!collision) {
+		set_position(get_position() + velocity * get_process_delta_time());
+		return;
+	}
+
 	GridBodyApi api = GridBodyApi(
 			get_position(),
 			velocity,
@@ -620,10 +640,45 @@ void GridBody::move_and_slide() {
 		}
 	}
 
+	// Stick to floor.
+	if (stick_to_floor && velocity.y >= -SMALL_VALUE && !api.is_on_floor) {
+		GridBodyApi api2 = GridBodyApi(api);
+		api2.wish_move.y = INF_F32;
+
+		api2.clamp_down();
+		for (i32 i = 0; i <= max_step_height - 1; i++) {
+			if (!api2.step_down()) {
+				break;
+			}
+		}
+
+		if (api2.is_on_floor) {
+			api = api2;
+			api.true_velocity.y = 0.0f;
+		}
+	}
+
+	is_on_floor = api.is_on_floor;
+	is_on_ceiling = api.is_on_ceiling;
+	is_on_left_wall = api.is_on_left_wall;
+	is_on_right_wall = api.is_on_right_wall;
 	set_velocity(api.true_velocity);
 	set_position(api.true_pos);
 
 	api.del();
+}
+
+u32 GridBody::get_floor_cell() const {
+	if (is_on_floor) {
+		Vector2 pos = get_position();
+		pos.y += half_size.y + 1.0f;
+
+		Vector2i coord = Vector2i(pos.floor());
+
+		return Grid::get_cell_material_idx(coord);
+	} else {
+		return 0;
+	}
 }
 
 // void GridBody::move_and_slide() {

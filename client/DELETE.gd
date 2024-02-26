@@ -21,3 +21,9 @@ func _process(delta: float) -> void:
 	velocity.y += 5.0
 	move_and_slide()
 	velocity *= pow(0.5, delta)
+	
+	$Label.set_text(str(
+		is_on_floor(), "\n",
+		hit_ceiling(), "\n",
+		hit_left_wall(), "\n",
+		hit_right_wall()))
