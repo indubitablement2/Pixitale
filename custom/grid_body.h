@@ -26,7 +26,10 @@ public:
 	i32 get_max_step_height() const;
 
 	// Smooth out moving up/down slopes.
-	f32 step_offset = 0.0f; // todo
+	f32 step_offset = 0.0f;
+	f32 step_smoothing = 0.75f;
+	void set_step_smoothing(f32 value);
+	f32 get_step_smoothing() const;
 
 	bool draw_half_size = false;
 	void set_draw_half_size(bool value);
@@ -37,9 +40,9 @@ public:
 	void set_stick_to_floor(bool value);
 	bool get_stick_to_floor() const;
 
-	bool collision = true;
-	void set_collision(bool value);
-	bool get_collision() const;
+	bool collision_enabled = true;
+	void set_collision_enabled(bool value);
+	bool get_collision_enabled() const;
 
 	bool was_on_floor = false;
 	bool get_was_on_floor() const;

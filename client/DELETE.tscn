@@ -5,6 +5,8 @@
 
 [node name="GridBody" type="GridBody"]
 half_size = Vector2(16, 16)
+draw_half_size = true
+step_smoothing = 0.75
 script = ExtResource("1_csg1f")
 
 [node name="Icon" type="Sprite2D" parent="."]

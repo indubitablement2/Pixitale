@@ -24,6 +24,6 @@ func _process(delta: float) -> void:
 	
 	$Label.set_text(str(
 		is_on_floor(), "\n",
-		hit_ceiling(), "\n",
-		hit_left_wall(), "\n",
-		hit_right_wall()))
+		is_on_ceiling(), "\n",
+		is_on_left_wall(), "\n",
+		is_on_right_wall()))
