@@ -19,6 +19,7 @@
 #include "rng.hpp"
 #include <algorithm>
 #include <atomic>
+#include <cstring>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -445,19 +446,16 @@ Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, GridLayer layer) {
 				}
 		}
 
-		Iter2D cell_iter = Iter2D(Vector2i(32, 32));
-
-		// todo: copy line by line 32 cells at a time
 		if (chunk == nullptr) {
-			while (cell_iter.next()) {
-				Vector2i image_coord = image_offset + cell_iter.coord;
-				image_buffer[image_coord.x + image_coord.y * image_size.x] = 0;
+			for (i32 y = 0; y < 32; y++) {
+				u32 *img_ptr = image_buffer + image_offset.x + (image_offset.y + y) * image_size.x;
+				std::memset(img_ptr, 0, 32 * sizeof(u32));
 			}
 		} else {
-			while (cell_iter.next()) {
-				u32 cell = chunk->get_cell(cell_iter.coord);
-				Vector2i image_coord = image_offset + cell_iter.coord;
-				image_buffer[image_coord.x + image_coord.y * image_size.x] = cell;
+			for (i32 y = 0; y < 32; y++) {
+				u32 *img_ptr = image_buffer + image_offset.x + (image_offset.y + y) * image_size.x;
+				u32 *cell_ptr = chunk->cells + y * 32;
+				std::memcpy(img_ptr, cell_ptr, 32 * sizeof(u32));
 			}
 		}
 	}
