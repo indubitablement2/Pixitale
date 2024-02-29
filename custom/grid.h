@@ -7,6 +7,7 @@
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
 #include "core/object/object.h"
+#include "core/templates/vector.h"
 #include "core/variant/callable.h"
 #include "generation_pass.h"
 #include "grid_iter.h"
@@ -121,6 +122,8 @@ public: // godot api
 	static GridChunkIter *iter_chunk(Vector2i chunk_coord);
 	static GridRectIter *iter_rect(Rect2i rect);
 	static GridLineIter *iter_line(Vector2i start, Vector2i end);
+
+	static Vector<Vector2i> get_line(Vector2i start, Vector2i end);
 
 	static void force_step();
 	static void queue_step_chunks(Rect2i chunk_rect);

@@ -129,6 +129,11 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
+			D_METHOD("get_line", "start", "end"),
+			&Grid::get_line);
+
+	ClassDB::bind_static_method(
+			"Grid",
 			D_METHOD("force_step"),
 			&Grid::force_step);
 	ClassDB::bind_static_method(
@@ -505,6 +510,16 @@ GridLineIter *Grid::iter_line(Vector2i start, Vector2i end) {
 	iter->set_line(start, end);
 	line_iters.push_back(iter);
 	return iter;
+}
+
+Vector<Vector2i> Grid::get_line(Vector2i start, Vector2i end) {
+	Vector<Vector2i> line;
+	IterLine line_iter = IterLine(end - start);
+	line.resize(i32(line_iter.num_points));
+	while (line_iter.next()) {
+		line.set(i32(line_iter.p), line_iter.currenti() + start);
+	}
+	return line;
 }
 
 void Grid::force_step() {
