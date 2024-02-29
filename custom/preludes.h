@@ -186,7 +186,7 @@ public:
 	Vector2i current;
 
 private:
-	Vector2i end;
+	Vector2 end;
 	Vector2 next_current;
 	Vector2 slope;
 	bool finished;
@@ -194,7 +194,8 @@ private:
 
 public:
 	inline VectorLine(Vector2i to) {
-		end = to;
+		end = Vector2(to);
+		end += end.sign() * 0.5f;
 		next_current = Vector2(0.5f, 0.5f);
 		slope = Vector2(f32(end.x) + 0.5f, f32(end.y) + 0.5f).normalized();
 		finished = false;

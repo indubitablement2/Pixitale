@@ -1,12 +1,13 @@
 #include "chunk.h"
 #include "cell.hpp"
 #include "cell_material.h"
-#include "core/math/math_funcs.h"
 #include "core/math/vector2.h"
 #include "core/math/vector2i.h"
 #include "grid.h"
 #include "preludes.h"
 #include <bit>
+
+thread_local std::vector<u32 *> free_velocity_buffers = {};
 
 // Api for working with cells within a single chunk (center)
 // which may affect nearby chunks.
@@ -77,6 +78,11 @@ public:
 
 	u32 get_cell(Vector2i coord) {
 		return *get_cell_ptr(coord);
+	}
+
+	u32 *get_velocity_ptr(Vector2i coord) {
+		i32 chunk_idx = to_local(coord);
+		return chunks[chunk_idx]->velocity + coord.x + coord.y * 32;
 	}
 
 	// void set_cell(Vector2i coord, u32 cell) {
@@ -257,66 +263,66 @@ public:
 		}
 
 		// Movement
-		if (Cell::is_particle(cell)) {
-			// todo
-		} else {
-			u32 orthogonal_velocity_i = Cell::orthogonal_velocity_i(cell);
-			if (!cell_material().can_fall && orthogonal_velocity_i == 0) {
-				Cell::clear_velocity(cell);
-				*cell_ptr = cell;
-				return;
-			}
-			f32 orthogonal_velocity = f32(orthogonal_velocity_i) / 255.0f;
+		// if (Cell::is_particle(cell)) {
+		// 	// todo
+		// } else {
+		// 	u32 orthogonal_velocity_i = Cell::orthogonal_velocity_i(cell);
+		// 	if (!cell_material().can_fall && orthogonal_velocity_i == 0) {
+		// 		Cell::clear_velocity(cell);
+		// 		*cell_ptr = cell;
+		// 		return;
+		// 	}
+		// 	f32 orthogonal_velocity = f32(orthogonal_velocity_i) / 255.0f;
 
-			i32 v_dir;
-			f32 vertical_acceleration = cell_material().vertical_acceleration;
-			if (vertical_acceleration >= 0) {
-				v_dir = 1;
-			} else {
-				v_dir = -1;
-				vertical_acceleration = -vertical_acceleration;
-			}
+		// 	i32 v_dir;
+		// 	f32 vertical_acceleration = cell_material().vertical_acceleration;
+		// 	if (vertical_acceleration >= 0) {
+		// 		v_dir = 1;
+		// 	} else {
+		// 		v_dir = -1;
+		// 		vertical_acceleration = -vertical_acceleration;
+		// 	}
 
-			if (can_swap(Vector2i(cell_coord.x, cell_coord.y + v_dir))) {
-				// Vertical movement
+		// 	if (can_swap(Vector2i(cell_coord.x, cell_coord.y + v_dir))) {
+		// 		// Vertical movement
 
-				if (Cell::movement_dir(cell) != 0) {
-					// We were moving horizontally before.
-					Cell::set_movement_dir(cell, 0);
-					orthogonal_velocity = 0.0f;
-				}
+		// 		if (Cell::movement_dir(cell) != 0) {
+		// 			// We were moving horizontally before.
+		// 			Cell::set_movement_dir(cell, 0);
+		// 			orthogonal_velocity = 0.0f;
+		// 		}
 
-				orthogonal_velocity += vertical_acceleration;
-				orthogonal_velocity = MIN(orthogonal_velocity, 1.0);
+		// 		orthogonal_velocity += vertical_acceleration;
+		// 		orthogonal_velocity = MIN(orthogonal_velocity, 1.0);
 
-				f32 vel = orthogonal_velocity * cell_material().vertical_velocity_max;
-				i32 v_num = i32(vel) + i32(rng.gen_probability_f32(vel - Math::floor(vel)));
-				for (i32 i = 0; i < v_num; i++) {
-					if (!try_swap(Vector2i(cell_coord.x, cell_coord.y + v_dir))) {
-						// Blocked. Transfer some vertical velocity to horizontal.
-						orthogonal_velocity *= cell_material().vertical_velocity_max / cell_material().horizontal_velocity_max;
-						orthogonal_velocity *= 0.75f;
-						Cell::set_movement_dir(cell, rng.gen_sign());
-						break;
-					}
-				}
+		// 		f32 vel = orthogonal_velocity * cell_material().vertical_velocity_max;
+		// 		i32 v_num = i32(vel) + i32(rng.gen_probability_f32(vel - Math::floor(vel)));
+		// 		for (i32 i = 0; i < v_num; i++) {
+		// 			if (!try_swap(Vector2i(cell_coord.x, cell_coord.y + v_dir))) {
+		// 				// Blocked. Transfer some vertical velocity to horizontal.
+		// 				orthogonal_velocity *= cell_material().vertical_velocity_max / cell_material().horizontal_velocity_max;
+		// 				orthogonal_velocity *= 0.75f;
+		// 				Cell::set_movement_dir(cell, rng.gen_sign());
+		// 				break;
+		// 			}
+		// 		}
 
-				Cell::set_orthogonal_velocity(cell, orthogonal_velocity);
-			} else {
-				// Horizontal movement
+		// 		Cell::set_orthogonal_velocity(cell, orthogonal_velocity);
+		// 	} else {
+		// 		// Horizontal movement
 
-				u32 h_dir = Cell::movement_dir(cell);
-				if (h_dir == 0) {
-					// We were moving vertically before.
-					h_dir = rng.gen_sign();
-				}
+		// 		u32 h_dir = Cell::movement_dir(cell);
+		// 		if (h_dir == 0) {
+		// 			// We were moving vertically before.
+		// 			h_dir = rng.gen_sign();
+		// 		}
 
-				// todo before each h move, check if can move diag first
+		// 		// todo before each h move, check if can move diag first
 
-				Cell::set_movement_dir(cell, h_dir);
-				Cell::set_orthogonal_velocity(cell, 0.0f);
-			}
-		}
+		// 		Cell::set_movement_dir(cell, h_dir);
+		// 		Cell::set_orthogonal_velocity(cell, 0.0f);
+		// 	}
+		// }
 
 		*cell_ptr = cell;
 	}
@@ -331,6 +337,15 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 			Chunk *chunk_ptr = Grid::get_chunk(other_chunk_coord);
 
 			TEST_ASSERT(chunk_ptr != nullptr, "step chunk got nullptr");
+
+			if (chunk_ptr->velocity == nullptr) {
+				if (free_velocity_buffers.size() > 0) {
+					chunk_ptr->velocity = free_velocity_buffers.back();
+					free_velocity_buffers.pop_back();
+				} else {
+					chunk_ptr->velocity = new u32[32 * 32]();
+				}
+			}
 
 			// Chunk generation
 			if (!chunk_ptr->generated) {
@@ -409,6 +424,26 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 		while (x != x_end) {
 			chunk_api.step_cell(Vector2i(x, y), force_step);
 			x += x_step;
+		}
+	}
+
+	// Remove uneeded cell velocity buffers.
+	for (i32 i = 0; i < 9; i++) {
+		Chunk *chunk_ptr = chunk_api.chunks[i];
+
+		if (chunk_ptr->is_inactive()) {
+#ifdef DEBUG_ENABLED
+			for (i32 ii = 0; ii < 32 * 32; ii++) {
+				TEST_ASSERT(chunk_ptr->cells[ii] == 0, "inactive chunk has non-zero velocity");
+			}
+#endif
+
+			if (free_velocity_buffers.size() < 16) {
+				free_velocity_buffers.push_back(chunk_ptr->velocity);
+			} else {
+				delete[] chunk_ptr->velocity;
+			}
+			chunk_ptr->velocity = nullptr;
 		}
 	}
 }
