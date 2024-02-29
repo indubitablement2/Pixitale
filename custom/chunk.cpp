@@ -339,11 +339,11 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 			TEST_ASSERT(chunk_ptr != nullptr, "step chunk got nullptr");
 
 			if (chunk_ptr->velocity == nullptr) {
-				if (free_velocity_buffers.size() > 0) {
+				if (!free_velocity_buffers.empty()) {
 					chunk_ptr->velocity = free_velocity_buffers.back();
 					free_velocity_buffers.pop_back();
 				} else {
-					chunk_ptr->velocity = new u32[32 * 32]();
+					chunk_ptr->velocity = new u32[32 * 32]{};
 				}
 			}
 
@@ -434,7 +434,7 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 		if (chunk_ptr->is_inactive()) {
 #ifdef DEBUG_ENABLED
 			for (i32 ii = 0; ii < 32 * 32; ii++) {
-				TEST_ASSERT(chunk_ptr->cells[ii] == 0, "inactive chunk has non-zero velocity");
+				TEST_ASSERT(chunk_ptr->velocity[ii] == 0, "inactive chunk has non-zero velocity");
 			}
 #endif
 

@@ -181,44 +181,37 @@ struct Iter2D {
 	}
 };
 
-struct VectorLine {
-public:
-	Vector2i current;
+struct IterLine {
+	f32 p;
+	f32 num_points;
+	Vector2 to;
 
-private:
-	Vector2 end;
-	Vector2 next_current;
-	Vector2 slope;
-	bool finished;
-	bool really_finished;
+	inline IterLine(){};
 
-public:
-	inline VectorLine(Vector2i to) {
-		end = Vector2(to);
-		end += end.sign() * 0.5f;
-		next_current = Vector2(0.5f, 0.5f);
-		slope = Vector2(f32(end.x) + 0.5f, f32(end.y) + 0.5f).normalized();
-		finished = false;
-		really_finished = false;
-	}
+	inline IterLine(Vector2i p_to, const bool include_start = true) :
+			p(include_start ? -1.0f : 0.0f),
+			num_points(f32(MAX(ABS(p_to.x), ABS(p_to.y)))),
+			to(Vector2(p_to) + Vector2(0.5f, 0.5f)) {}
 
 	inline bool next() {
-		if (finished) {
-			if (!really_finished) {
-				current = Vector2i(next_current.x, next_current.y);
-				really_finished = true;
-				return true;
-			} else {
-				return false;
-			}
+		p += 1.0f;
+		return p <= num_points;
+	}
+
+	inline Vector2 currentf() {
+		if (num_points == 0.0f) {
+			return Vector2(0.0f, 0.0f);
 		} else {
-			current = Vector2i(i32(next_current.x), i32(next_current.y));
-			next_current += slope;
-			if (Vector2i(next_current.x, next_current.y) == end) {
-				finished = true;
-			}
-			return true;
+			return (p / num_points) * to;
 		}
+	}
+
+	inline Vector2i currenti() {
+		return Vector2i(currentf().floor());
+	}
+
+	inline void reset(const bool include_start = true) {
+		p = include_start ? -1.0f : 0.0f;
 	}
 };
 
@@ -373,6 +366,14 @@ struct ChunkLocalCoord {
 
 	inline Vector2i coord() {
 		return chunk_coord * 32 + local_coord;
+	}
+
+	inline bool operator==(const ChunkLocalCoord &other) {
+		return chunk_coord == other.chunk_coord && local_coord == other.local_coord;
+	}
+
+	inline bool operator!=(const ChunkLocalCoord &other) {
+		return chunk_coord != other.chunk_coord || local_coord != other.local_coord;
 	}
 };
 

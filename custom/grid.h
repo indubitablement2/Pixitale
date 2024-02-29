@@ -43,6 +43,7 @@ private:
 
 	inline static std::vector<GridChunkIter *> chunk_iters = {};
 	inline static std::vector<GridRectIter *> rect_iters = {};
+	inline static std::vector<GridLineIter *> line_iters = {};
 
 	inline static std::vector<Rect2i> queue_step_chunk_rects = {};
 
@@ -119,6 +120,7 @@ public: // godot api
 
 	static GridChunkIter *iter_chunk(Vector2i chunk_coord);
 	static GridRectIter *iter_rect(Rect2i rect);
+	static GridLineIter *iter_line(Vector2i start, Vector2i end);
 
 	static void force_step();
 	static void queue_step_chunks(Rect2i chunk_rect);

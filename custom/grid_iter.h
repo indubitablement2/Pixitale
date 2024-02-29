@@ -78,6 +78,36 @@ public:
 	void activate();
 };
 
-// todo: bitmap iter, circle iter, line iter
+class GridLineIter : public Object {
+	GDCLASS(GridLineIter, Object);
+
+protected:
+	static void _bind_methods();
+
+public:
+	bool is_valid = false;
+
+	Vector2i start;
+
+	IterLine line_iter;
+
+	Chunk *chunk;
+	ChunkLocalCoord current;
+
+	bool next();
+
+	void set_cell(u32 value);
+	u32 get_cell();
+
+	void fill_remaining(u32 value);
+
+	void reset_iter();
+
+	Vector2i coord();
+
+	void set_line(Vector2i p_start, Vector2i end);
+};
+
+// todo: bitmap iter, circle iter, explosion iter
 
 #endif

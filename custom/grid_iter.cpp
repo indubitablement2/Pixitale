@@ -4,7 +4,6 @@
 #include "core/math/rect2.h"
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
-#include "core/string/print_string.h"
 #include "grid.h"
 #include "preludes.h"
 
@@ -257,4 +256,101 @@ void GridRectIter::activate() {
 			}
 		}
 	}
+}
+
+void GridLineIter::_bind_methods() {
+	ClassDB::bind_method(D_METHOD("next"), &GridLineIter::next);
+
+	ClassDB::bind_method(D_METHOD("set_cell", "value"), &GridLineIter::set_cell);
+	ClassDB::bind_method(D_METHOD("get_cell"), &GridLineIter::get_cell);
+
+	ClassDB::bind_method(D_METHOD("fill_remaining", "value"), &GridLineIter::fill_remaining);
+
+	ClassDB::bind_method(D_METHOD("reset_iter"), &GridLineIter::reset_iter);
+
+	ClassDB::bind_method(D_METHOD("coord"), &GridLineIter::coord);
+}
+
+bool GridLineIter::next() {
+	while (line_iter.next()) {
+		ChunkLocalCoord new_coord = ChunkLocalCoord(line_iter.currenti() + start);
+		if (new_coord.chunk_coord != current.chunk_coord) {
+			chunk = Grid::get_chunk(new_coord.chunk_coord);
+		}
+		current = new_coord;
+
+		if (chunk == nullptr) {
+			continue;
+		} else {
+			is_valid = true;
+			return true;
+		}
+	}
+
+	is_valid = false;
+
+	return false;
+}
+
+void GridLineIter::set_cell(u32 value) {
+	ERR_FAIL_COND_MSG(!is_valid, "next should return true before using iter");
+
+	chunk->set_cell(current.local_coord, value);
+
+	// Activate neighboring cells.
+	IterChunk _chunk_iter = IterChunk(Rect2(
+			current.coord() - Vector2i(1, 1),
+			Vector2i(3, 3)));
+	while (_chunk_iter.next()) {
+		Chunk *c;
+		if (_chunk_iter.chunk_coord == current.chunk_coord) {
+			c = chunk;
+		} else {
+			c = Grid::get_chunk(_chunk_iter.chunk_coord);
+		}
+
+		if (c == nullptr) {
+			continue;
+		}
+
+		TEST_ASSERT(_chunk_iter.local_rect().has_area(), "local_rect has no area");
+		c->activate_rect(_chunk_iter.local_rect());
+
+		Iter2D _cell_iter = _chunk_iter.local_iter();
+		while (_cell_iter.next()) {
+			u32 cell = c->get_cell(_cell_iter.coord);
+			Cell::set_active(cell, true);
+			c->set_cell(_cell_iter.coord, cell);
+		}
+	}
+}
+
+u32 GridLineIter::get_cell() {
+	ERR_FAIL_COND_V_MSG(!is_valid, 0, "next should return true before using iter");
+
+	return chunk->get_cell(current.local_coord);
+}
+
+void GridLineIter::fill_remaining(u32 value) {
+	while (next()) {
+		set_cell(value);
+	}
+}
+
+void GridLineIter::reset_iter() {
+	line_iter.reset();
+	chunk = nullptr;
+	is_valid = false;
+}
+
+Vector2i GridLineIter::coord() {
+	return current.coord();
+}
+
+void GridLineIter::set_line(Vector2i p_start, Vector2i end) {
+	is_valid = false;
+	start = p_start;
+	line_iter = IterLine(end - start);
+	current = ChunkLocalCoord(start);
+	chunk = Grid::get_chunk(current.chunk_coord);
 }

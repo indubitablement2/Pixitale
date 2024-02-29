@@ -40,12 +40,6 @@ func _process(_delta: float) -> void:
 		Core.set_cell_rect(
 			draw_mat_idx, 
 		Rect2i(Global.mouse_coord, Vector2i.ONE).grow(int(brush_size_range.value)))
-	
-	#queue_redraw()
-
-
-#func _draw() -> void:
-	#draw_multiline()
 
 func _on_item_selected(idx: int) -> void:
 	draw_mat_idx = idx

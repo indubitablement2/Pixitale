@@ -122,6 +122,10 @@ void Grid::_bind_methods() {
 			"Grid",
 			D_METHOD("iter_rect", "rect"),
 			&Grid::iter_rect);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("iter_line", "start", "end"),
+			&Grid::iter_line);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -183,6 +187,11 @@ void Grid::clear_iters() {
 		memdelete(iter);
 	}
 	rect_iters.clear();
+
+	for (auto &iter : line_iters) {
+		memdelete(iter);
+	}
+	line_iters.clear();
 }
 
 std::vector<std::pair<Callable *, Vector2i>> &Grid::get_reaction_callback_vector() {
@@ -469,6 +478,15 @@ Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, GridLayer layer) {
 			image_data);
 }
 
+GridChunkIter *Grid::iter_chunk(Vector2i chunk_coord) {
+	auto iter = memnew(GridChunkIter);
+	iter->set_chunk(chunk_coord);
+
+	chunk_iters.push_back(iter);
+
+	return iter;
+}
+
 GridRectIter *Grid::iter_rect(Rect2i rect) {
 	if (rect.size.x <= 0 || rect.size.y <= 0) {
 		rect.size = Vector2i(0, 0);
@@ -482,12 +500,10 @@ GridRectIter *Grid::iter_rect(Rect2i rect) {
 	return iter;
 }
 
-GridChunkIter *Grid::iter_chunk(Vector2i chunk_coord) {
-	auto iter = memnew(GridChunkIter);
-	iter->set_chunk(chunk_coord);
-
-	chunk_iters.push_back(iter);
-
+GridLineIter *Grid::iter_line(Vector2i start, Vector2i end) {
+	auto iter = memnew(GridLineIter);
+	iter->set_line(start, end);
+	line_iters.push_back(iter);
 	return iter;
 }
 
