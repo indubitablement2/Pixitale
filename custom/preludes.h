@@ -92,58 +92,6 @@ inline Vector2i mod_neg(Vector2i numerator, i32 denominator) {
 			mod_neg(numerator.y, denominator));
 }
 
-// // Handle end < start.
-// struct Iter1D {
-// 	i32 _start;
-// 	i32 _end;
-// 	i32 _step;
-
-// 	i32 current;
-
-// 	inline Iter1D(i32 p_start, i32 p_end, i32 p_step, i32 p_current) :
-// 			_start(p_start),
-// 			_end(p_end),
-// 			_step(p_step),
-// 			current(p_current) {}
-
-// 	inline Iter1D(i32 start, i32 end) :
-// 			_start(start),
-// 			_end(end),
-// 			_step(end >= start ? 1 : -1),
-// 			current(start - _step) {}
-
-// 	// Iterate from start to end (excluded).
-// 	// `[start..end[`.
-// 	inline static Iter1D exclusive(i32 start, i32 end) {
-// 		return Iter1D(start, end);
-// 	}
-
-// 	// Iterate from start to end (inclusive).
-// 	// `[start..end]`.
-// 	inline static Iter1D inclusive(i32 start, i32 end) {
-// 		i32 step = end >= start ? 1 : -1;
-// 		return Iter1D(start, end + step, step, start - step);
-// 	}
-
-// 	inline void restart() {
-// 		current = _start - _step;
-// 	}
-
-// 	inline bool next() {
-// 		if (current == _end) {
-// 			return false;
-// 		}
-
-// 		current += _step;
-
-// 		if (current == _end) {
-// 			return false;
-// 		} else {
-// 			return true;
-// 		}
-// 	}
-// };
-
 struct Iter2D {
 	Vector2i _start;
 	Vector2i _end;

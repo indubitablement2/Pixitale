@@ -423,11 +423,12 @@ Rect2i Grid::get_chunk_active_rect(Vector2i chunk_coord) {
 Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, GridLayer layer) {
 	Vector2i image_size = chunk_rect.size * 32;
 
-	// todo: reuse buffer  const_cast<u32*>(img->get_data().ptr());
+	// Tried not creating a new buffer each time, but it was not noticeably faster.
 	auto image_data = Vector<u8>();
 	image_data.resize(image_size.x * 4 * image_size.y);
 	auto image_buffer = reinterpret_cast<u32 *>(image_data.ptrw());
 
+	// This is where 99% of the time is spent.
 	Iter2D chunk_iter = Iter2D(chunk_rect.size);
 	while (chunk_iter.next()) {
 		Vector2i chunk_coord = chunk_rect.position + chunk_iter.coord;
