@@ -7,7 +7,6 @@
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
 #include "core/object/object.h"
-#include "core/templates/vector.h"
 #include "core/variant/callable.h"
 #include "generation_pass.h"
 #include "grid_iter.h"
@@ -16,12 +15,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-
-enum GridLayer {
-	GRID_LAYER_FOREGROUND = 0,
-	GRID_LAYER_MIDGROUND = 1,
-	GRID_LAYER_BACKGROUND = 2,
-};
 
 class Grid : public Object {
 	GDCLASS(Grid, Object);
@@ -117,13 +110,13 @@ public: // godot api
 
 	static Rect2i get_chunk_active_rect(Vector2i chunk_coord);
 
-	static Ref<Image> get_cell_buffer(Rect2i chunk_rect, GridLayer layer);
+	static Ref<Image> get_cell_buffer(Rect2i chunk_rect, bool background);
 
 	static GridChunkIter *iter_chunk(Vector2i chunk_coord);
 	static GridRectIter *iter_rect(Rect2i rect);
 	static GridLineIter *iter_line(Vector2i start, Vector2i end);
 
-	static Vector<Vector2i> get_line(Vector2i start, Vector2i end);
+	static TypedArray<Vector2i> get_line(Vector2i start, Vector2i end);
 
 	static void force_step();
 	static void queue_step_chunks(Rect2i chunk_rect);
@@ -139,6 +132,5 @@ public: // godot api
 };
 
 VARIANT_ENUM_CAST(CellCollision);
-VARIANT_ENUM_CAST(GridLayer);
 
 #endif

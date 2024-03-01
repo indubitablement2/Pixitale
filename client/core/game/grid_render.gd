@@ -50,17 +50,14 @@ func _process(_delta: float) -> void:
 				raw_cell_rect_chunk.size = _last_raw_cell_size / 32
 	_last_raw_cell_size = raw_cell_rect.size
 	
-	var fg_buffer := Grid.get_cell_buffer(raw_cell_rect_chunk, Grid.GRID_LAYER_FOREGROUND)
-	var mg_buffer := Grid.get_cell_buffer(raw_cell_rect_chunk, Grid.GRID_LAYER_MIDGROUND)
-	var bg_buffer := Grid.get_cell_buffer(raw_cell_rect_chunk, Grid.GRID_LAYER_BACKGROUND)
+	var fg_buffer := Grid.get_cell_buffer(raw_cell_rect_chunk, false)
+	var bg_buffer := Grid.get_cell_buffer(raw_cell_rect_chunk, true)
 	if raw_cell_rect.size != Vector2i(cell_raw_data_foreground.get_size()):
 		cell_raw_data_foreground.set_image(fg_buffer)
-		cell_raw_data_midground.set_image(mg_buffer)
 		cell_raw_data_background.set_image(bg_buffer)
 		#print("New raw cell texture size: ", raw_cell_rect.size)
 	else:
 		cell_raw_data_foreground.update(fg_buffer)
-		cell_raw_data_midground.update(mg_buffer)
 		cell_raw_data_background.update(bg_buffer)
 	
 	cell_render_material.set_shader_parameter(&"origin", raw_cell_rect.position)

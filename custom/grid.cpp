@@ -13,6 +13,7 @@
 #include "core/os/memory.h"
 #include "core/templates/vector.h"
 #include "core/variant/array.h"
+#include "core/variant/typed_array.h"
 #include "generation_pass.h"
 #include "grid_iter.h"
 #include "preludes.h"
@@ -111,7 +112,7 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("get_cell_buffer", "chunk_rect", "layer"),
+			D_METHOD("get_cell_buffer", "chunk_rect", "background"),
 			&Grid::get_cell_buffer);
 
 	ClassDB::bind_static_method(
@@ -174,10 +175,6 @@ void Grid::_bind_methods() {
 	BIND_ENUM_CONSTANT(CELL_COLLISION_SOLID);
 	BIND_ENUM_CONSTANT(CELL_COLLISION_PLATFORM);
 	BIND_ENUM_CONSTANT(CELL_COLLISION_LIQUID);
-
-	BIND_ENUM_CONSTANT(GRID_LAYER_FOREGROUND);
-	BIND_ENUM_CONSTANT(GRID_LAYER_MIDGROUND);
-	BIND_ENUM_CONSTANT(GRID_LAYER_BACKGROUND);
 }
 
 void Grid::clear_iters() {
@@ -434,7 +431,7 @@ Rect2i Grid::get_chunk_active_rect(Vector2i chunk_coord) {
 	}
 }
 
-Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, GridLayer layer) {
+Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, bool background) {
 	Vector2i image_size = chunk_rect.size * 32;
 
 	// Tried not creating a new buffer each time, but it was not noticeably faster.
@@ -449,19 +446,16 @@ Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, GridLayer layer) {
 		Vector2i image_offset = chunk_iter.coord * 32;
 
 		Chunk *chunk = get_chunk(chunk_coord);
-		switch (layer) {
-			case GRID_LAYER_FOREGROUND:
-				break;
-			case GRID_LAYER_MIDGROUND:
-				chunk = nullptr;
-				break;
-			case GRID_LAYER_BACKGROUND:
-				if (chunk != nullptr) {
-					chunk = chunk->background;
-				}
+		u32 *cells;
+		if (chunk == nullptr) {
+			cells = nullptr;
+		} else if (background) {
+			cells = chunk->background;
+		} else {
+			cells = &chunk->cells[0];
 		}
 
-		if (chunk == nullptr) {
+		if (cells == nullptr) {
 			for (i32 y = 0; y < 32; y++) {
 				u32 *img_ptr = image_buffer + image_offset.x + (image_offset.y + y) * image_size.x;
 				std::memset(img_ptr, 0, 32 * sizeof(u32));
@@ -469,7 +463,7 @@ Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, GridLayer layer) {
 		} else {
 			for (i32 y = 0; y < 32; y++) {
 				u32 *img_ptr = image_buffer + image_offset.x + (image_offset.y + y) * image_size.x;
-				u32 *cell_ptr = chunk->cells + y * 32;
+				u32 *cell_ptr = cells + y * 32;
 				std::memcpy(img_ptr, cell_ptr, 32 * sizeof(u32));
 			}
 		}
@@ -512,8 +506,8 @@ GridLineIter *Grid::iter_line(Vector2i start, Vector2i end) {
 	return iter;
 }
 
-Vector<Vector2i> Grid::get_line(Vector2i start, Vector2i end) {
-	Vector<Vector2i> line;
+TypedArray<Vector2i> Grid::get_line(Vector2i start, Vector2i end) {
+	TypedArray<Vector2i> line;
 	IterLine line_iter = IterLine(end - start);
 	line.resize(i32(line_iter.num_points));
 	while (line_iter.next()) {

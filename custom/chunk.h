@@ -7,7 +7,7 @@
 #include "preludes.h"
 #include <bit>
 
-// Coord is relative to first (top left) cell.
+// Coord is relative to first cell (top left).
 class alignas(64) Chunk {
 public:
 	bool generated = false;
@@ -17,9 +17,9 @@ public:
 	u32 active_rows = MAX_U32;
 	u32 active_columns = MAX_U32;
 
-	Chunk *background = nullptr;
-	u32 *velocity = nullptr;
+	u32 *background = nullptr;
 
+	u32 *velocity = nullptr;
 	u32 cells[32 * 32];
 
 	inline bool is_inactive() {
@@ -84,8 +84,8 @@ public:
 		bound_test(rect.position);
 		bound_test(rect.get_end() - Vector2i(1, 1));
 
-		active_rows |= u32((1ull << rect.size.y) - 1ull) << rect.position.y;
-		active_columns |= u32((1ull << rect.size.x) - 1ull) << rect.position.x;
+		active_rows |= u32((1uLL << rect.size.y) - 1uLL) << rect.position.y;
+		active_columns |= u32((1uLL << rect.size.x) - 1uLL) << rect.position.x;
 	}
 
 	inline void activate_point(Vector2i coord, bool activate_cell) {
@@ -110,7 +110,7 @@ public:
 
 	~Chunk() {
 		if (background != nullptr) {
-			delete background;
+			delete[] background;
 		}
 		if (velocity != nullptr) {
 			delete[] velocity;
