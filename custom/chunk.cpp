@@ -348,7 +348,7 @@ public:
 							movement = -2;
 						}
 					} else {
-						// Blocked and doesn't want to reverse.
+						// Blocked on moving side and doesn't want to reverse.
 						movement = -2;
 					}
 					break;

@@ -19,10 +19,9 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 ## Todo
 
 #### Cell Movement
-- [ ] Particle movement
-- [ ] Sand movement
+- [x] Particle movement
+- [x] Sand movement
 - [ ] Wind effect
-
 
 #### Background Cell
 - Just material and color. No movement or reaction.
@@ -47,13 +46,13 @@ Global light:
 - Similar to normal light, but sample from a direction instead of a point. Also blocked by background cell.
 
 #### Npc
-- Shared between players in mutiplayer?
+- Shared between players in multiplayer?
 
 #### Home Area
 - Can flag chunks as home. Save what the player built and gets repaired for free.
 - Should repair speed increase with the number of npc?
 - Needs an npc home nearby?
-- Shared between players in mutiplayer?
+- Shared between players in multiplayer?
 
 #### Stats
 To make it simple to compute stats, all stats are additive and use int.
