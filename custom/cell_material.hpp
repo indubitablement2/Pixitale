@@ -54,10 +54,11 @@ struct CellMaterial {
 	u32 horizontal_movement_start_chance = 0;
 	// Chance to stop moving horizontally.
 	u32 horizontal_movement_stop_chance = MAX_U32;
-	// // Duplicate this cell on vertical movement when moving atop inactive cells.
-	// // This is for top layer of fluid to eventually fill up and become inactive
-	// // instead of moving back and forth forever.
-	// u32 duplicate_on_vertical_movement_probability;
+
+	// Remove this cell on blocked horizontal movement when moving atop inactive cells.
+	// This is for top layer of fluid to eventually become inactive,
+	// instead of moving back and forth forever.
+	u32 dissipate_on_horizontal_blocked_chance = 0;
 
 	// When blocked from moving horizontally, try to reverse direction instead of stopping.
 	bool can_reverse_horizontal_movement = false;
@@ -73,6 +74,8 @@ struct CellMaterial {
 		horizontal_movement = CLAMP(i32(obj->get("horizontal_movement", nullptr)), 1, 16);
 		horizontal_movement_start_chance = u32(CLAMP(f64(obj->get("horizontal_movement_start_chance", nullptr)), 0.0, 1.0) * f64(MAX_U32));
 		horizontal_movement_stop_chance = u32(CLAMP(f64(obj->get("horizontal_movement_stop_chance", nullptr)), 0.0, 1.0) * f64(MAX_U32));
+
+		dissipate_on_horizontal_blocked_chance = u32(CLAMP(f64(obj->get("dissipate_on_horizontal_blocked_chance", nullptr)), 0.0, 1.0) * f64(MAX_U32));
 
 		can_reverse_horizontal_movement = bool(obj->get("can_reverse_horizontal_movement", nullptr));
 

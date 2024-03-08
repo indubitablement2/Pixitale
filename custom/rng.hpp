@@ -88,6 +88,15 @@ struct Rng {
 	inline bool gen_probability_u32_max(u32 probability) {
 		return gen_u32() < probability;
 	}
+
+	inline void shuffle(i32 *arr, u32 n) {
+		for (u32 i = n - 1; i > 0; i--) {
+			i32 j = gen_range_u32(0, i + 1);
+			i32 temp = arr[i];
+			arr[i] = arr[j];
+			arr[j] = temp;
+		}
+	}
 };
 
 #endif

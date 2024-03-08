@@ -316,8 +316,8 @@ public:
 			}
 		}
 
+		// Spontaneously start moving.
 		if (was_active && movement == -2 && rng.gen_probability_u32_max(cell_material->horizontal_movement_start_chance)) {
-			// Spontaneously start moving.
 			movement = rng.gen_sign();
 		}
 
@@ -335,6 +335,15 @@ public:
 					// Then horizontally.
 					if (try_move(Vector2i(movement, 0))) {
 						continue;
+					}
+
+					if (rng.gen_probability_u32_max(cell_material->dissipate_on_horizontal_blocked_chance)) {
+						if (!is_row_active(Vector2i(cell_coord.x, cell_coord.y + 2))) {
+							// Dissipate on blocked horizontal movement.
+							cell = 0;
+							Cell::set_active(cell, true);
+							break;
+						}
 					}
 
 					if (cell_material->can_reverse_horizontal_movement) {
@@ -435,6 +444,7 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 		i32 x_start_base = std::countr_zero(active_columns);
 		i32 x_end_base = 32 - std::countl_zero(active_columns);
 		// Alternate iteration between left and right.
+		// Reduces visible chunk border artifacts.
 		if ((Grid::get_tick() & 1) == 0) {
 			x_step = -1;
 			x_start = x_end_base - 1;
@@ -447,12 +457,6 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 	}
 
 	chunk_api.center()->clear_active_rect();
-
-	// for (i32 y = 0; y < 32; y++) {
-	// 	for (i32 x = 0; x < 32; x++) {
-	// 		chunk_api.step_cell(Vector2i(x, y), false);
-	// 	}
-	// }
 
 	// Iterate over each cell in the chunk from the bottom.
 	for (i32 y = y_bot; y != y_top; y--) {

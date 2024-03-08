@@ -30,9 +30,10 @@ display_name = "Water"
 base_color = Color(0, 0.298039, 0.631373, 0.921569)
 light_modulate = Color(0, 0, 1, 0.717647)
 density = 100
-vertical_movement = 2
-horizontal_movement_start_chance = 1.0
-horizontal_movement_stop_chance = 0.0
+vertical_movement = 3
+horizontal_movement = 4
+horizontal_movement_start_chance = 0.9
+horizontal_movement_stop_chance = 0.02
 can_reverse_horizontal_movement = true
 collision_type = 4
 
