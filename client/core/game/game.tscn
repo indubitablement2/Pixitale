@@ -1,4 +1,4 @@
-[gd_scene load_steps=32 format=3 uid="uid://cs41g41rbjtf3"]
+[gd_scene load_steps=31 format=3 uid="uid://cs41g41rbjtf3"]
 
 [ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
@@ -8,7 +8,6 @@
 [ext_resource type="Texture2D" uid="uid://bt8vd52xyn6om" path="res://core/shader/texture/cell_raw_data/foreground.tres" id="4_xxntp"]
 [ext_resource type="PackedScene" uid="uid://5ojtd4d004ve" path="res://core/camera/free_camera.tscn" id="7_7jk4b"]
 [ext_resource type="Texture2D" uid="uid://dcodkd1xxqxik" path="res://core/shader/texture/cell_raw_data/background.tres" id="7_602ny"]
-[ext_resource type="Texture2D" uid="uid://bnteua3rjglbi" path="res://core/shader/texture/cell_raw_data/midground.tres" id="8_7sqlw"]
 [ext_resource type="Material" uid="uid://btwoiop8xxp15" path="res://core/shader/cell_render.material" id="8_onaw1"]
 [ext_resource type="Texture2D" uid="uid://b5c5qksfr7hk4" path="res://core/shader/texture/cell_materials_data/base_color_atlas.tres" id="11_4eirp"]
 [ext_resource type="Texture2D" uid="uid://t50h32apl4gq" path="res://core/shader/texture/cell_materials_data/glow.tres" id="11_rdegm"]
@@ -174,7 +173,7 @@ shader_parameter/raycast_light_origin_dir = Vector2(0, -1)
 shader_parameter/raycast_light_lenght = 32
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_f00lt"]
-blend_mode = 1
+blend_mode = 2
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_5p4mp"]
 viewport_path = NodePath("LightPass")
@@ -384,13 +383,6 @@ visible = false
 z_index = -200
 z_as_relative = false
 texture = ExtResource("7_602ny")
-centered = false
-
-[node name="Midground" type="Sprite2D" parent="GridRender"]
-visible = false
-z_index = -100
-z_as_relative = false
-texture = ExtResource("8_7sqlw")
 centered = false
 
 [node name="Foreground" type="Sprite2D" parent="GridRender"]

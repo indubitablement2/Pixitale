@@ -2,7 +2,7 @@
 #include "BS_thread_pool.hpp"
 #include "biome.h"
 #include "cell.hpp"
-#include "cell_material.h"
+#include "cell_material.hpp"
 #include "chunk.h"
 #include "core/error/error_macros.h"
 #include "core/io/image.h"
@@ -11,6 +11,7 @@
 #include "core/object/class_db.h"
 #include "core/object/ref_counted.h"
 #include "core/os/memory.h"
+#include "core/string/print_string.h"
 #include "core/templates/vector.h"
 #include "core/variant/array.h"
 #include "core/variant/typed_array.h"
@@ -65,8 +66,8 @@ void Grid::_bind_methods() {
 			&Grid::remove_cell_reaction);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("print_reactions"),
-			&Grid::print_reactions);
+			D_METHOD("print_internals"),
+			&Grid::print_internals);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -241,7 +242,7 @@ void Grid::generate_chunk(Vector2i chunk_coord) {
 	memdelete(iter);
 }
 
-CellMaterial &Grid::get_cell_material(u32 material_idx) {
+const CellMaterial &Grid::get_cell_material(u32 material_idx) {
 	if (material_idx < cell_materials.size()) {
 		return cell_materials[material_idx];
 	} else {
@@ -309,9 +310,9 @@ u64 Grid::add_cell_reaction(u32 in1, u32 in2, u32 out1, u32 out2, f64 probabilit
 	CellReaction reaction = {};
 
 	reaction.probability = u32(CLAMP(
-			probability * (f64)CELL_REACTION_PROBABILITY_RANGE,
+			probability * f64(MAX_U32),
 			0.0,
-			(f64)(CELL_REACTION_PROBABILITY_RANGE)));
+			f64(MAX_U32)));
 
 	reaction.callback_swap = swap;
 	if (swap) {
@@ -358,14 +359,29 @@ bool Grid::remove_cell_reaction(u64 reaction_id) {
 	return false;
 }
 
-void Grid::print_reactions() {
+void Grid::print_internals() {
+	i32 cell_material_idx = 0;
+	for (auto &cell_material : cell_materials) {
+		print_line("material:", cell_material_idx);
+		print_line("	collision:", cell_material.collision);
+		print_line("	density:", cell_material.density);
+		print_line("	vertical_movement:", cell_material.vertical_movement);
+		print_line("	horizontal_movement:", cell_material.horizontal_movement);
+		print_line("	horizontal_movement_start_chance:", f64(cell_material.horizontal_movement_start_chance) / f64(MAX_U32));
+		print_line("	horizontal_movement_stop_chance:", f64(cell_material.horizontal_movement_stop_chance) / f64(MAX_U32));
+		print_line("	can_reverse_horizontal_movement:", cell_material.can_reverse_horizontal_movement);
+		print_line("	can_color:", cell_material.can_color);
+
+		cell_material_idx += 1;
+	}
+
 	for (auto &[key, reactions] : cell_reactions) {
 		u32 in1 = key & 0xFFFF;
 		u32 in2 = key >> 16;
 		print_line("reactions between:", in1, "and", in2);
 		for (auto &reaction : reactions) {
 			print_line("	id:", u64(key) | (u64(reaction.reaction_id) << 32));
-			print_line("	probability:", f64(reaction.probability) / f64(CELL_REACTION_PROBABILITY_RANGE));
+			print_line("	probability:", f64(reaction.probability) / f64(MAX_U32));
 			print_line("	out1:", reaction.mat_idx_out1);
 			print_line("	out2:", reaction.mat_idx_out2);
 			print_line("	callback:", !reaction.callback.is_null());

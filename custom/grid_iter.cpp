@@ -124,9 +124,8 @@ void GridChunkIter::activate() {
 
 			Iter2D _cell_iter = _chunk_iter.local_iter();
 			while (_cell_iter.next()) {
-				u32 cell = c->get_cell(_cell_iter.coord);
-				Cell::set_active(cell, true);
-				c->set_cell(_cell_iter.coord, cell);
+				u32 *cell = c->get_cell_ptr(_cell_iter.coord);
+				Cell::set_active(*cell, true);
 			}
 		}
 	}
@@ -246,13 +245,8 @@ void GridRectIter::activate() {
 
 			Iter2D _cell_iter = _chunk_iter.local_iter();
 			while (_cell_iter.next()) {
-				TEST_ASSERT(_cell_iter.coord.x >= 0, "coord.x is negative");
-				TEST_ASSERT(_cell_iter.coord.y >= 0, "coord.y is negative");
-				TEST_ASSERT(_cell_iter.coord.x < 32, "coord.x is too large");
-				TEST_ASSERT(_cell_iter.coord.y < 32, "coord.y is too large");
-				u32 cell = c->get_cell(_cell_iter.coord);
-				Cell::set_active(cell, true);
-				c->set_cell(_cell_iter.coord, cell);
+				u32 *cell = c->get_cell_ptr(_cell_iter.coord);
+				Cell::set_active(*cell, true);
 			}
 		}
 	}
@@ -318,9 +312,8 @@ void GridLineIter::set_cell(u32 value) {
 
 		Iter2D _cell_iter = _chunk_iter.local_iter();
 		while (_cell_iter.next()) {
-			u32 cell = c->get_cell(_cell_iter.coord);
-			Cell::set_active(cell, true);
-			c->set_cell(_cell_iter.coord, cell);
+			u32 *cell = c->get_cell_ptr(_cell_iter.coord);
+			Cell::set_active(*cell, true);
 		}
 	}
 }

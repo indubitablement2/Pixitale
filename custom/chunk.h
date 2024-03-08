@@ -3,6 +3,7 @@
 
 #include "cell.hpp"
 #include "core/math/rect2i.h"
+#include "core/math/vector2.h"
 #include "core/math/vector2i.h"
 #include "preludes.h"
 #include <bit>
@@ -10,7 +11,7 @@
 // Coord is relative to first cell (top left).
 class alignas(64) Chunk {
 public:
-	bool generated = false;
+	// bool generated = false;
 
 	i64 last_step_tick = -1;
 
@@ -19,7 +20,8 @@ public:
 
 	u32 *background = nullptr;
 
-	u32 *velocity = nullptr;
+	u32 *cells_save = nullptr;
+
 	u32 cells[32 * 32];
 
 	inline bool is_inactive() {
@@ -54,7 +56,7 @@ public:
 
 	inline u32 *get_cell_ptr(Vector2i coord) {
 		bound_test(coord);
-		return cells + (coord.x + coord.y * 32);
+		return cells + coord.x + coord.y * 32;
 	}
 
 	inline u32 get_cell(Vector2i coord) {
@@ -112,8 +114,8 @@ public:
 		if (background != nullptr) {
 			delete[] background;
 		}
-		if (velocity != nullptr) {
-			delete[] velocity;
+		if (cells_save != nullptr) {
+			delete[] cells_save;
 		}
 	}
 };

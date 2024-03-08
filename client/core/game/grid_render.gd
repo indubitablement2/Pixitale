@@ -23,7 +23,6 @@ static var _last_raw_cell_size := Vector2i()
 @onready var cell_render_material : ShaderMaterial = $Foreground.material
 
 @onready var cell_raw_data_foreground : ImageTexture = $Foreground.texture
-@onready var cell_raw_data_midground : ImageTexture = $Midground.texture
 @onready var cell_raw_data_background : ImageTexture = $Backgroud.texture
 
 func _init() -> void:

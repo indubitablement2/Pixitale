@@ -1,48 +1,43 @@
 #include "chunk.h"
 #include "cell.hpp"
-#include "cell_material.h"
+#include "cell_material.hpp"
 #include "core/math/vector2.h"
 #include "core/math/vector2i.h"
 #include "grid.h"
 #include "preludes.h"
 #include <bit>
 
-thread_local std::vector<u32 *> free_velocity_buffers = {};
-
 // Api for working with cells within a single chunk (center)
 // which may affect nearby chunks.
 // Coord is relative to top left cell of top left chunk unless otherwise specified.
 class ChunkApi {
 public:
-	u32 cell;
 	u32 *cell_ptr;
+	u32 cell;
+
+	u32 cell_material_idx;
+	const CellMaterial *cell_material;
+
 	// Coord of the current cell relative to cell_coord_origin.
 	Vector2i cell_coord;
+
 	// Coord of the top left cell of top left chunk.
 	Vector2i cell_coord_origin;
+
 	Rng rng;
-	std::vector<std::pair<Callable *, Vector2i>> &reaction_callbacks = Grid::get_reaction_callback_vector();
+
+	std::vector<std::pair<Callable *, Vector2i>> &reaction_callbacks;
+
 	Chunk *chunks[9];
 
 	ChunkApi(Vector2i chunk_coord) :
 			cell_coord_origin((chunk_coord - Vector2i(1, 1)) * 32),
-			rng(Grid::get_temporal_rng(chunk_coord)) {
+			rng(Grid::get_temporal_rng(chunk_coord)),
+			reaction_callbacks(Grid::get_reaction_callback_vector()) {
 	}
 
 	Chunk *center() {
 		return chunks[4];
-	}
-
-	u32 cell_material_idx() {
-		return Cell::material_idx(cell);
-	}
-
-	void set_cell_material_idx(u32 new_cell_material_idx) {
-		Cell::set_material_idx(cell, new_cell_material_idx);
-	}
-
-	CellMaterial &cell_material() {
-		return Grid::get_cell_material(cell_material_idx());
 	}
 
 	void bound_test(Vector2i coord) {
@@ -65,29 +60,10 @@ public:
 		return chunk_x + chunk_y * 3;
 	}
 
-	void get_ptrs(Vector2i coord, Chunk *&chunk_ptr, u32 *&other_cell_ptr) {
-		i32 chunk_idx = to_local(coord);
-		chunk_ptr = chunks[chunk_idx];
-		other_cell_ptr = chunk_ptr->get_cell_ptr(coord);
-	}
-
-	u32 *get_cell_ptr(Vector2i coord) {
+	inline u32 *get_ptr(Vector2i coord) {
 		i32 chunk_idx = to_local(coord);
 		return chunks[chunk_idx]->get_cell_ptr(coord);
 	}
-
-	u32 get_cell(Vector2i coord) {
-		return *get_cell_ptr(coord);
-	}
-
-	u32 *get_velocity_ptr(Vector2i coord) {
-		i32 chunk_idx = to_local(coord);
-		return chunks[chunk_idx]->velocity + coord.x + coord.y * 32;
-	}
-
-	// void set_cell(Vector2i coord, u32 cell) {
-	// 	*get_cell_ptr(coord) = cell;
-	// }
 
 	void activate_point(Vector2i coord, bool activate_cell) {
 		i32 chunk_idx = to_local(coord);
@@ -101,7 +77,7 @@ public:
 		activate_point(coord + Vector2i(1, -1), true);
 
 		activate_point(coord + Vector2i(-1, 0), true);
-		// center chunk is activated as a byproduct.
+		// center point is activated as a byproduct.
 		activate_point(coord + Vector2i(1, 0), true);
 
 		activate_point(coord + Vector2i(-1, 1), true);
@@ -114,71 +90,33 @@ public:
 		return chunks[chunk_idx]->is_row_active(coord.y);
 	}
 
-	bool can_swap(Vector2i other_coord) {
-		u32 other = get_cell(other_coord);
-		CellMaterial &other_cell_material = Grid::get_cell_material(Cell::material_idx(other));
-		return cell_material().density > other_cell_material.density;
-	}
-
-	// Returns true if swapped.
-	bool try_swap(Vector2i other_coord) {
-		Chunk *other_chunk_ptr;
-		u32 *other_cell_ptr;
-		get_ptrs(other_coord, other_chunk_ptr, other_cell_ptr);
-		u32 other = *other_cell_ptr;
-		CellMaterial &other_cell_material = Grid::get_cell_material(Cell::material_idx(other));
-
-		if (cell_material().density > other_cell_material.density) {
-			// todo: duplication on h movement
-
-			Cell::set_updated(other, Grid::cell_updated_bitmask);
-			Cell::set_updated(cell, Grid::cell_updated_bitmask);
-
-			*cell_ptr = other;
-			cell_ptr = other_cell_ptr;
-
-			activate_neightbors(other_coord);
-			activate_neightbors(cell_coord);
-			cell_coord = other_coord;
-
-			return true;
-		} else {
-			return false;
-		}
-	}
-
-	void try_react_between(Vector2i other_offset) {
-		Vector2i other_coord = cell_coord + other_offset;
-		Chunk *other_chunk_ptr;
-		u32 *other_cell_ptr;
-		get_ptrs(other_coord, other_chunk_ptr, other_cell_ptr);
+	void try_react_between(Vector2i dir) {
+		Vector2i other_coord = cell_coord + dir;
+		u32 *other_cell_ptr = get_ptr(other_coord);
 		u32 other = *other_cell_ptr;
 		u32 other_material_idx = Cell::material_idx(other);
 
 		bool swap;
 		CellReaction *reaction = nullptr;
 		CellReaction *reaction_end = nullptr;
-		Grid::reactions_between(reaction, reaction_end, cell_material_idx(), other_material_idx, swap);
+		Grid::reactions_between(
+				reaction,
+				reaction_end,
+				cell_material_idx,
+				other_material_idx,
+				swap);
 
 		if (reaction == nullptr) {
 			return;
 		}
 
+		// We have at least one possible reaction.
 		Cell::set_active(cell);
 
 		while (reaction != reaction_end) {
 			if (reaction->try_react(rng)) {
-				u32 cell_material_idx_out;
-				u32 other_material_idx_out;
-				if (swap) {
-					cell_material_idx_out = reaction->mat_idx_out2;
-					other_material_idx_out = reaction->mat_idx_out1;
-				} else {
-					cell_material_idx_out = reaction->mat_idx_out1;
-					other_material_idx_out = reaction->mat_idx_out2;
-				}
-
 				if (!reaction->callback.is_null()) {
+					// Make sure trigger coord is at `in1`.
 					Vector2i trigger_coord = cell_coord_origin;
 					// if (swap && reaction->callback_swap) {
 					// 	trigger_coord += cell_coord;
@@ -189,6 +127,7 @@ public:
 					// } else {
 					// 	trigger_coord += cell_coord;
 					// }
+					// Simplified version of the above.
 					if (swap == reaction->callback_swap) {
 						trigger_coord += cell_coord;
 					} else {
@@ -197,21 +136,34 @@ public:
 					reaction_callbacks.push_back({ &reaction->callback, trigger_coord });
 				}
 
-				if (cell_material_idx() != cell_material_idx_out) {
-					// todo: color
-					cell = Cell::build_cell(
-							cell_material_idx_out,
-							Grid::cell_updated_bitmask,
-							true);
+				u32 cell_material_idx_out;
+				u32 other_material_idx_out;
+				if (swap) {
+					cell_material_idx_out = reaction->mat_idx_out2;
+					other_material_idx_out = reaction->mat_idx_out1;
+				} else {
+					cell_material_idx_out = reaction->mat_idx_out1;
+					other_material_idx_out = reaction->mat_idx_out2;
+				}
+
+				if (cell_material_idx != cell_material_idx_out) {
+					cell_material_idx = cell_material_idx_out;
+					cell_material = &Grid::get_cell_material(cell_material_idx);
+
+					cell = 0;
+					Cell::set_material_idx(cell, cell_material_idx);
+					Cell::set_active(cell);
+
 					activate_neightbors(cell_coord);
 				}
 
 				if (other_material_idx != other_material_idx_out) {
-					// todo: color
-					*other_cell_ptr = Cell::build_cell(
-							other_material_idx_out,
-							Grid::cell_updated_bitmask,
-							true);
+					other = 0;
+					Cell::set_material_idx(other, other_material_idx_out);
+					Cell::set_active(other);
+
+					*other_cell_ptr = other;
+
 					activate_neightbors(other_coord);
 				}
 
@@ -222,31 +174,58 @@ public:
 		}
 	}
 
-	void step_cell(const Vector2i center_coord, bool force_step) {
+	// Returns true if swapped.
+	bool try_move(Vector2i dir) {
+		Vector2i other_coord = cell_coord + dir;
+		u32 *other_cell_ptr = get_ptr(other_coord);
+		u32 other = *other_cell_ptr;
+		u32 other_material_idx = Cell::material_idx(other);
+
+		if (other_material_idx == cell_material_idx) {
+			// Quick path for same material.
+			return false;
+		}
+
+		const CellMaterial &other_material = Grid::get_cell_material(other_material_idx);
+
+		if (cell_material->density > other_material.density) {
+			*cell_ptr = other;
+			cell_ptr = other_cell_ptr;
+
+			activate_neightbors(other_coord);
+			activate_neightbors(cell_coord);
+			cell_coord = other_coord;
+
+			Cell::set_active(cell);
+
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	void step_cell(const Vector2i center_coord, const bool force_step) {
 		cell_ptr = center()->get_cell_ptr(center_coord);
 		cell = *cell_ptr;
 		cell_coord = center_coord + Vector2i(32, 32);
 
-		if (force_step) {
-			if (Cell::is_updated(cell, Grid::cell_updated_bitmask)) {
-				if (Cell::is_active(cell)) {
-					center()->activate_point(center_coord, false);
-				}
-				return;
-			}
-		} else {
-			if (!Cell::is_active(cell)) {
-				return;
-			}
+		bool was_active = Cell::is_active(cell);
 
-			if (Cell::is_updated(cell, Grid::cell_updated_bitmask)) {
+		if (Cell::is_updated(cell, Grid::cell_updated_bitmask)) {
+			if (was_active) {
 				center()->activate_point(center_coord, false);
-				return;
 			}
+			return;
 		}
 
-		Cell::set_updated(cell, Grid::cell_updated_bitmask);
+		if (!force_step && !was_active) {
+			return;
+		}
+
 		Cell::set_active(cell, false);
+
+		cell_material_idx = Cell::material_idx(cell);
+		cell_material = &Grid::get_cell_material(cell_material_idx);
 
 		// Reactions
 		// We react with `o`s, `x`s will react with us.
@@ -258,71 +237,138 @@ public:
 		try_react_between(Vector2i(0, 1));
 		try_react_between(Vector2i(1, 1));
 
-		if (Cell::is_active(cell)) {
-			center()->activate_point(center_coord, false);
+		// // Particle movement
+		// if (Cell::movement(cell)) {
+		// 	velocity = *velocity_ptr;
+
+		// 	velocity.y += cell_material.gravity;
+		// 	velocity *= cell_material.friction;
+		// 	velocity = Vector2(
+		// 			CLAMP(velocity.x, -16.0f, 16.0f),
+		// 			CLAMP(velocity.y, -16.0f, 16.0f));
+
+		// 	Vector2i target = Vector2i(velocity);
+		// 	// Fractional part of velocity is handled using probability.
+		// 	Vector2 frac = velocity - Vector2(target);
+		// 	if (rng.gen_probability_f32(frac.x)) {
+		// 		target.x += i32(SIGN(velocity.x));
+		// 	}
+		// 	if (rng.gen_probability_f32(frac.y)) {
+		// 		target.y += i32(SIGN(velocity.y));
+		// 	}
+
+		// 	if (target != Vector2i(0, 0)) {
+		// 		IterLine iter = IterLine(target, false);
+		// 		Vector2i new_coord = cell_coord;
+		// 		while (iter.next()) {
+		// 			Vector2i other_coord = iter.currenti() + cell_coord;
+
+		// 			u32 *other_cell_ptr;
+		// 			get_ptr(other_coord, &other_cell_ptr);
+		// 			u32 other = *other_cell_ptr;
+
+		// 			u32 other_material_idx = Cell::material_idx(other);
+		// 			if (other_material_idx == cell_material_idx) {
+		// 				// todo: Can pass through same material cells.
+		// 				continue;
+		// 			}
+
+		// 			CellMaterial &other_cell_material = Grid::get_cell_material(other_material_idx);
+		// 			if (cell_material.density > other_cell_material.density) {
+		// 				// Can swap with less dense cells.
+		// 				new_coord = other_coord;
+		// 				continue;
+		// 			}
+
+		// 			if (Cell::movement(other)) {
+		// 				// Can pass through particle cells.
+		// 				continue;
+		// 			}
+
+		// 			// Blocked.
+		// 			velocity = -Vector2(
+		// 					velocity.x * rng.gen_f32() * cell_material.bounciness,
+		// 					velocity.y * rng.gen_f32() * cell_material.bounciness);
+		// 			break;
+		// 		}
+
+		// 		if (new_coord != cell_coord) {
+		// 			swap(new_coord);
+		// 		}
+		// 	}
+		// } else {
+		// 	velocity = Vector2(0.0f, 0.0f);
+		// }
+
+		// Vertical movement
+		i32 movement = Cell::movement(cell);
+		i32 vertical_dir = SIGN(cell_material->vertical_movement);
+		for (i32 i = 0; i != cell_material->vertical_movement; i += vertical_dir) {
+			if (try_move(Vector2i(0, vertical_dir))) {
+				movement = 0;
+			} else {
+				if (movement == 0) {
+					// Always move horizontally after falling.
+					movement = rng.gen_sign();
+				}
+
+				break;
+			}
 		}
 
-		// Movement
-		// if (Cell::is_particle(cell)) {
-		// 	// todo
-		// } else {
-		// 	u32 orthogonal_velocity_i = Cell::orthogonal_velocity_i(cell);
-		// 	if (!cell_material().can_fall && orthogonal_velocity_i == 0) {
-		// 		Cell::clear_velocity(cell);
-		// 		*cell_ptr = cell;
-		// 		return;
-		// 	}
-		// 	f32 orthogonal_velocity = f32(orthogonal_velocity_i) / 255.0f;
+		if (was_active && movement == -2 && rng.gen_probability_u32_max(cell_material->horizontal_movement_start_chance)) {
+			// Spontaneously start moving.
+			movement = rng.gen_sign();
+		}
 
-		// 	i32 v_dir;
-		// 	f32 vertical_acceleration = cell_material().vertical_acceleration;
-		// 	if (vertical_acceleration >= 0) {
-		// 		v_dir = 1;
-		// 	} else {
-		// 		v_dir = -1;
-		// 		vertical_acceleration = -vertical_acceleration;
-		// 	}
+		// Horizontal movement
+		if (movement == -1 || movement == 1) {
+			if (rng.gen_probability_u32_max(cell_material->horizontal_movement_stop_chance)) {
+				// Spontaneously stop moving.
+				movement = -2;
+			} else {
+				for (i32 i = 0; i < cell_material->horizontal_movement; i++) {
+					// Try move diagonally first.
+					if (try_move(Vector2i(movement, vertical_dir))) {
+						continue;
+					}
+					// Then horizontally.
+					if (try_move(Vector2i(movement, 0))) {
+						continue;
+					}
 
-		// 	if (can_swap(Vector2i(cell_coord.x, cell_coord.y + v_dir))) {
-		// 		// Vertical movement
+					if (cell_material->can_reverse_horizontal_movement) {
+						// Try other direction.
+						movement = -movement;
 
-		// 		if (Cell::movement_dir(cell) != 0) {
-		// 			// We were moving horizontally before.
-		// 			Cell::set_movement_dir(cell, 0);
-		// 			orthogonal_velocity = 0.0f;
-		// 		}
+						if (try_move(Vector2i(movement, vertical_dir))) {
+						} else if (try_move(Vector2i(movement, 0))) {
+						} else {
+							// Blocked on both sides.
+							movement = -2;
+						}
+					} else {
+						// Blocked and doesn't want to reverse.
+						movement = -2;
+					}
+					break;
+				}
+			}
+		}
 
-		// 		orthogonal_velocity += vertical_acceleration;
-		// 		orthogonal_velocity = MIN(orthogonal_velocity, 1.0);
+		Cell::set_movement(cell, movement);
+		if (movement != -2) {
+			Cell::set_active(cell, true);
+		}
 
-		// 		f32 vel = orthogonal_velocity * cell_material().vertical_velocity_max;
-		// 		i32 v_num = i32(vel) + i32(rng.gen_probability_f32(vel - Math::floor(vel)));
-		// 		for (i32 i = 0; i < v_num; i++) {
-		// 			if (!try_swap(Vector2i(cell_coord.x, cell_coord.y + v_dir))) {
-		// 				// Blocked. Transfer some vertical velocity to horizontal.
-		// 				orthogonal_velocity *= cell_material().vertical_velocity_max / cell_material().horizontal_velocity_max;
-		// 				orthogonal_velocity *= 0.75f;
-		// 				Cell::set_movement_dir(cell, rng.gen_sign());
-		// 				break;
-		// 			}
-		// 		}
-
-		// 		Cell::set_orthogonal_velocity(cell, orthogonal_velocity);
-		// 	} else {
-		// 		// Horizontal movement
-
-		// 		u32 h_dir = Cell::movement_dir(cell);
-		// 		if (h_dir == 0) {
-		// 			// We were moving vertically before.
-		// 			h_dir = rng.gen_sign();
-		// 		}
-
-		// 		// todo before each h move, check if can move diag first
-
-		// 		Cell::set_movement_dir(cell, h_dir);
-		// 		Cell::set_orthogonal_velocity(cell, 0.0f);
-		// 	}
-		// }
+		if (Cell::is_active(cell)) {
+			Cell::set_updated(cell, Grid::cell_updated_bitmask);
+			// This is for the case where we didn't move/react, but are active nonetheless.
+			// Otherwise this does nothing as we would call activate_neightbors.
+			center()->activate_point(center_coord, false);
+		} else {
+			Cell::clear_updated(cell);
+		}
 
 		*cell_ptr = cell;
 	}
@@ -338,18 +384,9 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 
 			TEST_ASSERT(chunk_ptr != nullptr, "step chunk got nullptr");
 
-			if (chunk_ptr->velocity == nullptr) {
-				if (!free_velocity_buffers.empty()) {
-					chunk_ptr->velocity = free_velocity_buffers.back();
-					free_velocity_buffers.pop_back();
-				} else {
-					chunk_ptr->velocity = new u32[32 * 32]{};
-				}
-			}
-
 			// Chunk generation
-			if (!chunk_ptr->generated) {
-				chunk_ptr->generated = true;
+			if (chunk_ptr->last_step_tick < 0) {
+				chunk_ptr->last_step_tick = 0;
 
 				// Clear cells.
 				for (i32 i = 0; i < 32 * 32; i++) {
@@ -364,15 +401,12 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 	}
 
 	bool force_step = chunk_api.center()->last_step_tick <= Grid::last_modified_tick;
-
 	chunk_api.center()->last_step_tick = Grid::get_tick();
 
 	if (chunk_api.center()->is_inactive() && !force_step) {
 		// Nothing to do.
 		return;
 	}
-
-	chunk_api.rng = Grid::get_temporal_rng(chunk_coord);
 
 	// i32 y_start = std::countr_zero(active_rows);
 	// i32 y_end = 32 - std::countl_zero(active_rows);
@@ -414,6 +448,12 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 
 	chunk_api.center()->clear_active_rect();
 
+	// for (i32 y = 0; y < 32; y++) {
+	// 	for (i32 x = 0; x < 32; x++) {
+	// 		chunk_api.step_cell(Vector2i(x, y), false);
+	// 	}
+	// }
+
 	// Iterate over each cell in the chunk from the bottom.
 	for (i32 y = y_bot; y != y_top; y--) {
 		if ((active_rows & (1u << y)) == 0) {
@@ -424,26 +464,6 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 		while (x != x_end) {
 			chunk_api.step_cell(Vector2i(x, y), force_step);
 			x += x_step;
-		}
-	}
-
-	// Remove uneeded cell velocity buffers.
-	for (i32 i = 0; i < 9; i++) {
-		Chunk *chunk_ptr = chunk_api.chunks[i];
-
-		if (chunk_ptr->is_inactive()) {
-#ifdef DEBUG_ENABLED
-			for (i32 ii = 0; ii < 32 * 32; ii++) {
-				TEST_ASSERT(chunk_ptr->velocity[ii] == 0, "inactive chunk has non-zero velocity");
-			}
-#endif
-
-			if (free_velocity_buffers.size() < 16) {
-				free_velocity_buffers.push_back(chunk_ptr->velocity);
-			} else {
-				delete[] chunk_ptr->velocity;
-			}
-			chunk_ptr->velocity = nullptr;
 		}
 	}
 }

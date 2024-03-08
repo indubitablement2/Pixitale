@@ -6,4 +6,3 @@
 
 [node name="Empty" type="Node" parent="."]
 script = ExtResource("1_1217u")
-density = -10

@@ -1,7 +1,7 @@
 #ifndef GRID_H
 #define GRID_H
 
-#include "cell_material.h"
+#include "cell_material.hpp"
 #include "chunk.h"
 #include "core/io/image.h"
 #include "core/math/rect2i.h"
@@ -69,7 +69,7 @@ public:
 	static void generate_chunk(Vector2i chunk_coord);
 
 	// Return default if not found.
-	static CellMaterial &get_cell_material(u32 material_idx);
+	static const CellMaterial &get_cell_material(u32 material_idx);
 
 	// Unaffected by time. Meant for world generation.
 	static Rng get_static_rng(Vector2i chunk_coord);
@@ -92,7 +92,7 @@ public: // godot api
 			f64 probability,
 			Callable callback);
 	static bool remove_cell_reaction(u64 reaction_id);
-	static void print_reactions();
+	static void print_internals();
 
 	static void clear_generation_passes();
 	static void add_generation_pass(GenerationPass *value);

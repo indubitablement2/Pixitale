@@ -3,7 +3,7 @@ class_name CellMaterial
 
 ## Default values are what empty cell (always idx 0) uses.
 ## CellMaterial can not be added or removed while in-game.
-## Some property can be modified.
+## Some property can be modified while in-game.
 
 @export var display_name := ""
 
@@ -55,63 +55,40 @@ func set_light_modulate(value: Color) -> void:
 
 ## If this cell can be colored.
 @export var can_color := false
-## Set color of new cell based on coordinates to match this image.
-## Can be null, if not needed.
-@export var new_color_image : Image = null
-## Use noise to randomly darken color up to this amount.
-## Keep as 0 to add no noise.
-@export_range(0.0, 1.0) var new_darken_noise_max := 0.0
 
 @export_category("Movement")
 ## Can swap position with less dense cell.
 @export var density := 0
-## 0: no movement.
-## 1: vertical movement down.
-## -1: vertical movement up.
-@export_enum("no movement:0", "up:-1", "down:1") var movement_vertical_step := 0
-## >= 1.0: can always move.
-## < 1.0: may randomly stop moving.
-## This is to simulate slow moving cell.
-@export var movement_chance := 1.0
-## Needs movement_vertical_step. 
-## Vertical movement is tried first.
-@export var horizontal_movement := false
+
+## How many vertical movement per step.
+## Negative value moves upwards.
+## For solid, should be 0 (never move vertically).
+@export_range(-16, 16) var vertical_movement := 0
+
+## How many horizontally movement per step.
+## A cell start moving horizontally after moving vertically at least once
+## or from horizontal_movement_start_chance.
+@export_range(1, 16) var horizontal_movement = 1;
+## Chance to spontaneously start moving horizontally when active.
+## Does not keep cell active if chance fail.
+@export_range(0.0, 1.0) var horizontal_movement_start_chance = 0.0;
+## Chance to stop moving horizontally.
+@export_range(0.0, 1.0) var horizontal_movement_stop_chance = 1.0;
+
+## When blocked from moving horizontally, 
+## try to reverse direction instead of stopping.
+@export var can_reverse_horizontal_movement := false
 
 @export_category("Interaction")
-@export var durability := 0
-## Which biome this cell count toward.
-## Leave to an empty String for none.
-@export var biome_id := &""
+#@export var durability := 0
 
-@export_category("Collision")
+### Which biome this cell count toward.
+### Leave to an empty String for none.
+#@export var biome_id := &""
+
 @export var collision_type := Grid.CELL_COLLISION_NONE
 ## Less than 1 is slippery, more than 1 is sticky.
-@export_range(0.0, 2.0, 0.01, "or_greater") var friction := 1.0
-#@export_range(0.0, 0.9, 0.01) var bounciness := 0.0
-
-@export_category("Ignite Preset")
-@export var use_fire_preset := false
-## Each level higher than `ignite_temperature_needed`
-## will have 2.5x the chance to ignite.
-## With ignite_temperature_needed set to Amber and  ignite_chance to 0.05:
-## Amber: 0.1, Fire: 0.25, RagingFire: 0.625
-@export var ignite_chance := 0.1
-@export_enum("Amber", "Fire", "RagingFire") var ignite_temperature_needed := 0
-@export_enum("Air", "Amber") var ignite_into_preset :String
-@export var ignite_into_custom :String
-
-@export_category("Event")
-# Chance/do what?
-@export var on_destroyed := false
+#@export_range(0.0, 2.0, 0.01, "or_greater") var friction := 1.0
+##@export_range(0.0, 0.9, 0.01) var bounciness := 0.0
 
 var idx := -1
-
-var num_reaction := 0
-## [[probability: int, out1: int, out2: int]]
-var reactions := []
-
-# Converted biome id to biome idx.
-var biome_idx := 0
-
-
-#func set_glo

@@ -14,10 +14,10 @@ struct Rng {
 			state(seed) {
 		state += 0x9e3779b97f4a7c15uLL;
 		state ^= state >> 30;
-		state *= 0xbf58476d1ce4e5b9uLL;
-		state ^= state >> 27;
-		state *= 0x94d049bb133111ebuLL;
-		state ^= (state >> 31);
+		// state *= 0xbf58476d1ce4e5b9uLL;
+		// state ^= state >> 27;
+		// state *= 0x94d049bb133111ebuLL;
+		// state ^= (state >> 31);
 	}
 
 	inline void mix(u64 seed) {
@@ -30,7 +30,7 @@ struct Rng {
 
 	inline u32 gen_u32() {
 		next();
-		return state >> 32;
+		return u32(state >> 32);
 	}
 
 	inline u32 gen_range_u32(u32 min, u32 max) {
@@ -82,6 +82,11 @@ struct Rng {
 	// Might be faster if range is a constant power of 2.
 	inline bool gen_probability_u32(u32 probability, u32 range) {
 		return gen_range_u32(0, range) < probability;
+	}
+
+	// Use the maximum value of u32 as range.
+	inline bool gen_probability_u32_max(u32 probability) {
+		return gen_u32() < probability;
 	}
 };
 

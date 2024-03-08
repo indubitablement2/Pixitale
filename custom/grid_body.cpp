@@ -1,7 +1,7 @@
 #include "grid_body.h"
 
 #include "cell.hpp"
-#include "cell_material.h"
+#include "cell_material.hpp"
 #include "core/math/rect2.h"
 #include "core/math/vector2.h"
 #include "core/math/vector2i.h"
@@ -95,7 +95,7 @@ struct GridBodyApi {
 			return false;
 		}
 
-		CellMaterial &mat = Grid::get_cell_material(mat_idx);
+		const CellMaterial &mat = Grid::get_cell_material(mat_idx);
 		return (u32(mat.collision) & collision_bitmask) != 0;
 	}
 

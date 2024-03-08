@@ -223,7 +223,7 @@ func load_mods() -> void:
 			if entry.entry_script.has_method(&"_entry"):
 				entry.entry_script._entry()
 	
-	Grid.print_reactions()
+	Grid.print_internals()
 
 func unload_mods() -> void:
 	for entry in mod_entries:
