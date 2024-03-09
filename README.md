@@ -31,11 +31,12 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 - [x] When creating new cells, add noise (soil, sand, etc)
 - [ ] Border texture (brick, wood, etc): Maybe a simple fake depth using shader?
 
-#### Liquid
+#### Liquid dissipation
 - [ ] Detect which direction liquid should flow for fastest dissipation. Eg. If most cell have been successful moving to right chunk and not moving to left chunk, prioritize moving right.
 
+#### Liquid metaball
 - [ ] Try using metaball to render liquid.
-- [ ] Surface wave shader when things enter leave liquid.
+- [ ] Surface wave shader when things enter/leave liquid.
 - [ ] Distortion shader instead of simple transparency.
 
 #### Light
