@@ -26,10 +26,13 @@ public:
 
 	bool next();
 
-	void set_cell(u32 value);
-	u32 get_cell();
+	void set_material_idx(u32 material_idx);
+	void set_color(Color color = Color(0.5f, 0.5f, 0.5f, 1.0f));
 
-	void fill_remaining(u32 value);
+	u32 get_material_idx();
+	Color get_color();
+
+	void fill_remaining(u32 material_idx);
 
 	void reset_iter();
 
@@ -63,10 +66,13 @@ public:
 
 	bool next();
 
-	void set_cell(u32 value);
-	u32 get_cell();
+	void set_material_idx(u32 material_idx);
+	void set_color(Color color = Color(0.5f, 0.5f, 0.5f, 1.0f));
 
-	void fill_remaining(u32 value);
+	u32 get_material_idx();
+	Color get_color();
+
+	void fill_remaining(u32 material_idx);
 
 	void reset_iter();
 
@@ -96,10 +102,13 @@ public:
 
 	bool next();
 
-	void set_cell(u32 value);
-	u32 get_cell();
+	void set_material_idx(u32 material_idx);
+	void set_color(Color color = Color(0.5f, 0.5f, 0.5f, 1.0f));
 
-	void fill_remaining(u32 value);
+	u32 get_material_idx();
+	Color get_color();
+
+	void fill_remaining(u32 material_idx);
 
 	void reset_iter();
 

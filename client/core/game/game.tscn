@@ -22,6 +22,7 @@ script/source = "extends Node2D
 @export var brush_size_range : Range
 
 var draw_mat_idx := 0
+var color_only := false
 var pressed := false
 
 func _ready() -> void:
@@ -36,17 +37,26 @@ func _unhandled_input(event: InputEvent) -> void:
 
 func _process(_delta: float) -> void:
 	if pressed:
-		Core.set_cell_rect(
-			draw_mat_idx, 
-		Rect2i(Global.mouse_coord, Vector2i.ONE).grow(int(brush_size_range.value)))
+		var rect := Rect2i(Global.mouse_coord, Vector2i.ONE).grow(int(brush_size_range.value))
+		if color_only:
+			Core.set_color_rect(
+				color_picker.color,
+				rect)
+		else:
+			Core.set_cell_material_rect(
+				draw_mat_idx,
+				rect)
 
 func _on_item_selected(idx: int) -> void:
 	draw_mat_idx = idx
 
-
 func _on_visibility_changed() -> void:
 	set_process_input(visible)
 	set_process(visible)
+
+func _on_color_toggled(toggled_on: bool) -> void:
+	color_only = toggled_on
+	color_picker.set_visible(toggled_on)
 "
 
 [sub_resource type="GDScript" id="GDScript_qtqv4"]
@@ -234,7 +244,6 @@ theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
 [node name="DebugMenu" type="HBoxContainer" parent="GUI/MarginContainer"]
-visible = false
 layout_mode = 2
 
 [node name="ScrollContainer" type="ScrollContainer" parent="GUI/MarginContainer/DebugMenu"]
@@ -286,16 +295,28 @@ auto_height = true
 layout_mode = 2
 
 [node name="HSlider" type="HSlider" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
+custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 max_value = 32.0
 rounded = true
 
+[node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
+layout_mode = 2
+
+[node name="Color" type="Button" parent="GUI/MarginContainer/DebugMenu/VBoxContainer/HBoxContainer"]
+layout_mode = 2
+toggle_mode = true
+text = "Color"
+
 [node name="ColorPicker" type="ColorPicker" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
+visible = false
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
+color = Color(0.5, 0.5, 0.5, 1)
 edit_alpha = false
 deferred_mode = true
+picker_shape = 3
 sampler_visible = false
 color_modes_visible = false
 sliders_visible = false
@@ -434,4 +455,5 @@ centered = false
 [node name="GridBody" parent="." instance=ExtResource("14_a3qr0")]
 
 [connection signal="visibility_changed" from="Draw" to="Draw" method="_on_visibility_changed"]
+[connection signal="toggled" from="GUI/MarginContainer/DebugMenu/VBoxContainer/HBoxContainer/Color" to="Draw" method="_on_color_toggled"]
 [connection signal="visibility_changed" from="GridRender/ActiveRect" to="GridRender/ActiveRect" method="_on_visibility_changed"]

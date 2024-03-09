@@ -3,7 +3,7 @@ shader_type canvas_item;
 
 #include "cell_raw_data_unpack.gdshaderinc"
 
-const float COLOR_MODULATE_STRENGTH = 0.5;
+const float COLOR_MODULATE_STRENGTH = 0.4;
 
 uniform ivec2 origin;
 
@@ -28,8 +28,8 @@ void fragment() {
 		wrapv(global_coord, base_color_size) + base_color_start,
 		0);
 	
-	//vec3 color_modulate = get_cell_color_modulate(data);
-	//
+	vec3 color_modulate = get_cell_color_modulate(data);
+	color.rgb += color_modulate * COLOR_MODULATE_STRENGTH;
 	//color.rgb = color.rgb * (1.0 - COLOR_MODULATE_STRENGTH)
 		//+ (color.rgb * color_modulate * COLOR_MODULATE_STRENGTH);
 	

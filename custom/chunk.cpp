@@ -154,6 +154,10 @@ public:
 					Cell::set_material_idx(cell, cell_material_idx);
 					Cell::set_active(cell);
 
+					if (cell_material->new_cell_noise_max > 0) {
+						Cell::set_color_value(cell, rng.gen_color_value(cell_material->new_cell_noise_max));
+					}
+
 					activate_neightbors(cell_coord);
 				}
 
@@ -161,6 +165,11 @@ public:
 					other = 0;
 					Cell::set_material_idx(other, other_material_idx_out);
 					Cell::set_active(other);
+
+					const CellMaterial &other_material = Grid::get_cell_material(other_material_idx_out);
+					if (other_material.new_cell_noise_max > 0) {
+						Cell::set_color_value(cell, rng.gen_color_value(other_material.new_cell_noise_max));
+					}
 
 					*other_cell_ptr = other;
 

@@ -23,8 +23,6 @@ protected:
 	static void _bind_methods();
 
 private:
-	inline static std::vector<CellMaterial> cell_materials = {};
-
 	// Key is lower material_idx | higher material_idx << 16.
 	inline static std::unordered_map<u32, std::vector<CellReaction>> cell_reactions = {};
 
@@ -41,8 +39,6 @@ private:
 
 	inline static std::vector<Rect2i> queue_step_chunk_rects = {};
 
-	inline static Rng temporal_rng = Rng(0);
-
 	// 3 passes of columns
 	// x : ys (ys may be duplicated and aren't sorted)
 	inline static std::unordered_map<i32, std::vector<i32>> passes[3] = { {}, {}, {} };
@@ -50,6 +46,10 @@ private:
 	inline static void clear_iters();
 
 public:
+	inline static Rng temporal_rng = Rng(0);
+
+	inline static std::vector<CellMaterial> cell_materials = {};
+
 	// Any chunk last stepped before this will need to be force stepped.
 	inline static i64 last_modified_tick = 0;
 

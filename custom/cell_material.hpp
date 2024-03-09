@@ -60,6 +60,9 @@ struct CellMaterial {
 	// instead of moving back and forth forever.
 	u32 dissipate_on_horizontal_blocked_chance = 0;
 
+	// Lighten or darken new cell, by up to this amount.
+	u32 new_cell_noise_max = 0;
+
 	// When blocked from moving horizontally, try to reverse direction instead of stopping.
 	bool can_reverse_horizontal_movement = false;
 	bool can_color = false;
@@ -77,9 +80,14 @@ struct CellMaterial {
 
 		dissipate_on_horizontal_blocked_chance = u32(CLAMP(f64(obj->get("dissipate_on_horizontal_blocked_chance", nullptr)), 0.0, 1.0) * f64(MAX_U32));
 
+		new_cell_noise_max = MIN(u32(obj->get("new_cell_noise_max", nullptr)), 15);
+
 		can_reverse_horizontal_movement = bool(obj->get("can_reverse_horizontal_movement", nullptr));
 
 		can_color = bool(obj->get("can_color", nullptr));
+		if (!can_color) {
+			new_cell_noise_max = 0;
+		}
 	}
 };
 

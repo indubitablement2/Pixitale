@@ -19,7 +19,7 @@ func _generate(iter: GridChunkIter) -> void:
 			while iter.next():
 				var h := int(absf(hill_noise.get_noise_1d(iter.coord().x)) * 32.0)
 				if iter.local_coord().y > h:
-					iter.set_cell(Base.ROCK_IDX)
+					iter.set_material_idx(Base.ROCK_IDX)
 		else:
 			iter.fill_remaining(Base.ROCK_IDX)
 	elif iter.chunk_coord().y <= -5:

@@ -205,7 +205,7 @@ void test_rng_bias() {
 
 void test_cell_color() {
 	f32 v = 0.0f;
-	while (v <= 1.0f) {
+	while (v < 1.02f) {
 		Color color_in = Color(v, v, v);
 
 		u32 cell = 0;
@@ -217,7 +217,7 @@ void test_cell_color() {
 		TEST_ASSERT(Math::abs(color_in.g - color_out.g) < 0.1, "g");
 		TEST_ASSERT(Math::abs(color_in.b - color_out.b) < 0.1, "b");
 
-		v += 0.01f;
+		v += 0.001f;
 	}
 }
 

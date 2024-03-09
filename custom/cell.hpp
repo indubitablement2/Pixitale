@@ -79,37 +79,60 @@ inline void set_active(u32 &cell, const bool active = true) {
 	}
 }
 
-// todo 0u should be 0.5f
+// Store in a way that 0.5f is 0u;
+// 0.0f -> 31
+// 0.4f -> 18
+// 0.5f -> 0
+// 1.0f -> 15
+inline u32 store_channel(f32 v) {
+	v = CLAMP(v, 0.0f, 1.0f);
+
+	v -= 0.5f;
+	if (v < 0.0f) {
+		v = -v + 0.5f;
+		v = MAX(v, 0.52f);
+	}
+	v *= 31.0f;
+
+	return u32(v);
+}
+
+inline f32 get_channel(const u32 v) {
+	f32 f = f32(v);
+
+	f /= 31.0f;
+	if (f > 0.5f) {
+		f = -f + 0.5f;
+	}
+	f += 0.5f;
+
+	return f;
+}
 
 inline Color color(const u32 cell) {
 	u32 color_data = (cell & Masks::MASK_COLOR) >> Shifts::SHIFT_COLOR;
 	return Color(
-			f32((color_data & 31u) ^ 31u) / 31.0f,
-			f32(((color_data >> 5) & 31u) ^ 31u) / 31.0f,
-			f32((color_data >> 10) ^ 31u) / 31.0f);
+			get_channel(color_data & 31u),
+			get_channel((color_data >> 5) & 31u),
+			get_channel(color_data >> 10));
 }
 
 inline void set_color(u32 &cell, const Color color) {
-	u32 color_data = (u32(CLAMP(color.r, 0.0f, 1.0f) * 31.0f) ^ 31u) |
-			((u32(CLAMP(color.g, 0.0f, 1.0f) * 31.0f) ^ 31u) << 5) |
-			((u32(CLAMP(color.b, 0.0f, 1.0f) * 31.0f) ^ 31u) << 10);
-	cell = (cell & ~Masks::MASK_COLOR) | (color_data << Shifts::SHIFT_COLOR);
+	u32 color_data = (store_channel(color.r)) |
+			(store_channel(color.g) << 5) |
+			(store_channel(color.b) << 10);
+
+	cell &= ~Masks::MASK_COLOR;
+	cell |= color_data << Shifts::SHIFT_COLOR;
 }
 
-inline void darken(u32 &cell, const u32 amount) {
-	u32 r = (cell >> SHIFT_RED) & 31u;
-	u32 g = (cell >> SHIFT_GREEN) & 31u;
-	u32 b = (cell >> SHIFT_BLUE) & 31u;
+// Meant for new cell.
+inline void set_color_value(u32 &cell, const u32 value) {
+	TEST_ASSERT(value < 32, "darken must be less than 32");
 
-	r = MIN(r + amount, 31u);
-	g = MIN(g + amount, 31u);
-	b = MIN(b + amount, 31u);
+	u32 color_data = value | (value << 5) | (value << 10);
 
-	cell &= ~MASK_COLOR;
-
-	cell |= r << SHIFT_RED;
-	cell |= g << SHIFT_GREEN;
-	cell |= b << SHIFT_BLUE;
+	cell |= color_data << Shifts::SHIFT_COLOR;
 }
 
 static_assert(

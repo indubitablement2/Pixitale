@@ -5,7 +5,8 @@ class_name Core
 static func _entry() -> void:
 	_QUEUE_STEP_CHUNKS = GridApi.add_grid_edit_method(Callable(Core, &"_queue_step_chunks"))
 	_SET_PAUSED = GridApi.add_grid_edit_method(Callable(Core, &"_set_paused"))
-	_SET_CELL_RECT = GridApi.add_grid_edit_method(Callable(Core, &"_set_cell_rect"))
+	_SET_CELL_MATERIAL_RECT = GridApi.add_grid_edit_method(Callable(Core, &"_set_cell_material_rect"))
+	_SET_COLOR_RECT = GridApi.add_grid_edit_method(Callable(Core, &"_set_color_rect"))
 	
 	print("core added")
 
@@ -35,12 +36,21 @@ static func set_paused(paused: bool) -> void:
 	if GridApi.is_server:
 		GridApi._next_edits.push_back([paused, _SET_PAUSED])
 
-static func _set_cell_rect(cell_material_idx: int, rect: Rect2i) -> void:
+static func _set_cell_material_rect(cell_material_idx: int, rect: Rect2i) -> void:
+	var iter := Grid.iter_rect(rect)
+	iter.fill_remaining(cell_material_idx)
+static var _SET_CELL_MATERIAL_RECT := 0
+static func set_cell_material_rect(cell_material_idx: int, rect: Rect2i) -> void:
+	if GridApi.is_server:
+		GridApi._next_edits.push_back([cell_material_idx, rect, _SET_CELL_MATERIAL_RECT])
+
+static func _set_color_rect(color: Color, rect: Rect2i) -> void:
 	var iter := Grid.iter_rect(rect)
 	while iter.next():
-		iter.set_cell(cell_material_idx)
-static var _SET_CELL_RECT := 0
-static func set_cell_rect(cell_material_idx: int, rect: Rect2i) -> void:
+		iter.set_color(color)
+static var _SET_COLOR_RECT := 0
+static func set_color_rect(color: Color, rect: Rect2i) -> void:
 	if GridApi.is_server:
-		GridApi._next_edits.push_back([cell_material_idx, rect, _SET_CELL_RECT])
+		GridApi._next_edits.push_back([color, rect, _SET_COLOR_RECT])
+
 

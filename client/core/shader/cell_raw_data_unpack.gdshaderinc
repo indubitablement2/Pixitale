@@ -7,8 +7,6 @@ const uint SHIFT_COLOR_GREEN = 22u;
 const uint SHIFT_COLOR_BLUE = 27u;
 const uint MASK_COLOR_CHANNEL = 31u;
 
-const float COLOR_CHANNEL_RANGE = 31.0;
-
 // Modulo which handle negative numbers instead of returning the remainder.
 // Eg. wrap(-1, 10) -> 9 whereas -1 % 10 -> -1.
 // Taken from prelude.hpp `mod_neg`
@@ -36,10 +34,23 @@ bool is_cell_active(uint data) {
 	return (data & MASK_ACTIVE) != 0u;
 }
 
+
+float get_channel(uint v) {
+	float f = float(v);
+	
+	f /= 31.0f;
+	if (f > 0.5f) {
+		f = -f + 0.5f;
+	}
+	
+	return f;
+}
+
+// [-0.5..0.5]
 vec3 get_cell_color_modulate(uint data) {
 	return vec3(
-		float((data >> SHIFT_COLOR_RED) & MASK_COLOR_CHANNEL) / COLOR_CHANNEL_RANGE,
-		float((data >> SHIFT_COLOR_GREEN) & MASK_COLOR_CHANNEL) / COLOR_CHANNEL_RANGE,
-		float(data >> SHIFT_COLOR_BLUE) / COLOR_CHANNEL_RANGE
+		get_channel((data >> SHIFT_COLOR_RED) & MASK_COLOR_CHANNEL),
+		get_channel((data >> SHIFT_COLOR_GREEN) & MASK_COLOR_CHANNEL),
+		get_channel(data >> SHIFT_COLOR_BLUE)
 	);
 }
