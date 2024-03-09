@@ -198,6 +198,11 @@ public:
 		const CellMaterial &other_material = Grid::get_cell_material(other_material_idx);
 
 		if (cell_material->density > other_material.density) {
+			if (rng.gen_probability_u32_max(cell_material->duplicate_on_movement_chance)) {
+				// Duplicate this cell.
+				other = cell;
+			}
+
 			*cell_ptr = other;
 			cell_ptr = other_cell_ptr;
 
@@ -344,15 +349,6 @@ public:
 					// Then horizontally.
 					if (try_move(Vector2i(movement, 0))) {
 						continue;
-					}
-
-					if (rng.gen_probability_u32_max(cell_material->dissipate_on_horizontal_blocked_chance)) {
-						if (!is_row_active(Vector2i(cell_coord.x, cell_coord.y + 2))) {
-							// Dissipate on blocked horizontal movement.
-							cell = 0;
-							Cell::set_active(cell, true);
-							break;
-						}
 					}
 
 					if (cell_material->can_reverse_horizontal_movement) {

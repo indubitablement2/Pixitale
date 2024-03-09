@@ -55,10 +55,10 @@ struct CellMaterial {
 	// Chance to stop moving horizontally.
 	u32 horizontal_movement_stop_chance = MAX_U32;
 
-	// Remove this cell on blocked horizontal movement when moving atop inactive cells.
+	// Duplicate this cell on any movement.
 	// This is for top layer of fluid to eventually become inactive,
 	// instead of moving back and forth forever.
-	u32 dissipate_on_horizontal_blocked_chance = 0;
+	u32 duplicate_on_movement_chance = 0;
 
 	// Lighten or darken new cell, by up to this amount.
 	u32 new_cell_noise_max = 0;
@@ -78,7 +78,7 @@ struct CellMaterial {
 		horizontal_movement_start_chance = u32(CLAMP(f64(obj->get("horizontal_movement_start_chance", nullptr)), 0.0, 1.0) * f64(MAX_U32));
 		horizontal_movement_stop_chance = u32(CLAMP(f64(obj->get("horizontal_movement_stop_chance", nullptr)), 0.0, 1.0) * f64(MAX_U32));
 
-		dissipate_on_horizontal_blocked_chance = u32(CLAMP(f64(obj->get("dissipate_on_horizontal_blocked_chance", nullptr)), 0.0, 1.0) * f64(MAX_U32));
+		duplicate_on_movement_chance = u32(CLAMP(f64(obj->get("duplicate_on_movement_chance", nullptr)), 0.0, 1.0) * f64(MAX_U32));
 
 		new_cell_noise_max = MIN(u32(obj->get("new_cell_noise_max", nullptr)), 15);
 

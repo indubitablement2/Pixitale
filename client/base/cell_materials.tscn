@@ -35,7 +35,7 @@ vertical_movement = 3
 horizontal_movement = 4
 horizontal_movement_start_chance = 1.0
 horizontal_movement_stop_chance = 0.0
-dissipate_on_horizontal_blocked_chance = 0.001
+duplicate_on_movement_chance = 0.001
 can_reverse_horizontal_movement = true
 collision_type = 4
 
@@ -49,6 +49,5 @@ density = 180
 vertical_movement = 1
 horizontal_movement_start_chance = 1.0
 horizontal_movement_stop_chance = 0.0
-dissipate_on_horizontal_blocked_chance = 0.001
 can_reverse_horizontal_movement = true
 collision_type = 4

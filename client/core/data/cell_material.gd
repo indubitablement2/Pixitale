@@ -79,10 +79,10 @@ func set_light_modulate(value: Color) -> void:
 ## Chance to stop moving horizontally.
 @export_range(0.0, 1.0) var horizontal_movement_stop_chance = 1.0;
 
-## Remove this cell on blocked horizontal movement when moving atop inactive cells.
+## Duplicate this cell on any movement.
 ## This is for top layer of fluid to eventually become inactive,
 ## instead of moving back and forth forever.
-@export_range(0.0, 1.0) var dissipate_on_horizontal_blocked_chance = 0.0;
+@export_range(0.0, 1.0) var duplicate_on_movement_chance = 0.0;
 
 ## When blocked from moving horizontally, 
 ## try to reverse direction instead of stopping.
