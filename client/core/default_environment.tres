@@ -1,3 +1,5 @@
 [gd_resource type="Environment" format=3 uid="uid://bet72xvipytek"]
 
 [resource]
+background_mode = 3
+glow_blend_mode = 1

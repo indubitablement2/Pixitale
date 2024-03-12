@@ -1,0 +1,18 @@
+[gd_resource type="ShaderMaterial" load_steps=5 format=3 uid="uid://d0lxlug0pmk6x"]
+
+[ext_resource type="Shader" path="res://core/shader/cell_light.gdshader" id="1_mrq3l"]
+[ext_resource type="Texture2D" uid="uid://t50h32apl4gq" path="res://core/shader/texture/cell_materials_data/glow.tres" id="2_2nlk1"]
+[ext_resource type="Texture2D" uid="uid://dcodkd1xxqxik" path="res://core/shader/texture/cell_raw_data/background.tres" id="2_jlhwm"]
+[ext_resource type="Texture2D" uid="uid://clehnwi7vgea5" path="res://core/shader/texture/cell_materials_data/light_modulate.tres" id="3_4ucvt"]
+
+[resource]
+shader = ExtResource("1_mrq3l")
+shader_parameter/origin = null
+shader_parameter/background_light_color = Color(0.5, 0.5, 0.5, 1)
+shader_parameter/raycast_light_color = Color(0.5, 0.5, 0.5, 1)
+shader_parameter/raycast_light_enabled = false
+shader_parameter/raycast_light_step = Vector2(-2, -3.464)
+shader_parameter/raycast_light_num_step = 8
+shader_parameter/glow = ExtResource("2_2nlk1")
+shader_parameter/light_modulate = ExtResource("3_4ucvt")
+shader_parameter/background = ExtResource("2_jlhwm")

@@ -100,3 +100,14 @@ order=PackedStringArray("base")
 textures/canvas_textures/default_texture_filter=0
 environment/defaults/default_clear_color=Color(0, 0, 0, 1)
 environment/defaults/default_environment="res://core/default_environment.tres"
+
+[shader_globals]
+
+cell_buffer_size={
+"type": "vec2",
+"value": Vector2(0, 0)
+}
+cell_buffer_origin={
+"type": "ivec2",
+"value": Vector2i(0, 0)
+}

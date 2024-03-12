@@ -5,11 +5,13 @@ class_name GridRender
 
 static var node : GridRender
 
+## Cap cell buffer size to 2048x2048 
+## to prevent lag/crash when experimenting.
 const MAX_GRID_CHUNK_SIZE := Vector2i(64, 64)
 
 ## Need cells data beyong what the screen can see,
 ## so that rendered light does not pop-in.
-var cell_padding := Vector2(32.0, 32.0)
+var cell_padding := Vector2(50.0, 50.0)
 
 ## What the camera sees.
 static var view := Rect2()
@@ -21,6 +23,7 @@ static var raw_cell_rect_chunk := Rect2i()
 static var _last_raw_cell_size := Vector2i()
 
 @onready var cell_render_material : ShaderMaterial = $Foreground.material
+@export var cell_light_material : ShaderMaterial
 
 @onready var cell_raw_data_foreground : ImageTexture = $Foreground.texture
 @onready var cell_raw_data_background : ImageTexture = $Backgroud.texture
@@ -59,7 +62,8 @@ func _process(_delta: float) -> void:
 		cell_raw_data_foreground.update(fg_buffer)
 		cell_raw_data_background.update(bg_buffer)
 	
-	cell_render_material.set_shader_parameter(&"origin", raw_cell_rect.position)
+	RenderingServer.global_shader_parameter_set(&"cell_buffer_origin", raw_cell_rect.position)
+	RenderingServer.global_shader_parameter_set(&"cell_buffer_size", Vector2(raw_cell_rect.size))
 	
 	position = raw_cell_rect.position
 

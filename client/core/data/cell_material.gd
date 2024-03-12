@@ -39,15 +39,15 @@ var base_color_atlas_coord := Vector2i.ZERO
 
 ## Permanent glow/bloom. Alpha is not used.
 ## Can be modified while in-game.
-@export var glow := Color.BLACK : set = set_glow
+@export_color_no_alpha var glow := Color.BLACK : set = set_glow
 func set_glow(value: Color) -> void:
 	glow = value
 	if idx != -1:
 		GridApi.glow.get_img_mut().set_pixel(idx, 0, glow)
 	
-## Light passing through this cell is blocked by alpha and tinted by rgb.
+## Light passing through this cell is multiplied by rgb. Alpha is not used.
 ## Can be modified while in-game.
-@export var light_modulate := Color.TRANSPARENT : set = set_light_modulate
+@export_color_no_alpha var light_modulate := Color.WHITE : set = set_light_modulate
 func set_light_modulate(value: Color) -> void:
 	light_modulate = value
 	if idx != -1:

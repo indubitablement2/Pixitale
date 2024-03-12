@@ -1,16 +1,22 @@
-[gd_scene load_steps=31 format=3 uid="uid://cs41g41rbjtf3"]
+[gd_scene load_steps=40 format=3 uid="uid://cs41g41rbjtf3"]
 
 [ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
+[ext_resource type="Environment" uid="uid://bet72xvipytek" path="res://core/default_environment.tres" id="2_3hhhn"]
+[ext_resource type="Texture2D" uid="uid://ck73ei3ddic5k" path="res://core/texture/util/pixel.png" id="2_caqnh"]
 [ext_resource type="Script" path="res://core/game/light_pass.gd" id="2_uuur8"]
-[ext_resource type="Shader" path="res://core/shader/cell_light.gdshader" id="3_7j3b5"]
-[ext_resource type="Texture2D" uid="uid://dtd2c027i6e6p" path="res://icon.svg" id="4_66u3x"]
+[ext_resource type="Script" path="res://core/game/light_modulate_viewport.gd" id="3_cyatu"]
+[ext_resource type="Material" uid="uid://d0lxlug0pmk6x" path="res://core/shader/cell_light.tres" id="4_4n7ow"]
+[ext_resource type="Material" uid="uid://pibq0mikbild" path="res://core/shader/cell_to_light_modulate.tres" id="4_ctfg4"]
 [ext_resource type="Texture2D" uid="uid://bt8vd52xyn6om" path="res://core/shader/texture/cell_raw_data/foreground.tres" id="4_xxntp"]
 [ext_resource type="PackedScene" uid="uid://5ojtd4d004ve" path="res://core/camera/free_camera.tscn" id="7_7jk4b"]
 [ext_resource type="Texture2D" uid="uid://dcodkd1xxqxik" path="res://core/shader/texture/cell_raw_data/background.tres" id="7_602ny"]
+[ext_resource type="Shader" path="res://core/shader/environment_light.gdshader" id="8_l1xnb"]
 [ext_resource type="Material" uid="uid://btwoiop8xxp15" path="res://core/shader/cell_render.material" id="8_onaw1"]
+[ext_resource type="Shader" path="res://core/shader/foreground_glow.gdshader" id="9_etry3"]
 [ext_resource type="Texture2D" uid="uid://b5c5qksfr7hk4" path="res://core/shader/texture/cell_materials_data/base_color_atlas.tres" id="11_4eirp"]
 [ext_resource type="Texture2D" uid="uid://t50h32apl4gq" path="res://core/shader/texture/cell_materials_data/glow.tres" id="11_rdegm"]
+[ext_resource type="Texture2D" uid="uid://cohkmmuriclai" path="res://base/texture/bg/bg_lac_1.png" id="12_wrkjg"]
 [ext_resource type="Texture2D" uid="uid://clehnwi7vgea5" path="res://core/shader/texture/cell_materials_data/light_modulate.tres" id="13_lh32a"]
 [ext_resource type="PackedScene" uid="uid://b7fwx4nr02qhh" path="res://DELETE.tscn" id="14_a3qr0"]
 
@@ -171,19 +177,24 @@ glow_blend_mode = 3
 [sub_resource type="World3D" id="World3D_54s67"]
 environment = SubResource("Environment_bap7c")
 
-[sub_resource type="ShaderMaterial" id="ShaderMaterial_sxpjy"]
-shader = ExtResource("3_7j3b5")
-shader_parameter/a_light_color = Color(0.5, 0.5, 0.5, 1)
-shader_parameter/a_raycast_light_color = Color(0.5, 0.5, 0.5, 1)
-shader_parameter/b_light_color = Color(0.5, 0.5, 0.5, 1)
-shader_parameter/b_raycast_light_color = Color(0.5, 0.5, 0.5, 1)
-shader_parameter/b_start = 0
-shader_parameter/raycast_light_enabled = false
-shader_parameter/raycast_light_origin_dir = Vector2(0, -1)
-shader_parameter/raycast_light_lenght = 32
+[sub_resource type="ViewportTexture" id="ViewportTexture_k6afj"]
+viewport_path = NodePath("BackgroundLightModulate")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_jgnly"]
+resource_local_to_scene = true
+shader = ExtResource("8_l1xnb")
+shader_parameter/light_color = Color(0.5, 0.5, 0.5, 1)
+shader_parameter/background = SubResource("ViewportTexture_k6afj")
+
+[sub_resource type="ViewportTexture" id="ViewportTexture_4smn4"]
+viewport_path = NodePath("ForegroundLightModulate")
+
+[sub_resource type="ShaderMaterial" id="ShaderMaterial_xrpb2"]
+shader = ExtResource("9_etry3")
+shader_parameter/glow = ExtResource("11_rdegm")
 
 [sub_resource type="CanvasItemMaterial" id="CanvasItemMaterial_f00lt"]
-blend_mode = 2
+blend_mode = 3
 
 [sub_resource type="ViewportTexture" id="ViewportTexture_5p4mp"]
 viewport_path = NodePath("LightPass")
@@ -220,6 +231,9 @@ func _on_visibility_changed() -> void:
 [node name="Game" type="Node"]
 script = ExtResource("1_bg66v")
 
+[node name="WorldEnvironment" type="WorldEnvironment" parent="."]
+environment = ExtResource("2_3hhhn")
+
 [node name="Draw" type="Node2D" parent="." node_paths=PackedStringArray("item_list", "color_picker", "brush_size_range")]
 process_mode = 3
 z_index = 300
@@ -244,6 +258,7 @@ theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
 [node name="DebugMenu" type="HBoxContainer" parent="GUI/MarginContainer"]
+visible = false
 layout_mode = 2
 
 [node name="ScrollContainer" type="ScrollContainer" parent="GUI/MarginContainer/DebugMenu"]
@@ -377,26 +392,86 @@ text = "Debug Menu"
 script = SubResource("GDScript_d36ir")
 debug_menu = NodePath("../../DebugMenu")
 
-[node name="LightPass" type="SubViewport" parent="."]
-process_mode = 3
+[node name="BackgroundLightModulate" type="SubViewport" parent="."]
 process_priority = 11
-world_3d = SubResource("World3D_54s67")
-script = ExtResource("2_uuur8")
+editor_description = "Background raw cell data to light modulate. Eg. How light change or is blocked by background cell. Result is used by a few lights effects."
+disable_3d = true
+canvas_item_default_texture_filter = 0
+positional_shadow_atlas_size = 0
+render_target_clear_mode = 2
+script = ExtResource("3_cyatu")
 
-[node name="CellLight" type="Sprite2D" parent="LightPass"]
-editor_description = "Raw cell data to light."
-material = SubResource("ShaderMaterial_sxpjy")
+[node name="Background" type="Sprite2D" parent="BackgroundLightModulate"]
+material = ExtResource("4_ctfg4")
+texture = ExtResource("7_602ny")
+centered = false
+
+[node name="ForegroundLightModulate" type="SubViewport" parent="."]
+process_priority = 11
+editor_description = "Foreground raw cell data to light modulate. Eg. How light change or is blocked by foreground cell. Result is used by most lights effects."
+disable_3d = true
+canvas_item_default_texture_filter = 0
+positional_shadow_atlas_size = 0
+render_target_clear_mode = 2
+script = ExtResource("3_cyatu")
+
+[node name="Foreground" type="Sprite2D" parent="ForegroundLightModulate"]
+material = ExtResource("4_ctfg4")
 texture = ExtResource("4_xxntp")
 centered = false
 
-[node name="DELETE" type="Sprite2D" parent="LightPass"]
+[node name="LightPass" type="SubViewport" parent="." node_paths=PackedStringArray("background_light_modulate", "foreground_light_modulate", "environment_light", "environment_light_ray", "foreground_glow")]
+process_mode = 3
+process_priority = 20
+editor_description = "Make sure to set blend mode to additive."
+disable_3d = true
+world_3d = SubResource("World3D_54s67")
+positional_shadow_atlas_size = 0
+render_target_clear_mode = 2
+script = ExtResource("2_uuur8")
+background_light_modulate = NodePath("../BackgroundLightModulate")
+foreground_light_modulate = NodePath("../ForegroundLightModulate")
+environment_light = NodePath("EnvironmentLight")
+environment_light_ray = NodePath("EnvironmentLightRay")
+foreground_glow = NodePath("ForegroundGlow")
+
+[node name="EnvironmentLight" type="Sprite2D" parent="LightPass"]
+editor_description = "Light from the environment (not cell). Blocked by background and foreground cells.
+
+This is also used to clear the screen."
+material = SubResource("ShaderMaterial_jgnly")
+texture = SubResource("ViewportTexture_4smn4")
+centered = false
+
+[node name="EnvironmentLightRay" type="Sprite2D" parent="LightPass"]
 visible = false
-texture = ExtResource("4_66u3x")
+centered = false
+
+[node name="ForegroundGlow" type="Sprite2D" parent="LightPass"]
+editor_description = "Glow from foreground cells."
+material = SubResource("ShaderMaterial_xrpb2")
+texture = ExtResource("4_xxntp")
+centered = false
+
+[node name="BlackBarTODO" type="Sprite2D" parent="LightPass"]
+visible = false
+modulate = Color(0, 0, 0, 1)
+scale = Vector2(1.04858e+06, 1)
+texture = ExtResource("2_caqnh")
+centered = false
+offset = Vector2(-0.5, 0)
+region_rect = Rect2(-11.855, -6.755, 9.905, 5.69)
+
+[node name="ParallaxBackground" type="ParallaxBackground" parent="."]
+
+[node name="Sprite2D" type="Sprite2D" parent="."]
+texture = ExtResource("12_wrkjg")
 
 [node name="GridRender" type="Node2D" parent="."]
 process_mode = 3
 process_priority = 10
 script = ExtResource("1_3cgdd")
+cell_light_material = ExtResource("4_4n7ow")
 
 [node name="Backgroud" type="Sprite2D" parent="GridRender"]
 editor_description = "Raw cell data to rendered background cell."
@@ -416,7 +491,6 @@ centered = false
 
 [node name="Light" type="Sprite2D" parent="GridRender"]
 editor_description = "Output from LightPass."
-visible = false
 z_index = 200
 z_as_relative = false
 material = SubResource("CanvasItemMaterial_f00lt")
@@ -433,12 +507,14 @@ script = SubResource("GDScript_f8hf2")
 zoom = Vector2(4, 4)
 
 [node name="LightModulate" type="Sprite2D" parent="."]
+z_index = 4096
 position = Vector2(0, 64)
 scale = Vector2(16, 16)
 texture = ExtResource("13_lh32a")
 centered = false
 
 [node name="Glow" type="Sprite2D" parent="."]
+z_index = 4096
 position = Vector2(0, 96)
 scale = Vector2(16, 16)
 texture = ExtResource("11_rdegm")
@@ -453,6 +529,10 @@ texture = ExtResource("11_4eirp")
 centered = false
 
 [node name="GridBody" parent="." instance=ExtResource("14_a3qr0")]
+
+[node name="GPUParticles2D" type="GPUParticles2D" parent="."]
+
+[node name="CPUParticles2D" type="CPUParticles2D" parent="."]
 
 [connection signal="visibility_changed" from="Draw" to="Draw" method="_on_visibility_changed"]
 [connection signal="toggled" from="GUI/MarginContainer/DebugMenu/VBoxContainer/HBoxContainer/Color" to="Draw" method="_on_color_toggled"]

@@ -1,30 +1,38 @@
 shader_type canvas_item;
 render_mode blend_add;
 
-#include "cell_raw_data_unpack.gdshaderinc"
+#include "prelude.gdshaderinc"
 
-uniform vec3 a_light_color : source_color = vec3(0.5, 0.5, 0.5);
-uniform vec3 a_raycast_light_color : source_color = vec3(0.5, 0.5, 0.5);
-uniform vec3 b_light_color : source_color = vec3(0.5, 0.5, 0.5);
-uniform vec3 b_raycast_light_color : source_color = vec3(0.5, 0.5, 0.5);
+uniform ivec2 origin;
 
-uniform int b_start = 0;
+uniform sampler2D glow;
+uniform sampler2D light_modulate;
 
+uniform sampler2D background;
+
+/// Light emitted when the background isn't opaque.
+uniform vec3 background_light_color : source_color = vec3(0.5, 0.5, 0.5);
+
+/// Raycast light emitted when the background isn't opaque.
+uniform vec3 raycast_light_color : source_color = vec3(0.5, 0.5, 0.5);
 uniform bool raycast_light_enabled = false;
-uniform vec2 raycast_light_origin_dir = vec2(0.0, -1.0);
-uniform int raycast_light_lenght = 32;
+uniform vec2 raycast_light_step = vec2(-2.0, -3.464);
+uniform int raycast_light_num_step = 8;
 
 void fragment() {
-	ivec2 local_coords = ivec2(VERTEX);
-//	ivec2 global_coords = ivec2(VERTEX) + global_origin;
+	ivec2 local_coords = ivec2(UV.xy * vec2(textureSize(TEXTURE, 0)));
+	ivec2 global_coord = local_coords + origin;
 	
 	uint data = get_cell_data(TEXTURE, local_coords);
+	int idx = int(get_cell_material_idx(data));
+	
+	vec3 g = texelFetch(glow, ivec2(idx, 0), 0).rgb;
 	
 //	COLOR = get_cell_base_color(data, ivec2(0));
 	
 	// Global light.
 	//vec3 col = light;
-	vec3 col = vec3(0);
+	vec3 col = g;
 	
 	//vec4 light_block = get_cell_light_block(data);
 	//col *= light_block.rgb;

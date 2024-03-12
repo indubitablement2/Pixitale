@@ -1,0 +1,8 @@
+[gd_resource type="ShaderMaterial" load_steps=3 format=3 uid="uid://pibq0mikbild"]
+
+[ext_resource type="Shader" path="res://core/shader/cell_to_light_modulate.gdshader" id="1_fdtf1"]
+[ext_resource type="Texture2D" uid="uid://clehnwi7vgea5" path="res://core/shader/texture/cell_materials_data/light_modulate.tres" id="2_japy7"]
+
+[resource]
+shader = ExtResource("1_fdtf1")
+shader_parameter/light_modulate = ExtResource("2_japy7")
