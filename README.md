@@ -24,23 +24,30 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 - [ ] Wind effect
 
 #### Background Cell
-- Just material and color. No movement or reaction.
-- Takes no memory if none are in a chunk.
+- [ ] Just material and color. No movement or reaction.
+- [ ] Takes no memory if none are in a chunk.
 
 #### Cell Color
-When creating new cells, add noise (soil, sand, etc)
+- [x] When creating new cells, add noise (soil, sand, etc)
+- [ ] Border texture (brick, wood, etc): Maybe a simple fake depth using shader?
 
-Border texture (brick, wood, etc): Maybe a simple fake depth using shader?
+#### Liquid dissipation
+- [ ] Detect which direction liquid should flow for fastest dissipation. Eg. If most cell have been successful moving to right chunk and not moving to left chunk, prioritize moving right.
+
+#### Liquid metaball
+- [ ] Try using metaball to render liquid.
+- [ ] Surface wave shader when things enter/leave liquid.
+- [ ] Distortion shader instead of simple transparency.
 
 #### Light
 Raycast using the current cell buffer. Update each frame. 
 Light is applied using subtractive blending mode. Full light is black (no effect) and no light is white (darken everything by 100%). 
 
-Normal light: 
+- [ ] Normal light: 
 - Given a position and a raycast origin, sample the cell buffer from the raycast origin to the fragment position. 
 - To prevent performance problem when there are many lights, for each x (comfigurable amount) lights on screen, reduced the number sample when raycasting. 
 
-Global light:
+- [ ] Global light:
 - Represent light coming from the background: sun, moon, lava lake, etc.
 - Unique light set by the biome. 
 - Similar to normal light, but sample from a direction instead of a point. Also blocked by background cell.
