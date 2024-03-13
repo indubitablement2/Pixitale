@@ -3,7 +3,7 @@ shader_type canvas_item;
 
 #include "prelude.gdshaderinc"
 
-const float COLOR_MODULATE_STRENGTH = 0.4;
+const float COLOR_MODULATE_STRENGTH = 0.3;
 
 global uniform ivec2 cell_buffer_origin;
 global uniform vec2 cell_buffer_size;

@@ -1,16 +1,15 @@
 [gd_scene load_steps=3 format=3 uid="uid://b7fwx4nr02qhh"]
 
-[ext_resource type="Texture2D" uid="uid://dtd2c027i6e6p" path="res://icon.svg" id="1_754fi"]
 [ext_resource type="Script" path="res://DELETE.gd" id="1_csg1f"]
+[ext_resource type="Texture2D" uid="uid://ck73ei3ddic5k" path="res://core/texture/util/pixel.png" id="2_f2225"]
 
 [node name="GridBody" type="GridBody"]
-half_size = Vector2(16, 16)
-draw_half_size = true
+half_size = Vector2(8, 10)
 script = ExtResource("1_csg1f")
 
 [node name="Icon" type="Sprite2D" parent="."]
-scale = Vector2(0.25, 0.25)
-texture = ExtResource("1_754fi")
+scale = Vector2(16, 20)
+texture = ExtResource("2_f2225")
 
 [node name="Label" type="Label" parent="."]
 offset_top = -101.0

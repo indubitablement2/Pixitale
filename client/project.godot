@@ -91,6 +91,11 @@ secondary={
 ]
 }
 
+[layer_names]
+
+2d_render/layer_1="Visible"
+2d_render/layer_2="Light"
+
 [mod]
 
 order=PackedStringArray("base")
