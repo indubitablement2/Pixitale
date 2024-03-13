@@ -334,6 +334,7 @@ layout_mode = 2
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 max_value = 32.0
+value = 16.0
 rounded = true
 
 [node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
