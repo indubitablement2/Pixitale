@@ -25,23 +25,30 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 
 #### Background Cell
 - [ ] Just material and color. No movement or reaction.
-- [ ] Takes no memory if none are in a chunk.
+- [ ] Free memory if chunk is empty.
 
 #### Cell Color
 - [x] When creating new cells, add noise (soil, sand, etc)
-- [ ] Border texture (brick, wood, etc): Maybe a simple fake depth using shader?
+- [x] Border texture (brick, wood, etc): Maybe a simple fake depth using shader?
+- [ ] Replace color with value + palette (6+6)
+
+#### Keep processing chunk until inactive
+- [ ] Add neighbors chunk when needed.
+- [ ] Flag for reaction pair which shouldn't keep chunk active (for visual only or infinite reactions).
+- [ ] Configurable maximum number of chunk to process per sim step.
+- [ ] Prioritize chunks which were requested from Godot's side then those which haven't been updated for the longest.
 
 #### Liquid dissipation
 - [ ] Detect which direction liquid should flow for fastest dissipation. Eg. If most cell have been successful moving to right chunk and not moving to left chunk, prioritize moving right.
 
-#### Liquid metaball
+#### Liquid shader
 - [ ] Try using metaball to render liquid.
 - [ ] Surface wave shader when things enter/leave liquid.
 - [ ] Distortion shader instead of simple transparency.
 
 #### Light
 Raycast using the current cell buffer. Update each frame. 
-Light is applied using subtractive blending mode. Full light is black (no effect) and no light is white (darken everything by 100%). 
+Light is applied using multiplicative blending mode.
 
 - [ ] Normal light: 
 - Given a position and a raycast origin, sample the cell buffer from the raycast origin to the fragment position. 
