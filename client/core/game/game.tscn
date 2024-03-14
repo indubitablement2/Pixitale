@@ -279,7 +279,6 @@ theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
 [node name="DebugMenu" type="HBoxContainer" parent="GUI/MarginContainer"]
-visible = false
 layout_mode = 2
 
 [node name="ScrollContainer" type="ScrollContainer" parent="GUI/MarginContainer/DebugMenu"]
