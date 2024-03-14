@@ -418,6 +418,7 @@ debug_menu = NodePath("../../DebugMenu")
 [node name="Sprite2D" type="Sprite2D" parent="ParallaxBackground"]
 position = Vector2(0, -200)
 texture = ExtResource("12_wrkjg")
+centered = false
 
 [node name="GridRender" type="Node2D" parent="." node_paths=PackedStringArray("background_light_modulate_viewport", "foreground_light_modulate_viewport", "light_pass_viewport")]
 process_mode = 3

@@ -1,0 +1,14 @@
+[remap]
+
+importer="image"
+type="Image"
+uid="uid://decr4utawunei"
+path="res://.godot/imported/rock_texture.png-a39c8bb5c8d7b6ec6ef37dd693d3714a.image"
+
+[deps]
+
+source_file="res://base/texture/cell_material/rock_texture.png"
+dest_files=["res://.godot/imported/rock_texture.png-a39c8bb5c8d7b6ec6ef37dd693d3714a.image"]
+
+[params]
+

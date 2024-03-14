@@ -1,0 +1,14 @@
+[remap]
+
+importer="image"
+type="Image"
+uid="uid://tewpegdockv8"
+path="res://.godot/imported/rock_texture2.png-c3ac42a387d98cc43333ef5c9164d88c.image"
+
+[deps]
+
+source_file="res://base/texture/cell_material/rock_texture2.png"
+dest_files=["res://.godot/imported/rock_texture2.png-c3ac42a387d98cc43333ef5c9164d88c.image"]
+
+[params]
+

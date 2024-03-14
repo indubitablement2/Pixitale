@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://bksnupjma5fjc"
-path="res://.godot/imported/rock_texture.png-47c02fd2ea915b56787776fbf5171055.ctex"
+uid="uid://cnao6foap3x87"
+path="res://.godot/imported/circle_heigh.png-74607839a63599803f77ac8bf120a462.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://base/cell_material/rock_texture.png"
-dest_files=["res://.godot/imported/rock_texture.png-47c02fd2ea915b56787776fbf5171055.ctex"]
+source_file="res://base/texture/cell_material/circle_heigh.png"
+dest_files=["res://.godot/imported/circle_heigh.png-74607839a63599803f77ac8bf120a462.ctex"]
 
 [params]
 
@@ -31,4 +31,4 @@ process/normal_map_invert_y=false
 process/hdr_as_srgb=false
 process/hdr_clamp_exposure=false
 process/size_limit=0
-detect_3d/compress_to=0
+detect_3d/compress_to=1

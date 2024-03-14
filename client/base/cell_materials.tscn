@@ -1,14 +1,17 @@
-[gd_scene load_steps=2 format=3 uid="uid://32c58wa8r20q"]
+[gd_scene load_steps=3 format=3 uid="uid://32c58wa8r20q"]
 
 [ext_resource type="Script" path="res://core/data/cell_material.gd" id="1_jtobp"]
+[ext_resource type="Image" uid="uid://tewpegdockv8" path="res://base/texture/cell_material/rock_texture2.png" id="2_m6cj0"]
 
 [node name="BaseCellMaterial" type="Node"]
 
 [node name="Rock" type="Node" parent="."]
 script = ExtResource("1_jtobp")
 display_name = "Rock"
+base_color_image = ExtResource("2_m6cj0")
 base_color = Color(0.411765, 0.411765, 0.411765, 1)
 light_modulate = Color(0, 0, 0, 1)
+new_cell_noise_max = 4
 can_color = true
 density = 200
 collision_type = 1

@@ -32,6 +32,19 @@ void fragment() {
 	vec3 color_modulate = get_cell_color_modulate(data);
 	color.rgb += color_modulate * COLOR_MODULATE_STRENGTH;
 	
+	float same_neighbors = 1.0;
+	same_neighbors += 0.18 * float(
+		get_cell_material_idx(get_cell_data(TEXTURE, local_coord + ivec2(0, -2))) != idx
+		|| get_cell_material_idx(get_cell_data(TEXTURE, local_coord + ivec2(2, 0))) != idx
+		//|| get_cell_material_idx(get_cell_data(TEXTURE, local_coord + ivec2(1, -1))) != idx
+	);
+	same_neighbors -= 0.22 * float(
+		get_cell_material_idx(get_cell_data(TEXTURE, local_coord + ivec2(-2, 0))) != idx
+		|| get_cell_material_idx(get_cell_data(TEXTURE, local_coord + ivec2(0, 2))) != idx
+		//|| get_cell_material_idx(get_cell_data(TEXTURE, local_coord + ivec2(-1, 1))) != idx
+	);
+	color.rgb *= same_neighbors;
+	
 	if (highlight_active) {
 		if (is_cell_active(data)) {
 			color += vec4(0.1, 0.1, 0.1, 0.3);
