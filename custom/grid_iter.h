@@ -27,10 +27,10 @@ public:
 	bool next();
 
 	void set_material_idx(u32 material_idx);
-	void set_color(Color color = Color(0.5f, 0.5f, 0.5f, 1.0f));
-
 	u32 get_material_idx();
-	Color get_color();
+
+	void set_color(u32 color);
+	u32 get_color();
 
 	void fill_remaining(u32 material_idx);
 
@@ -67,10 +67,10 @@ public:
 	bool next();
 
 	void set_material_idx(u32 material_idx);
-	void set_color(Color color = Color(0.5f, 0.5f, 0.5f, 1.0f));
-
 	u32 get_material_idx();
-	Color get_color();
+
+	void set_color(u32 color);
+	u32 get_color();
 
 	void fill_remaining(u32 material_idx);
 
@@ -103,10 +103,10 @@ public:
 	bool next();
 
 	void set_material_idx(u32 material_idx);
-	void set_color(Color color = Color(0.5f, 0.5f, 0.5f, 1.0f));
-
 	u32 get_material_idx();
-	Color get_color();
+
+	void set_color(u32 color);
+	u32 get_color();
 
 	void fill_remaining(u32 material_idx);
 

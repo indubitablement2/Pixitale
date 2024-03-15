@@ -97,15 +97,6 @@ struct Rng {
 			arr[j] = temp;
 		}
 	}
-
-	inline u32 gen_color_value(u32 max) {
-		u32 v = gen_u32() % max;
-		if (gen_bool()) {
-			// 50% chance of darkening.
-			v += 16;
-		}
-		return v;
-	}
 };
 
 #endif

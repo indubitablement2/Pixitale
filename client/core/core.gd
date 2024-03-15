@@ -44,12 +44,12 @@ static func set_cell_material_rect(cell_material_idx: int, rect: Rect2i) -> void
 	if GridApi.is_server:
 		GridApi._next_edits.push_back([cell_material_idx, rect, _SET_CELL_MATERIAL_RECT])
 
-static func _set_color_rect(color: Color, rect: Rect2i) -> void:
+static func _set_color_rect(color: int, rect: Rect2i) -> void:
 	var iter := Grid.iter_rect(rect)
 	while iter.next():
 		iter.set_color(color)
 static var _SET_COLOR_RECT := 0
-static func set_color_rect(color: Color, rect: Rect2i) -> void:
+static func set_color_rect(color: int, rect: Rect2i) -> void:
 	if GridApi.is_server:
 		GridApi._next_edits.push_back([color, rect, _SET_COLOR_RECT])
 

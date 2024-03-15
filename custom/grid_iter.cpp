@@ -8,13 +8,19 @@
 #include "grid.h"
 #include "preludes.h"
 
+void handle_darken(u32 &cell, u32 new_cell_darken_max) {
+	if (new_cell_darken_max > 0) {
+		Cell::set_darken(cell, Grid::temporal_rng.gen_range_u32(0, new_cell_darken_max));
+	}
+}
+
 void GridChunkIter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("next"), &GridChunkIter::next);
 
 	ClassDB::bind_method(D_METHOD("set_material_idx", "material_idx"), &GridChunkIter::set_material_idx);
-	ClassDB::bind_method(D_METHOD("set_color", "color"), &GridChunkIter::set_color, DEFVAL(Color(0.5f, 0.5f, 0.5f, 1.0f)));
-
 	ClassDB::bind_method(D_METHOD("get_material_idx"), &GridChunkIter::get_material_idx);
+
+	ClassDB::bind_method(D_METHOD("set_color", "color"), &GridChunkIter::set_color);
 	ClassDB::bind_method(D_METHOD("get_color"), &GridChunkIter::get_color);
 
 	ClassDB::bind_method(D_METHOD("fill_remaining", "material_idx"), &GridChunkIter::fill_remaining);
@@ -47,14 +53,20 @@ void GridChunkIter::set_material_idx(u32 material_idx) {
 	ERR_FAIL_COND_MSG(material_idx >= Grid::cell_materials.size(), "material_idx must be less than cell_materials.size");
 
 	CellMaterial &mat = Grid::cell_materials[material_idx];
-	if (mat.new_cell_noise_max > 0) {
-		Cell::set_color_value(material_idx, rng.gen_color_value(mat.new_cell_noise_max));
+	if (mat.noise_darken_max > 0) {
+		Cell::set_darken(material_idx, rng.gen_range_u32(0, mat.noise_darken_max));
 	}
 	chunk->set_cell(cell_iter.coord, material_idx);
 	modified = true;
 }
 
-void GridChunkIter::set_color(Color color) {
+u32 GridChunkIter::get_material_idx() {
+	ERR_FAIL_COND_V_MSG(!is_valid, 0, "next should return true before using iter");
+
+	return Cell::material_idx(chunk->get_cell(cell_iter.coord));
+}
+
+void GridChunkIter::set_color(u32 color) {
 	ERR_FAIL_COND_MSG(!is_valid, "next should return true before using iter");
 
 	u32 *cell_ptr = chunk->get_cell_ptr(cell_iter.coord);
@@ -65,14 +77,8 @@ void GridChunkIter::set_color(Color color) {
 	}
 }
 
-u32 GridChunkIter::get_material_idx() {
+u32 GridChunkIter::get_color() {
 	ERR_FAIL_COND_V_MSG(!is_valid, 0, "next should return true before using iter");
-
-	return Cell::material_idx(chunk->get_cell(cell_iter.coord));
-}
-
-Color GridChunkIter::get_color() {
-	ERR_FAIL_COND_V_MSG(!is_valid, Color(0.5f, 0.5f, 0.5f, 1.0f), "next should return true before using iter");
 
 	return Cell::color(chunk->get_cell(cell_iter.coord));
 }
@@ -82,10 +88,10 @@ void GridChunkIter::fill_remaining(u32 material_idx) {
 
 	CellMaterial &mat = Grid::cell_materials[material_idx];
 
-	if (mat.new_cell_noise_max > 0) {
+	if (mat.noise_darken_max > 0) {
 		while (next()) {
 			u32 cell = material_idx;
-			Cell::set_color_value(cell, rng.gen_color_value(mat.new_cell_noise_max));
+			Cell::set_darken(cell, rng.gen_range_u32(0, mat.noise_darken_max));
 			chunk->set_cell(cell_iter.coord, cell);
 		}
 	} else {
@@ -175,9 +181,9 @@ void GridRectIter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("next"), &GridRectIter::next);
 
 	ClassDB::bind_method(D_METHOD("set_material_idx", "material_idx"), &GridRectIter::set_material_idx);
-	ClassDB::bind_method(D_METHOD("set_color", "color"), &GridRectIter::set_color, DEFVAL(Color(0.5f, 0.5f, 0.5f, 1.0f)));
-
 	ClassDB::bind_method(D_METHOD("get_material_idx"), &GridRectIter::get_material_idx);
+
+	ClassDB::bind_method(D_METHOD("set_color", "color"), &GridRectIter::set_color);
 	ClassDB::bind_method(D_METHOD("get_color"), &GridRectIter::get_color);
 
 	ClassDB::bind_method(D_METHOD("fill_remaining", "material_idx"), &GridRectIter::fill_remaining);
@@ -217,14 +223,21 @@ void GridRectIter::set_material_idx(u32 material_idx) {
 	ERR_FAIL_COND_MSG(material_idx >= Grid::cell_materials.size(), "material_idx must be less than cell_materials.size");
 
 	CellMaterial &mat = Grid::cell_materials[material_idx];
-	if (mat.new_cell_noise_max > 0) {
-		Cell::set_color_value(material_idx, Grid::temporal_rng.gen_color_value(mat.new_cell_noise_max));
+	if (mat.noise_darken_max > 0) {
+		Cell::set_darken(material_idx, Grid::temporal_rng.gen_range_u32(0, mat.noise_darken_max));
 	}
+
 	chunk->set_cell(cell_iter.coord, material_idx);
 	modified = true;
 }
 
-void GridRectIter::set_color(Color color) {
+u32 GridRectIter::get_material_idx() {
+	ERR_FAIL_COND_V_MSG(!is_valid, 0, "next should return true before using iter");
+
+	return Cell::material_idx(chunk->get_cell(cell_iter.coord));
+}
+
+void GridRectIter::set_color(u32 color) {
 	ERR_FAIL_COND_MSG(!is_valid, "next should return true before using iter");
 
 	u32 *cell_ptr = chunk->get_cell_ptr(cell_iter.coord);
@@ -235,14 +248,8 @@ void GridRectIter::set_color(Color color) {
 	}
 }
 
-u32 GridRectIter::get_material_idx() {
+u32 GridRectIter::get_color() {
 	ERR_FAIL_COND_V_MSG(!is_valid, 0, "next should return true before using iter");
-
-	return Cell::material_idx(chunk->get_cell(cell_iter.coord));
-}
-
-Color GridRectIter::get_color() {
-	ERR_FAIL_COND_V_MSG(!is_valid, Color(0.5f, 0.5f, 0.5f, 1.0f), "next should return true before using iter");
 
 	return Cell::color(chunk->get_cell(cell_iter.coord));
 }
@@ -252,10 +259,10 @@ void GridRectIter::fill_remaining(u32 material_idx) {
 
 	CellMaterial &mat = Grid::cell_materials[material_idx];
 
-	if (mat.new_cell_noise_max > 0) {
+	if (mat.noise_darken_max > 0) {
 		while (next()) {
 			u32 cell = material_idx;
-			Cell::set_color_value(cell, Grid::temporal_rng.gen_color_value(mat.new_cell_noise_max));
+			Cell::set_darken(cell, Grid::temporal_rng.gen_range_u32(0, mat.noise_darken_max));
 			chunk->set_cell(cell_iter.coord, cell);
 		}
 	} else {
@@ -335,10 +342,10 @@ void GridLineIter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("next"), &GridLineIter::next);
 
 	ClassDB::bind_method(D_METHOD("set_material_idx", "material_idx"), &GridLineIter::set_material_idx);
-	ClassDB::bind_method(D_METHOD("set_color", "color"), &GridLineIter::set_color, DEFVAL(Color(0.5f, 0.5f, 0.5f, 1.0f)));
-
 	ClassDB::bind_method(D_METHOD("get_material_idx"), &GridLineIter::get_material_idx);
+
 	ClassDB::bind_method(D_METHOD("get_color"), &GridLineIter::get_color);
+	ClassDB::bind_method(D_METHOD("set_color", "color"), &GridLineIter::set_color);
 
 	ClassDB::bind_method(D_METHOD("fill_remaining", "material_idx"), &GridLineIter::fill_remaining);
 
@@ -373,8 +380,8 @@ void GridLineIter::set_material_idx(u32 material_idx) {
 	ERR_FAIL_COND_MSG(material_idx >= Grid::cell_materials.size(), "material_idx must be less than cell_materials.size");
 
 	CellMaterial &mat = Grid::cell_materials[material_idx];
-	if (mat.new_cell_noise_max > 0) {
-		Cell::set_color_value(material_idx, Grid::temporal_rng.gen_color_value(mat.new_cell_noise_max));
+	if (mat.noise_darken_max > 0) {
+		Cell::set_darken(material_idx, Grid::temporal_rng.gen_range_u32(0, mat.noise_darken_max));
 	}
 
 	chunk->set_cell(current.local_coord, material_idx);
@@ -406,7 +413,13 @@ void GridLineIter::set_material_idx(u32 material_idx) {
 	}
 }
 
-void GridLineIter::set_color(Color color) {
+u32 GridLineIter::get_material_idx() {
+	ERR_FAIL_COND_V_MSG(!is_valid, 0, "next should return true before using iter");
+
+	return Cell::material_idx(chunk->get_cell(current.local_coord));
+}
+
+void GridLineIter::set_color(u32 color) {
 	ERR_FAIL_COND_MSG(!is_valid, "next should return true before using iter");
 
 	u32 *cell_ptr = chunk->get_cell_ptr(current.local_coord);
@@ -417,14 +430,8 @@ void GridLineIter::set_color(Color color) {
 	}
 }
 
-u32 GridLineIter::get_material_idx() {
+u32 GridLineIter::get_color() {
 	ERR_FAIL_COND_V_MSG(!is_valid, 0, "next should return true before using iter");
-
-	return Cell::material_idx(chunk->get_cell(current.local_coord));
-}
-
-Color GridLineIter::get_color() {
-	ERR_FAIL_COND_V_MSG(!is_valid, Color(0.5f, 0.5f, 0.5f, 1.0f), "next should return true before using iter");
 
 	return Cell::color(chunk->get_cell(current.local_coord));
 }

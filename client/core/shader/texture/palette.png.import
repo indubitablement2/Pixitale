@@ -2,16 +2,16 @@
 
 importer="texture"
 type="CompressedTexture2D"
-uid="uid://d2fbvccapny4k"
-path="res://.godot/imported/gamma_values.png-8d89dfe7428ee1973790215f0db7ca99.ctex"
+uid="uid://2400dglldhhw"
+path="res://.godot/imported/palette.png-efcf6d4b317ebe7d24217c813428a8e5.ctex"
 metadata={
 "vram_texture": false
 }
 
 [deps]
 
-source_file="res://core/texture/palette/gamma_values.png"
-dest_files=["res://.godot/imported/gamma_values.png-8d89dfe7428ee1973790215f0db7ca99.ctex"]
+source_file="res://core/shader/texture/palette.png"
+dest_files=["res://.godot/imported/palette.png-efcf6d4b317ebe7d24217c813428a8e5.ctex"]
 
 [params]
 

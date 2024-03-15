@@ -30,7 +30,7 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 #### Cell Color
 - [x] When creating new cells, add noise (soil, sand, etc)
 - [x] Border texture (brick, wood, etc): Maybe a simple fake depth using shader?
-- [ ] Replace color with value + palette (6+6)
+- [x] Replace color with darken + palette. 6 bits each
 
 #### Keep processing chunk until inactive
 - [ ] Add neighbors chunk when needed.

@@ -1,8 +1,6 @@
 #ifndef CELL_HPP
 #define CELL_HPP
 
-#include "core/math/color.h"
-#include "core/typedefs.h"
 #include "preludes.h"
 
 namespace Cell {
@@ -11,10 +9,8 @@ enum Shifts {
 	SHIFT_MOVEMENT = 12,
 	SHIFT_UPDATED = 14,
 	SHIFT_ACTIVE = 16,
-	SHIFT_COLOR = 17,
-	SHIFT_RED = 17,
-	SHIFT_GREEN = 22,
-	SHIFT_BLUE = 27,
+	SHIFT_DARKEN = 20,
+	SHIFT_COLOR = 26,
 };
 
 // material_idx: 0..12
@@ -23,16 +19,17 @@ enum Shifts {
 // updated: 14..16
 // alternate between 1,2 and 3. 0 is always not updated (default for new cell).
 // active: 16
-// color: 17..32
+// unused: 17..20 (8)
+// darken: 20..26
+// color: 26..32
 enum Masks {
 	MASK_MATERIAL = 4095u,
 	MASK_MOVEMENT = 3u << Shifts::SHIFT_MOVEMENT,
 	MASK_UPDATED = 3u << Shifts::SHIFT_UPDATED,
 	MASK_ACTIVE = 1u << Shifts::SHIFT_ACTIVE,
-	MASK_COLOR = 32767u << Shifts::SHIFT_COLOR,
-	MASK_RED = 31u << Shifts::SHIFT_RED,
-	MASK_GREEN = 31u << Shifts::SHIFT_GREEN,
-	MASK_BLUE = 31u << Shifts::SHIFT_BLUE,
+	MASK_UNUSED = 7 << 17,
+	MASK_DARKEN = 63u << Shifts::SHIFT_DARKEN,
+	MASK_COLOR = 63u << Shifts::SHIFT_COLOR,
 };
 
 inline u32 material_idx(const u32 cell) {
@@ -40,6 +37,7 @@ inline u32 material_idx(const u32 cell) {
 }
 
 inline void set_material_idx(u32 &cell, const u32 material_idx) {
+	TEST_ASSERT(material_idx < 4096, "material_idx must be less than 4096");
 	cell = (cell & ~Masks::MASK_MATERIAL) | material_idx | Masks::MASK_ACTIVE;
 }
 
@@ -79,60 +77,24 @@ inline void set_active(u32 &cell, const bool active = true) {
 	}
 }
 
-// Store in a way that 0.5f is 0u;
-// 0.0f -> 31
-// 0.4f -> 18
-// 0.5f -> 0
-// 1.0f -> 15
-inline u32 store_channel(f32 v) {
-	v = CLAMP(v, 0.0f, 1.0f);
-
-	v -= 0.5f;
-	if (v < 0.0f) {
-		v = -v + 0.5f;
-		v = MAX(v, 0.52f);
-	}
-	v *= 31.0f;
-
-	return u32(v);
+inline void set_darken(u32 &cell, const u32 darken) {
+	TEST_ASSERT(darken < 64, "darken must be less than 64");
+	cell &= ~Masks::MASK_DARKEN;
+	cell |= darken << Shifts::SHIFT_DARKEN;
 }
 
-inline f32 get_channel(const u32 v) {
-	f32 f = f32(v);
-
-	f /= 31.0f;
-	if (f > 0.5f) {
-		f = -f + 0.5f;
-	}
-	f += 0.5f;
-
-	return f;
+inline u32 darken(const u32 cell) {
+	return (cell & Masks::MASK_DARKEN) >> Shifts::SHIFT_DARKEN;
 }
 
-inline Color color(const u32 cell) {
-	u32 color_data = (cell & Masks::MASK_COLOR) >> Shifts::SHIFT_COLOR;
-	return Color(
-			get_channel(color_data & 31u),
-			get_channel((color_data >> 5) & 31u),
-			get_channel(color_data >> 10));
-}
-
-inline void set_color(u32 &cell, const Color color) {
-	u32 color_data = (store_channel(color.r)) |
-			(store_channel(color.g) << 5) |
-			(store_channel(color.b) << 10);
-
+inline void set_color(u32 &cell, const u32 color) {
+	TEST_ASSERT(color < 64, "color must be less than 64");
 	cell &= ~Masks::MASK_COLOR;
-	cell |= color_data << Shifts::SHIFT_COLOR;
+	cell |= color << Shifts::SHIFT_COLOR;
 }
 
-// Meant for new cell.
-inline void set_color_value(u32 &cell, const u32 value) {
-	TEST_ASSERT(value < 32, "darken must be less than 32");
-
-	u32 color_data = value | (value << 5) | (value << 10);
-
-	cell |= color_data << Shifts::SHIFT_COLOR;
+inline u32 color(const u32 cell) {
+	return (cell & Masks::MASK_COLOR) >> Shifts::SHIFT_COLOR;
 }
 
 static_assert(
@@ -140,14 +102,10 @@ static_assert(
 				Masks::MASK_MOVEMENT +
 				Masks::MASK_UPDATED +
 				Masks::MASK_ACTIVE +
+				Masks::MASK_UNUSED +
+				Masks::MASK_DARKEN +
 				Masks::MASK_COLOR ==
 		MAX_U32);
-
-static_assert(
-		Masks::MASK_RED +
-				Masks::MASK_GREEN +
-				Masks::MASK_BLUE ==
-		Masks::MASK_COLOR);
 
 } // namespace Cell
 

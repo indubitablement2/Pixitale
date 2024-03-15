@@ -29,20 +29,12 @@ bool is_cell_active(uint data) {
 	return (data &  65536u) != 0u;
 }
 
-float _get_channel(uint v) {
-	float f = float(v);
-	f /= 31.0f;
-	if (f > 0.5f) {
-		f = -f + 0.5f;
-	}
-	return f;
+// Already inverted.
+// [0, 1]
+float get_cell_darken(uint data) {
+	return float(((data >> 20u) & 63u) ^ 63u) / 63.0;
 }
 
-// [-0.5..0.5]
-vec3 get_cell_color_modulate(uint data) {
-	return vec3(
-		_get_channel((data >> 17u) & 31u),
-		_get_channel((data >> 22u) & 31u),
-		_get_channel(data >> 27u)
-	);
+int get_cell_color(uint data) {
+	return int(data >> 26u);
 }

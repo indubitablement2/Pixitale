@@ -1,5 +1,4 @@
 #include "tests.h"
-#include "cell.hpp"
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
 #include "core/os/time.h"
@@ -203,24 +202,6 @@ void test_rng_bias() {
 	TEST_ASSERT(float_bias != 0.5, "rng float bias is 0.5");
 }
 
-void test_cell_color() {
-	f32 v = 0.0f;
-	while (v < 1.02f) {
-		Color color_in = Color(v, v, v);
-
-		u32 cell = 0;
-		Cell::set_color(cell, color_in);
-
-		Color color_out = Cell::color(cell);
-
-		TEST_ASSERT(Math::abs(color_in.r - color_out.r) < 0.1, "r");
-		TEST_ASSERT(Math::abs(color_in.g - color_out.g) < 0.1, "g");
-		TEST_ASSERT(Math::abs(color_in.b - color_out.b) < 0.1, "b");
-
-		v += 0.001f;
-	}
-}
-
 void PixitaleTests::_bind_methods() {
 	ClassDB::bind_static_method(
 			"PixitaleTests",
@@ -249,7 +230,6 @@ void PixitaleTests::run_tests() {
 	test_int_coord();
 	test_iter_chunk();
 	test_rng_bias();
-	test_cell_color();
 }
 
 bool PixitaleTests::assert_enabled() {

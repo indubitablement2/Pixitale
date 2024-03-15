@@ -24,10 +24,11 @@ environment = ExtResource("7_3kidg")
 script/source = "extends Node2D
 
 @export var item_list : ItemList
-@export var color_picker : ColorPicker
+@export var color_picker : ItemList
 @export var brush_size_range : Range
 
 var draw_mat_idx := 0
+var color := 0
 var color_only := false
 var pressed := false
 
@@ -36,6 +37,11 @@ func _ready() -> void:
 		item_list.add_item(mat.name)
 	item_list.select(0)
 	item_list.item_selected.connect(_on_item_selected)
+	
+	for i in Global.COLOR_PALETTE.size():
+		color_picker.add_item(\"     \")
+		color_picker.set_item_custom_bg_color(i,  Global.COLOR_PALETTE[i])
+	color_picker.item_selected.connect(_on_color_picker_item_selected)
 
 func _unhandled_input(event: InputEvent) -> void:
 	if event.is_action(\"primary\"):
@@ -44,14 +50,13 @@ func _unhandled_input(event: InputEvent) -> void:
 func _process(_delta: float) -> void:
 	if pressed:
 		var rect := Rect2i(Global.mouse_coord, Vector2i.ONE).grow(int(brush_size_range.value))
-		if color_only:
-			Core.set_color_rect(
-				color_picker.color,
-				rect)
-		else:
+		if !color_only:
 			Core.set_cell_material_rect(
 				draw_mat_idx,
 				rect)
+		Core.set_color_rect(
+			color,
+			rect)
 
 func _on_item_selected(idx: int) -> void:
 	draw_mat_idx = idx
@@ -60,9 +65,8 @@ func _on_visibility_changed() -> void:
 	set_process_input(visible)
 	set_process(visible)
 
-func _on_color_toggled(toggled_on: bool) -> void:
-	color_only = toggled_on
-	color_picker.set_visible(toggled_on)
+func _on_color_picker_item_selected(idx: int) -> void:
+	color = idx
 "
 
 [sub_resource type="GDScript" id="GDScript_qtqv4"]
@@ -260,9 +264,9 @@ process_mode = 3
 z_index = 300
 z_as_relative = false
 script = SubResource("GDScript_x0xfk")
-item_list = NodePath("../GUI/MarginContainer/DebugMenu/ItemList")
+item_list = NodePath("../GUI/MarginContainer/DebugMenu/CellMaterialPicker")
 color_picker = NodePath("../GUI/MarginContainer/DebugMenu/VBoxContainer/ColorPicker")
-brush_size_range = NodePath("../GUI/MarginContainer/DebugMenu/VBoxContainer/HSlider")
+brush_size_range = NodePath("../GUI/MarginContainer/DebugMenu/VBoxContainer/CursorSize")
 
 [node name="GUI" type="CanvasLayer" parent="."]
 process_mode = 3
@@ -320,7 +324,7 @@ text = "Active Cell"
 script = SubResource("GDScript_nlogk")
 cell_render_material = ExtResource("8_onaw1")
 
-[node name="ItemList" type="ItemList" parent="GUI/MarginContainer/DebugMenu"]
+[node name="CellMaterialPicker" type="ItemList" parent="GUI/MarginContainer/DebugMenu"]
 custom_minimum_size = Vector2(90, 0)
 layout_mode = 2
 size_flags_vertical = 0
@@ -329,34 +333,18 @@ auto_height = true
 [node name="VBoxContainer" type="VBoxContainer" parent="GUI/MarginContainer/DebugMenu"]
 layout_mode = 2
 
-[node name="HSlider" type="HSlider" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
+[node name="CursorSize" type="HSlider" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
 custom_minimum_size = Vector2(300, 0)
 layout_mode = 2
 max_value = 32.0
 value = 16.0
 rounded = true
 
-[node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
+[node name="ColorPicker" type="ItemList" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
 layout_mode = 2
-
-[node name="Color" type="Button" parent="GUI/MarginContainer/DebugMenu/VBoxContainer/HBoxContainer"]
-layout_mode = 2
-toggle_mode = true
-text = "Color"
-
-[node name="ColorPicker" type="ColorPicker" parent="GUI/MarginContainer/DebugMenu/VBoxContainer"]
-visible = false
-layout_mode = 2
-size_flags_horizontal = 0
-size_flags_vertical = 0
-color = Color(0.5, 0.5, 0.5, 1)
-edit_alpha = false
-deferred_mode = true
-picker_shape = 3
-sampler_visible = false
-color_modes_visible = false
-sliders_visible = false
-hex_visible = false
+allow_search = false
+auto_height = true
+max_columns = 8
 
 [node name="VBoxContainer" type="VBoxContainer" parent="GUI/MarginContainer"]
 layout_mode = 2
@@ -506,5 +494,4 @@ zoom = Vector2(4, 4)
 [node name="GridBody" parent="." instance=ExtResource("14_a3qr0")]
 
 [connection signal="visibility_changed" from="Draw" to="Draw" method="_on_visibility_changed"]
-[connection signal="toggled" from="GUI/MarginContainer/DebugMenu/VBoxContainer/HBoxContainer/Color" to="Draw" method="_on_color_toggled"]
 [connection signal="visibility_changed" from="GridRender/ActiveRect" to="GridRender/ActiveRect" method="_on_visibility_changed"]

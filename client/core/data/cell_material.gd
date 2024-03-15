@@ -53,9 +53,8 @@ func set_light_modulate(value: Color) -> void:
 	if idx != -1:
 		GridApi.light_modulate.get_img_mut().set_pixel(idx, 0, light_modulate)
 
-## Lighten or darken new cell, by up to this amount.
-## can_color should be true for this to work.
-@export_range(0, 15) var new_cell_noise_max := 0
+## Darken new cell, by up to this amount.
+@export_range(0, 63) var noise_darken_max := 0
 
 ## If this cell can be colored.
 @export var can_color := false

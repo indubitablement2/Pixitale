@@ -88,6 +88,12 @@ struct GridBodyApi {
 		}
 
 		u32 cell = chunk->get_cell(Vector2i(coord.x & 31, coord.y & 31));
+
+		if (Cell::movement(cell) != -2) {
+			// Moving cell.
+			return false;
+		}
+
 		u32 mat_idx = Cell::material_idx(cell);
 
 		if (mat_idx == 0) {

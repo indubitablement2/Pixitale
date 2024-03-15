@@ -3,13 +3,12 @@ shader_type canvas_item;
 
 #include "prelude.gdshaderinc"
 
-const float COLOR_MODULATE_STRENGTH = 0.3;
-
 global uniform ivec2 cell_buffer_origin;
 global uniform vec2 cell_buffer_size;
 
 uniform sampler2D base_color_atlas;
 uniform sampler2D base_color_atlas_rect;
+uniform sampler2D color_palette;
 
 uniform bool highlight_active = false;
 
@@ -29,8 +28,11 @@ void fragment() {
 		wrapv(global_coord, base_color_size) + base_color_start,
 		0);
 	
-	vec3 color_modulate = get_cell_color_modulate(data);
-	color.rgb += color_modulate * COLOR_MODULATE_STRENGTH;
+	vec3 color_added = texelFetch(color_palette, ivec2(get_cell_color(data), 0), 0).rgb;
+	color_added -= 0.5;
+	color.rgb += color_added;
+	
+	color.rgb *= get_cell_darken(data);
 	
 	float same_neighbors = 1.0;
 	same_neighbors += 0.18 * float(
