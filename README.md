@@ -1,5 +1,5 @@
 # Pixitale
-![Project Logo](image.jpg)
+![Project Logo](image.png)
 
 ## Editor Build
 See https://docs.godotengine.org/en/stable/contributing/development/compiling/index.html for requirements.
