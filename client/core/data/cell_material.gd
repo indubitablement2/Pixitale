@@ -71,17 +71,17 @@ func set_light_modulate(value: Color) -> void:
 ## How many horizontally movement per step.
 ## A cell start moving horizontally after moving vertically at least once
 ## or from horizontal_movement_start_chance.
-@export_range(1, 16) var horizontal_movement = 1;
+@export_range(1, 16) var horizontal_movement := 1;
 ## Chance to spontaneously start moving horizontally when active.
 ## Does not keep cell active if chance fail.
-@export_range(0.0, 1.0) var horizontal_movement_start_chance = 0.0;
+@export_range(0.0, 1.0) var horizontal_movement_start_chance := 0.0;
 ## Chance to stop moving horizontally.
-@export_range(0.0, 1.0) var horizontal_movement_stop_chance = 1.0;
+@export_range(0.0, 1.0) var horizontal_movement_stop_chance := 1.0;
 
-## Duplicate this cell on any movement.
+## Small chance to remove this cell on horizontal movement.
 ## This is for top layer of fluid to eventually become inactive,
 ## instead of moving back and forth forever.
-@export_range(0.0, 1.0) var duplicate_on_movement_chance = 0.0;
+@export var dissipate_on_horizontal_movement := false
 
 ## When blocked from moving horizontally, 
 ## try to reverse direction instead of stopping.

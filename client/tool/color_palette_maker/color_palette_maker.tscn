@@ -2,7 +2,7 @@
 
 [ext_resource type="Script" path="res://tool/color_palette_maker/color_palette_maker.gd" id="1_paftf"]
 
-[sub_resource type="Image" id="Image_oywm0"]
+[sub_resource type="Image" id="Image_5dswg"]
 data = {
 "data": PackedByteArray(133, 133, 133, 162, 162, 162, 192, 192, 192, 223, 223, 223, 255, 255, 255, 0, 0, 0, 24, 24, 24, 51, 51, 51, 77, 77, 77, 104, 104, 104, 255, 0, 0, 255, 255, 0, 0, 255, 0, 0, 255, 255, 0, 0, 255, 255, 0, 255, 48, 0, 20, 90, 0, 34, 133, 0, 40, 177, 0, 34, 220, 25, 0, 246, 79, 0, 255, 132, 68, 255, 178, 129, 36, 16, 0, 67, 38, 0, 94, 62, 0, 119, 88, 0, 143, 115, 0, 165, 145, 0, 183, 177, 0, 196, 211, 0, 18, 25, 0, 31, 53, 0, 30, 83, 0, 0, 114, 30, 0, 142, 75, 0, 171, 114, 0, 200, 154, 0, 230, 195, 0, 27, 23, 0, 54, 52, 0, 80, 83, 0, 106, 117, 0, 133, 155, 0, 160, 197, 0, 187, 245, 135, 208, 255, 0, 23, 43, 0, 46, 90, 0, 60, 155, 39, 39, 254, 89, 88, 255, 133, 122, 255, 172, 153, 255, 206, 184, 255, 34, 0, 57, 71, 0, 96, 111, 0, 127, 154, 0, 151, 200, 0, 170, 249, 0, 183, 255, 115, 182, 255, 170, 195),
 "format": "RGB8",
@@ -12,7 +12,7 @@ data = {
 }
 
 [sub_resource type="ImageTexture" id="ImageTexture_ljvqv"]
-image = SubResource("Image_oywm0")
+image = SubResource("Image_5dswg")
 
 [node name="ColorPaletteMaker" type="TextureRect"]
 anchors_preset = 15

@@ -198,10 +198,10 @@ public:
 		const CellMaterial &other_material = Grid::get_cell_material(other_material_idx);
 
 		if (cell_material->density > other_material.density) {
-			if (rng.gen_probability_u32_max(cell_material->duplicate_on_movement_chance)) {
-				// Duplicate this cell.
-				other = cell;
-			}
+			// if (rng.gen_probability_u32_max(cell_material->duplicate_on_movement_chance)) {
+			// 	// Duplicate this cell.
+			// 	other = cell;
+			// }
 
 			*cell_ptr = other;
 			cell_ptr = other_cell_ptr;
@@ -316,10 +316,12 @@ public:
 
 		// Vertical movement
 		i32 movement = Cell::movement(cell);
+		u32 flow = Cell::flow(cell);
 		i32 vertical_dir = SIGN(cell_material->vertical_movement);
 		for (i32 i = 0; i != cell_material->vertical_movement; i += vertical_dir) {
 			if (try_move(Vector2i(0, vertical_dir))) {
 				movement = 0;
+				flow = 0;
 			} else {
 				if (movement == 0) {
 					// Always move horizontally after falling.
@@ -340,40 +342,63 @@ public:
 			if (rng.gen_probability_u32_max(cell_material->horizontal_movement_stop_chance)) {
 				// Spontaneously stop moving.
 				movement = -2;
+				flow = 0;
 			} else {
 				for (i32 i = 0; i < cell_material->horizontal_movement; i++) {
 					// Try move diagonally first.
 					if (try_move(Vector2i(movement, vertical_dir))) {
+						flow += 1;
 						continue;
 					}
 					// Then horizontally.
 					if (try_move(Vector2i(movement, 0))) {
+						flow += 1;
 						continue;
 					}
 
 					if (cell_material->can_reverse_horizontal_movement) {
-						// Try other direction.
-						movement = -movement;
+						if (flow <= 1) {
+							// Try other direction.
+							movement = -movement;
+							flow = 1;
 
-						if (try_move(Vector2i(movement, vertical_dir))) {
-						} else if (try_move(Vector2i(movement, 0))) {
+							if (try_move(Vector2i(movement, vertical_dir))) {
+							} else if (try_move(Vector2i(movement, 0))) {
+							} else {
+								// Blocked on both sides.
+								movement = -2;
+								flow = 0;
+							}
 						} else {
-							// Blocked on both sides.
-							movement = -2;
+							// We keep trying the same direction until flow is 0.
+							flow -= 1;
 						}
 					} else {
 						// Blocked on moving side and doesn't want to reverse.
 						movement = -2;
+						flow = 0;
 					}
 					break;
+				}
+
+				if (flow != 0 && cell_material->dissipate_on_horizontal_movement) {
+					if (rng.gen_probability_u32_max(DISSIPATION_CHANCE)) {
+						// Remove this cell.
+						cell = 0;
+						Cell::set_active(cell);
+					}
 				}
 			}
 		}
 
-		Cell::set_movement(cell, movement);
-		if (movement != -2) {
+		if (movement == -2) {
+			flow = 0;
+		} else {
+			flow = MIN(flow, 3u);
 			Cell::set_active(cell, true);
 		}
+		Cell::set_movement(cell, movement);
+		Cell::set_flow(cell, flow);
 
 		if (Cell::is_active(cell)) {
 			Cell::set_updated(cell, Grid::cell_updated_bitmask);

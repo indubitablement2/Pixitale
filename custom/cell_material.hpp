@@ -5,6 +5,8 @@
 #include "preludes.h"
 #include "rng.hpp"
 
+const u32 DISSIPATION_CHANCE = 67108864u; // 1.6%
+
 enum CellCollision {
 	CELL_COLLISION_NONE = 0,
 	CELL_COLLISION_SOLID = 1,
@@ -55,14 +57,13 @@ struct CellMaterial {
 	// Chance to stop moving horizontally.
 	u32 horizontal_movement_stop_chance = MAX_U32;
 
-	// Duplicate this cell on any movement.
-	// This is for top layer of fluid to eventually become inactive,
-	// instead of moving back and forth forever.
-	u32 duplicate_on_movement_chance = 0;
-
 	// Darken new cell, by up to this amount.
 	u32 noise_darken_max = 0;
 
+	// Small chance to remove this cell on horizontal movement.
+	// This is for top layer of fluid to eventually become inactive,
+	// instead of moving back and forth forever.
+	bool dissipate_on_horizontal_movement = false;
 	// When blocked from moving horizontally, try to reverse direction instead of stopping.
 	bool can_reverse_horizontal_movement = false;
 	bool can_color = false;
@@ -78,9 +79,9 @@ struct CellMaterial {
 		horizontal_movement_start_chance = u32(CLAMP(f64(obj->get("horizontal_movement_start_chance", nullptr)), 0.0, 1.0) * f64(MAX_U32));
 		horizontal_movement_stop_chance = u32(CLAMP(f64(obj->get("horizontal_movement_stop_chance", nullptr)), 0.0, 1.0) * f64(MAX_U32));
 
-		duplicate_on_movement_chance = u32(CLAMP(f64(obj->get("duplicate_on_movement_chance", nullptr)), 0.0, 1.0) * f64(MAX_U32));
-
 		noise_darken_max = MIN(u32(obj->get("noise_darken_max", nullptr)), 63u);
+
+		dissipate_on_horizontal_movement = bool(obj->get("dissipate_on_horizontal_movement", nullptr));
 
 		can_reverse_horizontal_movement = bool(obj->get("can_reverse_horizontal_movement", nullptr));
 

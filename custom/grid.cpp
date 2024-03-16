@@ -369,6 +369,8 @@ void Grid::print_internals() {
 		print_line("	horizontal_movement:", cell_material.horizontal_movement);
 		print_line("	horizontal_movement_start_chance:", f64(cell_material.horizontal_movement_start_chance) / f64(MAX_U32));
 		print_line("	horizontal_movement_stop_chance:", f64(cell_material.horizontal_movement_stop_chance) / f64(MAX_U32));
+		print_line("	noise_darken_max:", cell_material.noise_darken_max);
+		print_line("	dissipate_on_horizontal_movement:", cell_material.dissipate_on_horizontal_movement);
 		print_line("	can_reverse_horizontal_movement:", cell_material.can_reverse_horizontal_movement);
 		print_line("	can_color:", cell_material.can_color);
 

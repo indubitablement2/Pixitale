@@ -9,6 +9,8 @@ enum Shifts {
 	SHIFT_MOVEMENT = 12,
 	SHIFT_UPDATED = 14,
 	SHIFT_ACTIVE = 16,
+	SHIFT_UNUSED = 17,
+	SHIFT_FLOW = 18,
 	SHIFT_DARKEN = 20,
 	SHIFT_COLOR = 26,
 };
@@ -19,7 +21,9 @@ enum Shifts {
 // updated: 14..16
 // alternate between 1,2 and 3. 0 is always not updated (default for new cell).
 // active: 16
-// unused: 17..20 (8)
+// unused: 17
+// flow: 18..20
+// Keep moving in the same direction until flow is 0. Makes fluid disperse faster.
 // darken: 20..26
 // color: 26..32
 enum Masks {
@@ -27,7 +31,8 @@ enum Masks {
 	MASK_MOVEMENT = 3u << Shifts::SHIFT_MOVEMENT,
 	MASK_UPDATED = 3u << Shifts::SHIFT_UPDATED,
 	MASK_ACTIVE = 1u << Shifts::SHIFT_ACTIVE,
-	MASK_UNUSED = 7 << 17,
+	MASK_UNUSED = 1u << Shifts::SHIFT_UNUSED,
+	MASK_FLOW = 3u << Shifts::SHIFT_FLOW,
 	MASK_DARKEN = 63u << Shifts::SHIFT_DARKEN,
 	MASK_COLOR = 63u << Shifts::SHIFT_COLOR,
 };
@@ -50,6 +55,16 @@ inline void set_movement(u32 &cell, const i32 movement) {
 	TEST_ASSERT(movement >= -2 && movement <= 1, "movement must be between -2 and 1");
 	cell &= ~Masks::MASK_MOVEMENT;
 	cell |= u32(movement + 2) << Shifts::SHIFT_MOVEMENT;
+}
+
+inline u32 flow(const u32 cell) {
+	return (cell & Masks::MASK_FLOW) >> Shifts::SHIFT_FLOW;
+}
+
+inline void set_flow(u32 &cell, const u32 flow) {
+	TEST_ASSERT(flow < 4, "flow must be less than 8");
+	cell &= ~Masks::MASK_FLOW;
+	cell |= flow << Shifts::SHIFT_FLOW;
 }
 
 inline bool is_updated(const u32 cell, const u32 updated_mask) {
@@ -103,6 +118,7 @@ static_assert(
 				Masks::MASK_UPDATED +
 				Masks::MASK_ACTIVE +
 				Masks::MASK_UNUSED +
+				Masks::MASK_FLOW +
 				Masks::MASK_DARKEN +
 				Masks::MASK_COLOR ==
 		MAX_U32);

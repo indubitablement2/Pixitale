@@ -18,14 +18,25 @@ collision_type = 1
 
 [node name="Sand" type="Node" parent="."]
 script = ExtResource("1_jtobp")
+display_name = "Sand"
 base_color = Color(0.721569, 0.592157, 0, 1)
 light_modulate = Color(0, 0, 0, 1)
 noise_darken_max = 8
 can_color = true
 density = 190
 vertical_movement = 3
-horizontal_movement_start_chance = 0.425
-horizontal_movement_stop_chance = 0.07
+horizontal_movement_start_chance = 0.3
+horizontal_movement_stop_chance = 0.04
+collision_type = 1
+
+[node name="InfiniteSand" type="Node" parent="."]
+script = ExtResource("1_jtobp")
+display_name = "Sand"
+base_color = Color(0.721569, 0.592157, 0, 1)
+light_modulate = Color(0, 0, 0, 1)
+noise_darken_max = 8
+can_color = true
+density = 300
 collision_type = 1
 
 [node name="Water" type="Node" parent="."]
@@ -35,10 +46,10 @@ base_color = Color(0, 0.298039, 0.631373, 0.921569)
 light_modulate = Color(0.581253, 0.582588, 0.817106, 1)
 density = 100
 vertical_movement = 3
-horizontal_movement = 4
+horizontal_movement = 3
 horizontal_movement_start_chance = 1.0
 horizontal_movement_stop_chance = 0.0
-duplicate_on_movement_chance = 0.001
+dissipate_on_horizontal_movement = true
 can_reverse_horizontal_movement = true
 collision_type = 4
 
@@ -51,8 +62,22 @@ light_modulate = Color(0.621799, 0.368783, 0.378197, 1)
 noise_darken_max = 4
 density = 180
 vertical_movement = 2
+horizontal_movement_start_chance = 1.0
+horizontal_movement_stop_chance = 0.0
+dissipate_on_horizontal_movement = true
+can_reverse_horizontal_movement = true
+collision_type = 4
+
+[node name="Smoke" type="Node" parent="."]
+script = ExtResource("1_jtobp")
+display_name = "Smoke"
+base_color = Color(0.262745, 0.262745, 0.262745, 0.439216)
+light_modulate = Color(0.336608, 0.336608, 0.336608, 1)
+noise_darken_max = 13
+density = 10
+vertical_movement = -1
 horizontal_movement = 2
 horizontal_movement_start_chance = 1.0
 horizontal_movement_stop_chance = 0.0
+dissipate_on_horizontal_movement = true
 can_reverse_horizontal_movement = true
-collision_type = 4

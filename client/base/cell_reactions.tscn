@@ -1,4 +1,6 @@
-[gd_scene load_steps=2 format=3 uid="uid://bkwg61l2dv4oa"]
+[gd_scene load_steps=3 format=3 uid="uid://bkwg61l2dv4oa"]
+
+[ext_resource type="Script" path="res://core/data/cell_reaction.gd" id="1_pm404"]
 
 [sub_resource type="GDScript" id="GDScript_pd1m6"]
 script/source = "extends CellReaction
@@ -16,4 +18,18 @@ in1_tag = &"Lava"
 in2_tag = &"Water"
 out1_name = &"Lava"
 out2_name = &"Lava"
-probability = 0.001
+probability = 0.01
+
+[node name="SmokeDissipate" type="Node" parent="."]
+script = ExtResource("1_pm404")
+in1_tag = &"Smoke"
+in2_tag = &"Empty"
+probability = 0.005
+
+[node name="InfiniteSand" type="Node" parent="."]
+script = ExtResource("1_pm404")
+in1_tag = &"InfiniteSand"
+in2_tag = &"Empty"
+out1_name = &"InfiniteSand"
+out2_name = &"Sand"
+probability = 0.2
