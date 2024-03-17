@@ -1,6 +1,5 @@
 #include "register_types.h"
 #include "core/object/class_db.h"
-#include "generation_pass.h"
 #include "grid.h"
 #include "grid_body.h"
 #include "grid_iter.h"
@@ -16,13 +15,11 @@ void initialize_custom_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_abstract_class<Grid>();
 	ClassDB::register_abstract_class<ImagePacker>();
 
-	ClassDB::register_class<GenerationPass>();
 	ClassDB::register_class<GridChunkIter>();
 	ClassDB::register_class<GridRectIter>();
 	ClassDB::register_class<GridLineIter>();
 
 	ClassDB::register_class<GridBody>();
-	// ClassDB::register_class<GridBiomeScanner>();
 }
 
 void uninitialize_custom_module(ModuleInitializationLevel p_level) {

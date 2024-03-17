@@ -15,7 +15,6 @@
 #include "core/templates/vector.h"
 #include "core/variant/array.h"
 #include "core/variant/typed_array.h"
-#include "generation_pass.h"
 #include "grid_iter.h"
 #include "preludes.h"
 #include "rng.hpp"
@@ -40,6 +39,10 @@ u32 reations_key(const u32 m1, const u32 m2, bool &swap) {
 		swap = true;
 		return m2 | (m1 << 16);
 	}
+}
+
+i32 get_slice_idx(i32 x) {
+	return div_floor(x + (GENERATION_SLICE_CHUNK_SIZE / 2), GENERATION_SLICE_CHUNK_SIZE);
 }
 
 void Grid::_bind_methods() {
@@ -71,12 +74,12 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("clear_generation_passes"),
-			&Grid::clear_generation_passes);
+			D_METHOD("set_generate_chunk_callback", "value"),
+			&Grid::set_generate_chunk_callback);
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("add_generation_pass", "value"),
-			&Grid::add_generation_pass);
+			D_METHOD("set_generate_slice_callback", "value"),
+			&Grid::set_generate_slice_callback);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -172,6 +175,8 @@ void Grid::_bind_methods() {
 			D_METHOD("randi_range", "min", "max"),
 			&Grid::randi_range);
 
+	BIND_CONSTANT(GENERATION_SLICE_CHUNK_SIZE);
+
 	BIND_ENUM_CONSTANT(CELL_COLLISION_NONE);
 	BIND_ENUM_CONSTANT(CELL_COLLISION_SOLID);
 	BIND_ENUM_CONSTANT(CELL_COLLISION_PLATFORM);
@@ -232,11 +237,10 @@ void Grid::generate_chunk(Vector2i chunk_coord) {
 	auto iter = memnew(GridChunkIter);
 	iter->set_chunk(chunk_coord);
 
-	for (auto pass : generation_passes) {
-		pass->generate(iter);
-		iter->reset_iter();
-	}
+	i32 slice_idx = get_slice_idx(chunk_coord.x);
+	TEST_ASSERT(generated_slice.contains(slice_idx), "slice should be generated");
 
+	generate_chunk_callback.call(iter, slice_idx);
 	iter->chunk->activate_all(true);
 
 	memdelete(iter);
@@ -392,12 +396,12 @@ void Grid::print_internals() {
 	}
 }
 
-void Grid::clear_generation_passes() {
-	generation_passes = {};
+void Grid::set_generate_chunk_callback(Callable value) {
+	generate_chunk_callback = value;
 }
 
-void Grid::add_generation_pass(GenerationPass *value) {
-	generation_passes.push_back(value);
+void Grid::set_generate_slice_callback(Callable value) {
+	generate_slice_callback = value;
 }
 
 void Grid::clear() {
@@ -411,6 +415,8 @@ void Grid::clear() {
 
 	tick = 0;
 	seed = 0;
+
+	generated_slice = {};
 }
 
 void Grid::set_tick(i64 value) {
@@ -581,6 +587,18 @@ void Grid::step() {
 
 	for (i32 i = 0; i < 3; i++) {
 		auto &pass = passes[i];
+
+		// Generate slice if not already generated.
+		for (auto &pair : pass) {
+			i32 slice_idx = get_slice_idx(pair.first);
+
+			if (generated_slice.insert(slice_idx).second) {
+				Rng prev_rng = temporal_rng;
+				temporal_rng = get_static_rng(Vector2i(slice_idx, 0));
+				generate_slice_callback.call(slice_idx);
+				temporal_rng = prev_rng;
+			}
+		}
 
 		for (auto &pair : pass) {
 			tp.push_task([&pair] {

@@ -36,8 +36,10 @@ var cell_reactions := {}
 ## Ordered in this order
 ## - process_priority
 ## - which mod they are part of
-## - their original node order
+## - their scene node order
 var generation_passes : Array[GenerationPass] = []
+## slice_idx(int) : GenerationData
+var _generation_data : Dictionary = {}
 
 var _edit_callables : Array[Callable] = []
 ## tick(int) : Array of Array(args..., callback idx)
@@ -50,8 +52,8 @@ var _delete_node : Node = null
 var _step_thread := Thread.new()
 
 func _ready() -> void:
-	#process_mode = Node.PROCESS_MODE_DISABLED
-	pass
+	Grid.set_generate_slice_callback(_generate_slice)
+	Grid.set_generate_chunk_callback(_generate_chunk)
 
 func _exit_tree() -> void:
 	if _step_thread.is_started():
@@ -97,6 +99,7 @@ func add_grid_edit_method(m: Callable) -> int:
 	_edit_callables.push_back(m)
 	return idx
 
+## Use Grid.set_seed first as GenerationPass depends on it.
 func load_mods() -> void:
 	unload_mods()
 	_delete_node = Node.new()
@@ -215,8 +218,6 @@ func load_mods() -> void:
 					generation_passes.insert(gen_pass_idx, gen_pass)
 					break
 				gen_pass_idx += 1
-	for gen_pass in generation_passes:
-		Grid.add_generation_pass(gen_pass)
 	
 	for entry in mod_entries:
 		if entry.entry_script:
@@ -233,9 +234,12 @@ func unload_mods() -> void:
 	mod_entries = []
 	
 	Grid.clear()
-	Grid.clear_generation_passes()
 	Grid.clear_cell_reactions()
 	Grid.clear_cell_materials()
+	
+	for data : GenerationData in _generation_data.values():
+		data.free()
+	_generation_data = {}
 	
 	if _delete_node:
 		_delete_node.queue_free()
@@ -257,3 +261,14 @@ func _edit_peer(tick: int, bytes: PackedByteArray) -> void:
 func _step() -> void:
 	Grid.step()
 
+func _generate_slice(slice_idx: int) -> void:
+	var data := GenerationData.new(slice_idx)
+	for gen_pass in generation_passes:
+		gen_pass._generate_slice(data)
+	_generation_data[slice_idx] = data
+
+func _generate_chunk(iter: GridChunkIter, slice_idx: int) -> void:
+	var data : GenerationData = _generation_data[slice_idx]
+	for gen_pass in generation_passes:
+		gen_pass._generate_chunk(iter, data)
+		iter.reset_iter()

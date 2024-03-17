@@ -8,13 +8,15 @@
 #include "core/math/vector2i.h"
 #include "core/object/object.h"
 #include "core/variant/callable.h"
-#include "generation_pass.h"
 #include "grid_iter.h"
 #include "preludes.h"
 #include "rng.hpp"
 #include <unordered_map>
+#include <unordered_set>
 #include <utility>
 #include <vector>
+
+const i32 GENERATION_SLICE_CHUNK_SIZE = 1024;
 
 class Grid : public Object {
 	GDCLASS(Grid, Object);
@@ -26,7 +28,9 @@ private:
 	// Key is lower material_idx | higher material_idx << 16.
 	inline static std::unordered_map<u32, std::vector<CellReaction>> cell_reactions = {};
 
-	inline static std::vector<GenerationPass *> generation_passes = {};
+	inline static Callable generate_chunk_callback = Callable();
+	inline static Callable generate_slice_callback = Callable();
+	inline static std::unordered_set<i32> generated_slice = {};
 
 	inline static i64 tick = 0;
 	inline static u64 seed = 0;
@@ -94,8 +98,8 @@ public: // godot api
 	static bool remove_cell_reaction(u64 reaction_id);
 	static void print_internals();
 
-	static void clear_generation_passes();
-	static void add_generation_pass(GenerationPass *value);
+	static void set_generate_chunk_callback(Callable value);
+	static void set_generate_slice_callback(Callable value);
 
 	static void clear();
 
