@@ -15,11 +15,18 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 
 ## Todo
 
+#### Commands
+- [ ] Rename grid edits to commands.
+- [ ] Separate step chunk from other commands.
+- [ ] Apply commands on step thread. Need to change iter to RefCounted.
+- [ ] (server) Skip step if previous step did not finish. Slow down simulation instead of whole game.
+- [ ] (client) Immediately try to start next step if commands are available instead of waiting for next frame.
+
 #### Cell Movement
 - [x] Particle movement
 - [x] Sand movement
 - [ ] Wind effect. Light cell move horizontally based on wind value when moving vertically.
-- [ ] Small bug: cell very rarely go to sleep even around moving liquid.
+- [ ] Small bug: Cell very rarely go to sleep even around moving liquid. Probably caused by flow changes.
 
 #### Background Cell
 - [ ] Just material and color. No movement or reaction.

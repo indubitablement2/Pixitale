@@ -83,7 +83,6 @@ inline bool is_active(const u32 cell) {
 	return cell & Masks::MASK_ACTIVE;
 }
 
-// When inactive, set updated bit to 0 (never skip when it return to active).
 inline void set_active(u32 &cell, const bool active = true) {
 	if (active) {
 		cell |= Masks::MASK_ACTIVE;

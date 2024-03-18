@@ -37,17 +37,11 @@ private:
 
 	inline static std::unordered_map<u64, Chunk *> chunks = {};
 
-	inline static std::vector<GridChunkIter *> chunk_iters = {};
-	inline static std::vector<GridRectIter *> rect_iters = {};
-	inline static std::vector<GridLineIter *> line_iters = {};
-
 	inline static std::vector<Rect2i> queue_step_chunk_rects = {};
 
 	// 3 passes of columns
 	// x : ys (ys may be duplicated and aren't sorted)
 	inline static std::unordered_map<i32, std::vector<i32>> passes[3] = { {}, {}, {} };
-
-	inline static void clear_iters();
 
 public:
 	inline static Rng temporal_rng = Rng(0);
@@ -109,16 +103,25 @@ public: // godot api
 	static void set_seed(u64 value);
 	static u64 get_seed();
 
-	// Return a fallback value if cell is not found.
-	static u32 get_cell_material_idx(Vector2i coord);
-
 	static Rect2i get_chunk_active_rect(Vector2i chunk_coord);
 
 	static Ref<Image> get_cell_buffer(Rect2i chunk_rect, bool background);
 
-	static GridChunkIter *iter_chunk(Vector2i chunk_coord);
-	static GridRectIter *iter_rect(Rect2i rect);
-	static GridLineIter *iter_line(Vector2i start, Vector2i end);
+	static u32 get_cell_data(ChunkLocalCoord coord);
+	static u32 get_cell_material_idx(ChunkLocalCoord coord);
+	static u32 get_cell_color(ChunkLocalCoord coord);
+	static void set_cell_material_idx(ChunkLocalCoord coord, u32 material_idx);
+	static void set_cell_color(ChunkLocalCoord coord, u32 color);
+
+	static u32 get_cell_data_v(Vector2i coord);
+	static u32 get_cell_material_idx_v(Vector2i coord);
+	static u32 get_cell_color_v(Vector2i coord);
+	static void set_cell_material_idx_v(Vector2i coord, u32 material_idx);
+	static void set_cell_color_v(Vector2i coord, u32 color);
+
+	static Ref<GridRectIter> iter_rect(Rect2i rect);
+	static Ref<GridLineIter> iter_line(Vector2i start, Vector2i end);
+	static Ref<GridFillIter> iter_fill(Vector2i start, u32 material_idx);
 
 	static TypedArray<Vector2i> get_line(Vector2i start, Vector2i end);
 
@@ -133,6 +136,11 @@ public: // godot api
 	static f32 randf();
 	static f32 randf_range(f32 min, f32 max);
 	static i32 randi_range(i32 min, i32 max);
+
+	static i64 div_floor(i64 numerator, i64 denominator);
+	static Vector2i div_floor_v(Vector2i numerator, Vector2i denominator);
+	static i64 mod_neg(i64 numerator, i64 denominator);
+	static Vector2i mod_neg_v(Vector2i numerator, Vector2i denominator);
 };
 
 VARIANT_ENUM_CAST(CellCollision);

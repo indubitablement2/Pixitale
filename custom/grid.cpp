@@ -106,11 +106,6 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("get_cell_material_idx", "coord"),
-			&Grid::get_cell_material_idx);
-
-	ClassDB::bind_static_method(
-			"Grid",
 			D_METHOD("get_chunk_active_rect", "chunk_coord"),
 			&Grid::get_chunk_active_rect);
 
@@ -121,8 +116,21 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("iter_chunk", "chunk_coord"),
-			&Grid::iter_chunk);
+			D_METHOD("get_cell_material_idx", "coord"),
+			&Grid::get_cell_material_idx_v);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("get_cell_color", "coord"),
+			&Grid::get_cell_color_v);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("set_cell_material_idx", "coord", "material_idx"),
+			&Grid::set_cell_material_idx_v);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("set_cell_color", "coord", "color"),
+			&Grid::set_cell_color_v);
+
 	ClassDB::bind_static_method(
 			"Grid",
 			D_METHOD("iter_rect", "rect"),
@@ -131,6 +139,10 @@ void Grid::_bind_methods() {
 			"Grid",
 			D_METHOD("iter_line", "start", "end"),
 			&Grid::iter_line);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("iter_fill", "start", "filter_material_idx"),
+			&Grid::iter_fill);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -183,25 +195,6 @@ void Grid::_bind_methods() {
 	BIND_ENUM_CONSTANT(CELL_COLLISION_LIQUID);
 }
 
-void Grid::clear_iters() {
-	for (auto &iter : chunk_iters) {
-		iter->activate();
-		memdelete(iter);
-	}
-	chunk_iters.clear();
-
-	for (auto &iter : rect_iters) {
-		iter->activate();
-		memdelete(iter);
-	}
-	rect_iters.clear();
-
-	for (auto &iter : line_iters) {
-		memdelete(iter);
-	}
-	line_iters.clear();
-}
-
 std::vector<std::pair<Callable *, Vector2i>> &Grid::get_reaction_callback_vector() {
 	if (thread_idx == MAX_U32) {
 		thread_idx = next_thread_idx.fetch_add(1, std::memory_order_relaxed);
@@ -235,7 +228,7 @@ void Grid::reactions_between(
 
 void Grid::generate_chunk(Vector2i chunk_coord) {
 	auto iter = memnew(GridChunkIter);
-	iter->set_chunk(chunk_coord);
+	iter->prepare(chunk_coord);
 
 	i32 slice_idx = get_slice_idx(chunk_coord.x);
 	TEST_ASSERT(generated_slice.contains(slice_idx), "slice should be generated");
@@ -405,7 +398,6 @@ void Grid::set_generate_slice_callback(Callable value) {
 }
 
 void Grid::clear() {
-	clear_iters();
 	queue_step_chunk_rects = {};
 
 	for (auto &[chunk_id, chunk] : chunks) {
@@ -434,16 +426,6 @@ void Grid::set_seed(u64 value) {
 
 u64 Grid::get_seed() {
 	return seed;
-}
-
-u32 Grid::get_cell_material_idx(Vector2i coord) {
-	ChunkLocalCoord chunk_local_coord = ChunkLocalCoord(coord);
-	Chunk *chunk = get_chunk(chunk_local_coord.chunk_coord);
-	if (chunk != nullptr) {
-		return Cell::material_idx(chunk->get_cell(chunk_local_coord.local_coord));
-	} else {
-		return 0;
-	}
 }
 
 Rect2i Grid::get_chunk_active_rect(Vector2i chunk_coord) {
@@ -501,32 +483,106 @@ Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, bool background) {
 			image_data);
 }
 
-GridChunkIter *Grid::iter_chunk(Vector2i chunk_coord) {
-	auto iter = memnew(GridChunkIter);
-	iter->set_chunk(chunk_coord);
-
-	chunk_iters.push_back(iter);
-
-	return iter;
+u32 Grid::get_cell_data(ChunkLocalCoord coord) {
+	Chunk *chunk = get_chunk(coord.chunk_coord);
+	if (chunk == nullptr) {
+		return 0;
+	}
+	return chunk->get_cell(coord.local_coord);
 }
 
-GridRectIter *Grid::iter_rect(Rect2i rect) {
+u32 Grid::get_cell_material_idx(ChunkLocalCoord coord) {
+	return Cell::material_idx(get_cell_data(coord));
+}
+
+u32 Grid::get_cell_color(ChunkLocalCoord coord) {
+	return Cell::color(get_cell_data(coord));
+}
+
+void Grid::set_cell_material_idx(ChunkLocalCoord coord, u32 material_idx) {
+	ERR_FAIL_COND_MSG(material_idx >= cell_materials.size(), "material_idx must be less than cell_materials.size");
+
+	CellMaterial &mat = cell_materials[material_idx];
+	if (mat.noise_darken_max > 0) {
+		Cell::set_darken(material_idx, temporal_rng.gen_range_u32(0, mat.noise_darken_max));
+	}
+
+	Chunk *chunk = get_chunk(coord.chunk_coord);
+	if (chunk == nullptr) {
+		return;
+	}
+
+	chunk->set_cell(coord.local_coord, material_idx);
+
+	// Activate neighboring cells.
+	IterChunk chunk_iter = IterChunk(coord - Vector2i(1, 1), coord + Vector2i(1, 1));
+	while (chunk_iter.next()) {
+		chunk = get_chunk(chunk_iter.chunk_coord);
+		if (chunk == nullptr) {
+			continue;
+		}
+
+		chunk->activate_rect(chunk_iter.local_rect());
+
+		Iter2D cell_iter = chunk_iter.local_iter();
+		while (cell_iter.next()) {
+			Cell::set_active(*chunk->get_cell_ptr(cell_iter.coord), true);
+		}
+	}
+}
+
+void Grid::set_cell_color(ChunkLocalCoord coord, u32 color) {
+	Chunk *chunk = get_chunk(coord.chunk_coord);
+	if (chunk == nullptr) {
+		return;
+	}
+
+	u32 *cell = chunk->get_cell_ptr(coord.local_coord);
+
+	if (get_cell_material(Cell::material_idx(*cell)).can_color) {
+		Cell::set_color(*cell, color);
+	}
+}
+
+u32 Grid::get_cell_data_v(Vector2i coord) {
+	return get_cell_data(ChunkLocalCoord(coord));
+}
+
+u32 Grid::get_cell_material_idx_v(Vector2i coord) {
+	return get_cell_material_idx(ChunkLocalCoord(coord));
+}
+
+u32 Grid::get_cell_color_v(Vector2i coord) {
+	return get_cell_color(ChunkLocalCoord(coord));
+}
+
+void Grid::set_cell_material_idx_v(Vector2i coord, u32 material_idx) {
+	set_cell_material_idx(ChunkLocalCoord(coord), material_idx);
+}
+
+void Grid::set_cell_color_v(Vector2i coord, u32 color) {
+	set_cell_color(ChunkLocalCoord(coord), color);
+}
+
+Ref<GridRectIter> Grid::iter_rect(Rect2i rect) {
 	if (rect.size.x <= 0 || rect.size.y <= 0) {
 		rect.size = Vector2i(0, 0);
 	}
 
-	auto iter = memnew(GridRectIter);
-	iter->set_rect(rect);
-
-	rect_iters.push_back(iter);
-
+	Ref<GridRectIter> iter = memnew(GridRectIter);
+	iter->prepare(rect);
 	return iter;
 }
 
-GridLineIter *Grid::iter_line(Vector2i start, Vector2i end) {
-	auto iter = memnew(GridLineIter);
-	iter->set_line(start, end);
-	line_iters.push_back(iter);
+Ref<GridLineIter> Grid::iter_line(Vector2i start, Vector2i end) {
+	Ref<GridLineIter> iter = memnew(GridLineIter);
+	iter->prepare(start, end);
+	return iter;
+}
+
+Ref<GridFillIter> Grid::iter_fill(Vector2i start, u32 filter_material_idx) {
+	Ref<GridFillIter> iter = memnew(GridFillIter);
+	iter->prepare(filter_material_idx, start);
 	return iter;
 }
 
@@ -554,8 +610,6 @@ void Grid::step_prepare() {
 	set_tick(tick + 1);
 
 	cell_updated_bitmask = (u32(tick % 3) + 1u) << Cell::Shifts::SHIFT_UPDATED;
-
-	clear_iters();
 
 	for (i32 i = 0; i < 3; i++) {
 		passes[i].clear();

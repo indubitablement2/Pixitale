@@ -55,6 +55,16 @@ inline i32 div_floor(i32 numerator, i32 denominator) {
 	}
 }
 
+inline i64 div_floor(i64 numerator, i64 denominator) {
+	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
+
+	if (numerator >= 0) {
+		return numerator / denominator;
+	} else {
+		return -1 - (-1 - numerator) / denominator;
+	}
+}
+
 inline Vector2i div_floor(Vector2i numerator, Vector2i denominator) {
 	return Vector2i(
 			div_floor(numerator.x, denominator.x),
@@ -72,6 +82,18 @@ inline i32 mod_neg(i32 numerator, i32 denominator) {
 	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
 
 	i32 mod = numerator % denominator;
+	// return mod >= 0 ? mod : mod + denominator;
+	if (mod >= 0) {
+		return mod;
+	} else {
+		return mod + denominator;
+	}
+}
+
+inline i64 mod_neg(i64 numerator, i64 denominator) {
+	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
+
+	i64 mod = numerator % denominator;
 	// return mod >= 0 ? mod : mod + denominator;
 	if (mod >= 0) {
 		return mod;
@@ -375,6 +397,60 @@ struct ChunkLocalCoord {
 	inline bool operator!=(const ChunkLocalCoord &other) {
 		return chunk_coord != other.chunk_coord || local_coord != other.local_coord;
 	}
+
+	inline ChunkLocalCoord operator+(const Vector2i &other) {
+		TEST_ASSERT(other.x > -32, "only support offset up to 31");
+		TEST_ASSERT(other.x < 32, "only support offset up to 31");
+		TEST_ASSERT(other.y > -32, "only support offset up to 31");
+		TEST_ASSERT(other.y < 32, "only support offset up to 31");
+
+		ChunkLocalCoord result = *this;
+		result.local_coord += other;
+
+		if (result.local_coord.x >= 32) {
+			result.local_coord.x -= 32;
+			chunk_coord.x += 1;
+		} else if (result.local_coord.x < 0) {
+			result.local_coord.x -= 32;
+			chunk_coord.x += 1;
+		}
+		if (result.local_coord.y >= 32) {
+			result.local_coord.y -= 32;
+			chunk_coord.y += 1;
+		} else if (result.local_coord.y < 0) {
+			result.local_coord.y -= 32;
+			chunk_coord.y += 1;
+		}
+
+		return result;
+	}
+
+	inline ChunkLocalCoord operator-(const Vector2i &other) {
+		TEST_ASSERT(other.x > -32, "only support offset up to 31");
+		TEST_ASSERT(other.x < 32, "only support offset up to 31");
+		TEST_ASSERT(other.y > -32, "only support offset up to 31");
+		TEST_ASSERT(other.y < 32, "only support offset up to 31");
+
+		ChunkLocalCoord result = *this;
+		result.local_coord -= other;
+
+		if (result.local_coord.x >= 32) {
+			result.local_coord.x -= 32;
+			chunk_coord.x += 1;
+		} else if (result.local_coord.x < 0) {
+			result.local_coord.x -= 32;
+			chunk_coord.x += 1;
+		}
+		if (result.local_coord.y >= 32) {
+			result.local_coord.y -= 32;
+			chunk_coord.y += 1;
+		} else if (result.local_coord.y < 0) {
+			result.local_coord.y -= 32;
+			chunk_coord.y += 1;
+		}
+
+		return result;
+	}
 };
 
 // Iterate over all the chunks which intersect the rect.
@@ -387,6 +463,20 @@ struct IterChunk {
 	Vector2i local_coord_end;
 
 	inline IterChunk(){};
+
+	inline IterChunk(ChunkLocalCoord start, ChunkLocalCoord end) :
+			_start(start),
+			_end(end),
+			chunk_coord(Vector2i(_start.chunk_coord.x - 1, _start.chunk_coord.y)) {
+		if (_end.local_coord.x == 0) {
+			_end.chunk_coord.x -= 1;
+			_end.local_coord.x = 32;
+		}
+		if (_end.local_coord.y == 0) {
+			_end.chunk_coord.y -= 1;
+			_end.local_coord.y = 32;
+		}
+	}
 
 	inline IterChunk(Rect2i rect) :
 			_start(ChunkLocalCoord(rect.position)),

@@ -18,6 +18,7 @@ void initialize_custom_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<GridChunkIter>();
 	ClassDB::register_class<GridRectIter>();
 	ClassDB::register_class<GridLineIter>();
+	ClassDB::register_class<GridFillIter>();
 
 	ClassDB::register_class<GridBody>();
 }
