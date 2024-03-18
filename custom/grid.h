@@ -137,10 +137,10 @@ public: // godot api
 	static f32 randf_range(f32 min, f32 max);
 	static i32 randi_range(i32 min, i32 max);
 
-	static i64 div_floor(i64 numerator, i64 denominator);
-	static Vector2i div_floor_v(Vector2i numerator, Vector2i denominator);
-	static i64 mod_neg(i64 numerator, i64 denominator);
-	static Vector2i mod_neg_v(Vector2i numerator, Vector2i denominator);
+	static i64 _div_floor(i64 numerator, i64 denominator);
+	static Vector2i _div_floor_v(Vector2i numerator, Vector2i denominator);
+	static i64 _mod_neg(i64 numerator, i64 denominator);
+	static Vector2i _mod_neg_v(Vector2i numerator, Vector2i denominator);
 };
 
 VARIANT_ENUM_CAST(CellCollision);

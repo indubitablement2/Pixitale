@@ -187,6 +187,23 @@ void Grid::_bind_methods() {
 			D_METHOD("randi_range", "min", "max"),
 			&Grid::randi_range);
 
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("div_floor", "numerator", "denominator"),
+			&Grid::_div_floor);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("div_floor_v", "numerator", "denominator"),
+			&Grid::_div_floor_v);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("mod_neg", "numerator", "denominator"),
+			&Grid::_mod_neg);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("mod_neg_v", "numerator", "denominator"),
+			&Grid::_mod_neg_v);
+
 	BIND_CONSTANT(GENERATION_SLICE_CHUNK_SIZE);
 
 	BIND_ENUM_CONSTANT(CELL_COLLISION_NONE);
@@ -710,4 +727,33 @@ f32 Grid::randf_range(f32 min, f32 max) {
 
 i32 Grid::randi_range(i32 min, i32 max) {
 	return temporal_rng.gen_range_i32(min, max);
+}
+
+i64 Grid::_div_floor(i64 numerator, i64 denominator) {
+	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
+
+	if (numerator >= 0) {
+		return numerator / denominator;
+	} else {
+		return -1 - (-1 - numerator) / denominator;
+	}
+}
+
+Vector2i Grid::_div_floor_v(Vector2i numerator, Vector2i denominator) {
+	return div_floor(numerator, denominator);
+}
+
+i64 Grid::_mod_neg(i64 numerator, i64 denominator) {
+	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
+
+	i64 mod = numerator % denominator;
+	if (mod >= 0) {
+		return mod;
+	} else {
+		return mod + denominator;
+	}
+}
+
+Vector2i Grid::_mod_neg_v(Vector2i numerator, Vector2i denominator) {
+	return mod_neg(numerator, denominator);
 }

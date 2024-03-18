@@ -55,16 +55,6 @@ inline i32 div_floor(i32 numerator, i32 denominator) {
 	}
 }
 
-inline i64 div_floor(i64 numerator, i64 denominator) {
-	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
-
-	if (numerator >= 0) {
-		return numerator / denominator;
-	} else {
-		return -1 - (-1 - numerator) / denominator;
-	}
-}
-
 inline Vector2i div_floor(Vector2i numerator, Vector2i denominator) {
 	return Vector2i(
 			div_floor(numerator.x, denominator.x),
@@ -82,18 +72,6 @@ inline i32 mod_neg(i32 numerator, i32 denominator) {
 	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
 
 	i32 mod = numerator % denominator;
-	// return mod >= 0 ? mod : mod + denominator;
-	if (mod >= 0) {
-		return mod;
-	} else {
-		return mod + denominator;
-	}
-}
-
-inline i64 mod_neg(i64 numerator, i64 denominator) {
-	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");
-
-	i64 mod = numerator % denominator;
 	// return mod >= 0 ? mod : mod + denominator;
 	if (mod >= 0) {
 		return mod;
