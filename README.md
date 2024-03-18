@@ -15,6 +15,11 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 
 ## Todo
 
+#### Build
+- [ ] Update github workflow for all targets.
+- [ ] Upload editor builds to release.
+- [ ] Add automatic determinism test.
+
 #### Commands
 - [ ] Rename grid edits to commands.
 - [ ] Separate step chunk from other commands.
@@ -66,18 +71,23 @@ Light is applied using multiplicative blending mode.
 - Similar to normal light, but sample from a direction instead of a point. Also blocked by background cell.
 
 #### Npc
-- Shared between players in multiplayer?
 
 #### Home Area
 - Can flag chunks as home. Save what the player built and gets repaired for free.
 - Should repair speed increase with the number of npc?
 - Needs an npc home nearby?
-- Shared between players in multiplayer?
+
+#### Drawing
+- [ ] Can save part of grid as blueprint.
+- [ ] Can paste blueprint to grid.
 
 #### Stats
-To make it simple to compute stats.
+Make it simple to compute stats.
 
 #### State Serialization
-- Serialize and compress the grid.
-- Other deterministic things.
+- [ ] Serialize and compress the grid.
+- [ ] Other deterministic things.
+
+#### Performance
+- [ ] Unload old chunk
 
