@@ -20,7 +20,7 @@ class_name GenerationPass
 ##
 ## data is never saved or sent over the network to connected peer. 
 ## Instead it is (re)generated as needed in any order.
-func _generate_slice(data: GenerationData) -> void:
+func _generate_slice(_data: GenerationData) -> void:
 	pass
 
 ## Generate a chunk.
@@ -41,5 +41,5 @@ func _generate_slice(data: GenerationData) -> void:
 ## To share data between passes, add it as metadata to iter. 
 ## The same iter is used throughout the chunk generation. 
 ## It is just reset before each pass.
-func _generate_chunk(iter: GridChunkIter, data: GenerationData) -> void:
+func _generate_chunk(_iter: GridChunkIter, _data: GenerationData) -> void:
 	pass

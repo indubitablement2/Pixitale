@@ -376,58 +376,39 @@ struct ChunkLocalCoord {
 		return chunk_coord != other.chunk_coord || local_coord != other.local_coord;
 	}
 
+	inline void operator+=(const Vector2i &other) {
+		local_coord += other;
+
+		if (local_coord.x >= 32) {
+			i32 dif = local_coord.x / 32;
+			local_coord.x -= dif * 32;
+			chunk_coord.x += dif;
+		} else if (local_coord.x < 0) {
+			i32 dif = -local_coord.x / 32 + 1;
+			local_coord.x += dif * 32;
+			chunk_coord.x -= dif;
+		}
+		if (local_coord.y >= 32) {
+			i32 dif = local_coord.y / 32;
+			local_coord.y -= dif * 32;
+			chunk_coord.y += dif;
+		} else if (local_coord.y < 0) {
+			i32 dif = -local_coord.y / 32 + 1;
+			local_coord.y += dif * 32;
+			chunk_coord.y -= dif;
+		}
+	}
+
 	inline ChunkLocalCoord operator+(const Vector2i &other) {
-		TEST_ASSERT(other.x > -32, "only support offset up to 31");
-		TEST_ASSERT(other.x < 32, "only support offset up to 31");
-		TEST_ASSERT(other.y > -32, "only support offset up to 31");
-		TEST_ASSERT(other.y < 32, "only support offset up to 31");
-
-		ChunkLocalCoord result = *this;
-		result.local_coord += other;
-
-		if (result.local_coord.x >= 32) {
-			result.local_coord.x -= 32;
-			chunk_coord.x += 1;
-		} else if (result.local_coord.x < 0) {
-			result.local_coord.x -= 32;
-			chunk_coord.x += 1;
-		}
-		if (result.local_coord.y >= 32) {
-			result.local_coord.y -= 32;
-			chunk_coord.y += 1;
-		} else if (result.local_coord.y < 0) {
-			result.local_coord.y -= 32;
-			chunk_coord.y += 1;
-		}
-
-		return result;
+		ChunkLocalCoord ret = *this;
+		ret += other;
+		return ret;
 	}
 
 	inline ChunkLocalCoord operator-(const Vector2i &other) {
-		TEST_ASSERT(other.x > -32, "only support offset up to 31");
-		TEST_ASSERT(other.x < 32, "only support offset up to 31");
-		TEST_ASSERT(other.y > -32, "only support offset up to 31");
-		TEST_ASSERT(other.y < 32, "only support offset up to 31");
-
-		ChunkLocalCoord result = *this;
-		result.local_coord -= other;
-
-		if (result.local_coord.x >= 32) {
-			result.local_coord.x -= 32;
-			chunk_coord.x += 1;
-		} else if (result.local_coord.x < 0) {
-			result.local_coord.x -= 32;
-			chunk_coord.x += 1;
-		}
-		if (result.local_coord.y >= 32) {
-			result.local_coord.y -= 32;
-			chunk_coord.y += 1;
-		} else if (result.local_coord.y < 0) {
-			result.local_coord.y -= 32;
-			chunk_coord.y += 1;
-		}
-
-		return result;
+		ChunkLocalCoord ret = *this;
+		ret += -other;
+		return ret;
 	}
 };
 

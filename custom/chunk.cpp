@@ -251,69 +251,6 @@ public:
 		try_react_between(Vector2i(0, 1));
 		try_react_between(Vector2i(1, 1));
 
-		// // Particle movement
-		// if (Cell::movement(cell)) {
-		// 	velocity = *velocity_ptr;
-
-		// 	velocity.y += cell_material.gravity;
-		// 	velocity *= cell_material.friction;
-		// 	velocity = Vector2(
-		// 			CLAMP(velocity.x, -16.0f, 16.0f),
-		// 			CLAMP(velocity.y, -16.0f, 16.0f));
-
-		// 	Vector2i target = Vector2i(velocity);
-		// 	// Fractional part of velocity is handled using probability.
-		// 	Vector2 frac = velocity - Vector2(target);
-		// 	if (rng.gen_probability_f32(frac.x)) {
-		// 		target.x += i32(SIGN(velocity.x));
-		// 	}
-		// 	if (rng.gen_probability_f32(frac.y)) {
-		// 		target.y += i32(SIGN(velocity.y));
-		// 	}
-
-		// 	if (target != Vector2i(0, 0)) {
-		// 		IterLine iter = IterLine(target, false);
-		// 		Vector2i new_coord = cell_coord;
-		// 		while (iter.next()) {
-		// 			Vector2i other_coord = iter.currenti() + cell_coord;
-
-		// 			u32 *other_cell_ptr;
-		// 			get_ptr(other_coord, &other_cell_ptr);
-		// 			u32 other = *other_cell_ptr;
-
-		// 			u32 other_material_idx = Cell::material_idx(other);
-		// 			if (other_material_idx == cell_material_idx) {
-		// 				// todo: Can pass through same material cells.
-		// 				continue;
-		// 			}
-
-		// 			CellMaterial &other_cell_material = Grid::get_cell_material(other_material_idx);
-		// 			if (cell_material.density > other_cell_material.density) {
-		// 				// Can swap with less dense cells.
-		// 				new_coord = other_coord;
-		// 				continue;
-		// 			}
-
-		// 			if (Cell::movement(other)) {
-		// 				// Can pass through particle cells.
-		// 				continue;
-		// 			}
-
-		// 			// Blocked.
-		// 			velocity = -Vector2(
-		// 					velocity.x * rng.gen_f32() * cell_material.bounciness,
-		// 					velocity.y * rng.gen_f32() * cell_material.bounciness);
-		// 			break;
-		// 		}
-
-		// 		if (new_coord != cell_coord) {
-		// 			swap(new_coord);
-		// 		}
-		// 	}
-		// } else {
-		// 	velocity = Vector2(0.0f, 0.0f);
-		// }
-
 		// Vertical movement
 		i32 movement = Cell::movement(cell);
 		u32 flow = Cell::flow(cell);
@@ -342,7 +279,6 @@ public:
 			if (rng.gen_probability_u32_max(cell_material->horizontal_movement_stop_chance)) {
 				// Spontaneously stop moving.
 				movement = -2;
-				flow = 0;
 			} else {
 				for (i32 i = 0; i < cell_material->horizontal_movement; i++) {
 					// Try move diagonally first.
@@ -367,7 +303,6 @@ public:
 							} else {
 								// Blocked on both sides.
 								movement = -2;
-								flow = 0;
 							}
 						} else {
 							// We keep trying the same direction until flow is 0.
@@ -376,16 +311,16 @@ public:
 					} else {
 						// Blocked on moving side and doesn't want to reverse.
 						movement = -2;
-						flow = 0;
 					}
 					break;
 				}
 
-				if (flow != 0 && cell_material->dissipate_on_horizontal_movement) {
+				if (movement != -2 && cell_material->dissipate_on_horizontal_movement) {
 					if (rng.gen_probability_u32_max(DISSIPATION_CHANCE)) {
 						// Remove this cell.
 						cell = 0;
 						Cell::set_active(cell);
+						activate_neightbors(cell_coord);
 					}
 				}
 			}

@@ -178,6 +178,26 @@ void test_iter_chunk() {
 	TEST_ASSERT(!c.next(), "negative");
 }
 
+void test_chunk_local_coord() {
+	ChunkLocalCoord coord = ChunkLocalCoord(Vector2i(0, 0));
+	TEST_ASSERT(coord.chunk_coord == Vector2i(0, 0), "0");
+	TEST_ASSERT(coord.local_coord == Vector2i(0, 0), "0");
+	TEST_ASSERT(coord.coord() == Vector2i(0, 0), "0");
+	coord = coord - Vector2i(1, 1);
+	TEST_ASSERT(coord.chunk_coord == Vector2i(-1, -1), "-1");
+	TEST_ASSERT(coord.local_coord == Vector2i(31, 31), "-1");
+	TEST_ASSERT(coord.coord() == Vector2i(-1, -1), "-1");
+
+	coord = ChunkLocalCoord(Vector2i(31, 31));
+	TEST_ASSERT(coord.chunk_coord == Vector2i(0, 0), "31");
+	TEST_ASSERT(coord.local_coord == Vector2i(31, 31), "31");
+	TEST_ASSERT(coord.coord() == Vector2i(31, 31), "31");
+	coord = coord + Vector2i(1, 1);
+	TEST_ASSERT(coord.chunk_coord == Vector2i(1, 1), "32");
+	TEST_ASSERT(coord.local_coord == Vector2i(0, 0), "32");
+	TEST_ASSERT(coord.coord() == Vector2i(32, 32), "32");
+}
+
 void test_rng_bias() {
 	u32 num_tests = 100000;
 	u32 num_true = 0;
@@ -229,6 +249,7 @@ void PixitaleTests::run_tests() {
 	test_iter2d();
 	test_int_coord();
 	test_iter_chunk();
+	test_chunk_local_coord();
 	test_rng_bias();
 }
 

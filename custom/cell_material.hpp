@@ -5,7 +5,7 @@
 #include "preludes.h"
 #include "rng.hpp"
 
-const u32 DISSIPATION_CHANCE = 67108864u; // 1.6%
+const u32 DISSIPATION_CHANCE = 8388608u; // 0.2%
 
 enum CellCollision {
 	CELL_COLLISION_NONE = 0,

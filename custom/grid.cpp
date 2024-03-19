@@ -519,14 +519,14 @@ u32 Grid::get_cell_color(ChunkLocalCoord coord) {
 void Grid::set_cell_material_idx(ChunkLocalCoord coord, u32 material_idx) {
 	ERR_FAIL_COND_MSG(material_idx >= cell_materials.size(), "material_idx must be less than cell_materials.size");
 
-	CellMaterial &mat = cell_materials[material_idx];
-	if (mat.noise_darken_max > 0) {
-		Cell::set_darken(material_idx, temporal_rng.gen_range_u32(0, mat.noise_darken_max));
-	}
-
 	Chunk *chunk = get_chunk(coord.chunk_coord);
 	if (chunk == nullptr) {
 		return;
+	}
+
+	CellMaterial &mat = cell_materials[material_idx];
+	if (mat.noise_darken_max > 0) {
+		Cell::set_darken(material_idx, temporal_rng.gen_range_u32(0, mat.noise_darken_max));
 	}
 
 	chunk->set_cell(coord.local_coord, material_idx);

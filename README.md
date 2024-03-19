@@ -31,7 +31,7 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 - [x] Particle movement
 - [x] Sand movement
 - [ ] Wind effect. Light cell move horizontally based on wind value when moving vertically.
-- [ ] Small bug: Cell very rarely go to sleep even around moving liquid. Probably caused by flow changes.
+- [x] Small bug: Cell very rarely go to sleep even around moving liquid. Probably caused by flow changes.
 
 #### Background Cell
 - [ ] Just material and color. No movement or reaction.

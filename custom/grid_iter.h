@@ -16,7 +16,8 @@ protected:
 	static void _bind_methods();
 
 public:
-	Iter2D cell_iter;
+	i32 x;
+	i32 y;
 	Vector2i _chunk_coord;
 	Chunk *chunk;
 	Rng rng;

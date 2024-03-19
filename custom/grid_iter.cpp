@@ -37,22 +37,33 @@ void GridChunkIter::_bind_methods() {
 }
 
 void GridChunkIter::prepare(Vector2i p_chunk_coord) {
+	x = -1;
+	y = 0;
 	_chunk_coord = p_chunk_coord;
-	cell_iter = Iter2D(Vector2i(32, 32));
 	chunk = Grid::get_chunk(p_chunk_coord);
 	rng = Grid::get_static_rng(p_chunk_coord);
 }
 
 bool GridChunkIter::next() {
-	return cell_iter.next();
+	x += 1;
+	if (x >= 32) {
+		x = 0;
+		y += 1;
+		if (y >= 32) {
+			y = 0;
+			x = -1;
+			return false;
+		}
+	}
+	return true;
 }
 
 u32 GridChunkIter::get_material_idx() {
-	return Cell::material_idx(chunk->get_cell(coord()));
+	return Cell::material_idx(chunk->get_cell(chunk_local_coord()));
 }
 
 u32 GridChunkIter::get_color() {
-	return Cell::color(chunk->get_cell(coord()));
+	return Cell::color(chunk->get_cell(chunk_local_coord()));
 }
 
 void GridChunkIter::set_material_idx(u32 material_idx) {
@@ -62,11 +73,11 @@ void GridChunkIter::set_material_idx(u32 material_idx) {
 	if (mat.noise_darken_max > 0) {
 		Cell::set_darken(material_idx, rng.gen_range_u32(0, mat.noise_darken_max));
 	}
-	chunk->set_cell(coord(), material_idx);
+	chunk->set_cell(chunk_local_coord(), material_idx);
 }
 
 void GridChunkIter::set_color(u32 color) {
-	u32 *cell_ptr = chunk->get_cell_ptr(coord());
+	u32 *cell_ptr = chunk->get_cell_ptr(chunk_local_coord());
 
 	if (Grid::get_cell_material(Cell::material_idx(*cell_ptr)).can_color) {
 		Cell::set_color(*cell_ptr, color);
@@ -84,7 +95,7 @@ Vector2i GridChunkIter::chunk_coord() {
 }
 
 Vector2i GridChunkIter::chunk_local_coord() {
-	return Vector2i(cell_iter.coord.x & 31, cell_iter.coord.y & 31);
+	return Vector2i(x & 31, y);
 }
 
 Vector2i GridChunkIter::coord() {
@@ -92,7 +103,8 @@ Vector2i GridChunkIter::coord() {
 }
 
 void GridChunkIter::reset_iter() {
-	cell_iter = Iter2D(Vector2i(32, 32));
+	x = -1;
+	y = 0;
 }
 
 bool GridChunkIter::randb() {
@@ -132,6 +144,7 @@ void GridRectIter::_bind_methods() {
 
 void GridRectIter::prepare(Rect2i rect) {
 	iter = Iter2D(rect);
+	current = ChunkLocalCoord(rect.position);
 }
 
 bool GridRectIter::next() {
