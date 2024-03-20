@@ -1,7 +1,7 @@
 [gd_scene load_steps=11 format=3 uid="uid://bya1mm57ycmcx"]
 
 [ext_resource type="Script" path="res://core/singleton/grid_api.gd" id="1_4rbhp"]
-[ext_resource type="Script" path="res://core/util/ImageAndTexture.gd" id="2_14wtj"]
+[ext_resource type="Script" path="res://core/util/image_and_texture.gd" id="2_14wtj"]
 [ext_resource type="Texture2D" uid="uid://b5c5qksfr7hk4" path="res://core/shader/texture/cell_materials_data/base_color_atlas.tres" id="3_6y6x5"]
 [ext_resource type="Texture2D" uid="uid://cbatmgjxr7jum" path="res://core/shader/texture/cell_materials_data/base_color_atlas_rect.tres" id="4_1efp6"]
 [ext_resource type="Texture2D" uid="uid://t50h32apl4gq" path="res://core/shader/texture/cell_materials_data/glow.tres" id="5_os2em"]

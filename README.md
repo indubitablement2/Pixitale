@@ -18,7 +18,7 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 #### Build
 - [ ] Update github workflow for all targets.
 - [ ] Upload editor builds to release.
-- [ ] Add automatic determinism test.
+- [x] Add automatic determinism test.
 
 #### Commands
 - [ ] Rename grid edits to commands.
@@ -86,8 +86,10 @@ Make it simple to compute stats.
 
 #### State Serialization
 - [ ] Serialize and compress the grid.
+- [ ] Use serialized state for determinism test
 - [ ] Other deterministic things.
 
 #### Performance
-- [ ] Unload old chunk
+- [ ] Unload old chunk.
+- [ ] Use Godot thread pool.
 

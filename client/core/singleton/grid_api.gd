@@ -56,8 +56,6 @@ func _ready() -> void:
 	Grid.set_generate_chunk_callback(_generate_chunk)
 
 func _exit_tree() -> void:
-	if _step_thread.is_started():
-		_step_thread.wait_to_finish()
 	unload_mods()
 
 func _process(_delta: float) -> void:
@@ -223,10 +221,11 @@ func load_mods() -> void:
 		if entry.entry_script:
 			if entry.entry_script.has_method(&"_entry"):
 				entry.entry_script._entry()
-	
-	Grid.print_internals()
 
 func unload_mods() -> void:
+	if _step_thread.is_started():
+		_step_thread.wait_to_finish()
+	
 	for entry in mod_entries:
 		if entry.entry_script:
 			if entry.entry_script.has_method(&"_exit"):
@@ -247,6 +246,8 @@ func unload_mods() -> void:
 	cell_materials = []
 	cell_material_names = {}
 	cell_material_tags = {}
+	
+	cell_reactions = {}
 	
 	generation_passes = []
 	
