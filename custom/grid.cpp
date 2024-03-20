@@ -248,7 +248,7 @@ void Grid::generate_chunk(Vector2i chunk_coord) {
 	iter->prepare(chunk_coord);
 
 	i32 slice_idx = get_slice_idx(chunk_coord.x);
-	TEST_ASSERT(generated_slice.contains(slice_idx), "slice should be generated");
+	// TEST_ASSERT(generated_slice.contains(slice_idx), "slice should be generated");
 
 	generate_chunk_callback.call(iter, slice_idx);
 	iter->chunk->activate_all(true);

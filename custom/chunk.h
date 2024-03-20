@@ -6,7 +6,6 @@
 #include "core/math/vector2.h"
 #include "core/math/vector2i.h"
 #include "preludes.h"
-#include <bit>
 
 // Coord is relative to first cell (top left).
 class alignas(64) Chunk {
@@ -37,10 +36,10 @@ public:
 	}
 
 	inline Rect2i active_rect() {
-		i32 y_start = std::countr_zero(active_rows);
-		i32 y_end = 32 - std::countl_zero(active_rows);
-		i32 x_start = std::countr_zero(active_columns);
-		i32 x_end = 32 - std::countl_zero(active_columns);
+		i32 y_start = countr_zero(active_rows);
+		i32 y_end = 32 - countl_zero(active_rows);
+		i32 x_start = countr_zero(active_columns);
+		i32 x_end = 32 - countl_zero(active_columns);
 
 		return Rect2i(
 				Vector2i(x_start, y_start),

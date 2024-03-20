@@ -44,6 +44,32 @@ const f32 NEG_INF_F32 = -std::numeric_limits<f32>::infinity();
 #define TEST_ASSERT(m_cond, m_msg) ((void)0)
 #endif
 
+inline i32 countr_zero(u32 v) {
+	if (v == 0) {
+		return 32;
+	}
+
+	i32 i = 0;
+	while ((v & 1) == 0) {
+		v >>= 1;
+		i += 1;
+	}
+	return i;
+}
+
+inline i32 countl_zero(u32 v) {
+	if (v == 0) {
+		return 32;
+	}
+
+	i32 i = 0;
+	while ((v & (1u << 31)) == 0) {
+		v <<= 1;
+		i += 1;
+	}
+	return i;
+}
+
 // Round toward negative infinity instead of 0.
 inline i32 div_floor(i32 numerator, i32 denominator) {
 	TEST_ASSERT(denominator > 0, "denominator is not greater than 0");

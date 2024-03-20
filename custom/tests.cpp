@@ -6,6 +6,20 @@
 #include "preludes.h"
 #include "rng.hpp"
 
+void test_count_zero() {
+	TEST_ASSERT(countr_zero(0b00000000) == 32, "countr zero");
+	TEST_ASSERT(countr_zero(0b00000001) == 0, "countr zero");
+	TEST_ASSERT(countr_zero(0b00000010) == 1, "countr zero");
+	TEST_ASSERT(countr_zero(0b10110100) == 2, "countr zero");
+	TEST_ASSERT(countr_zero(0b10001000) == 3, "countr zero");
+
+	TEST_ASSERT(countl_zero(0b00000000) == 32, "countl zero");
+	TEST_ASSERT(countl_zero(0b00000001) == 31, "countl zero");
+	TEST_ASSERT(countl_zero(0b00000010) == 30, "countl zero");
+	TEST_ASSERT(countl_zero(1u << 31) == 0, "countl zero");
+	TEST_ASSERT(countl_zero((1u << 31) - 1) == 1, "countl zero");
+}
+
 void test_div_floor() {
 	i32 denominator = 3;
 	i32 in[10] = { 0, 1, 2, 3, 4, -1, -2, -3, -4, -5 };
@@ -244,6 +258,7 @@ void PixitaleTests::run_tests() {
 		return;
 	}
 
+	test_count_zero();
 	test_div_floor();
 	test_mod_neg();
 	test_iter2d();

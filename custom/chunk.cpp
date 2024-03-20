@@ -5,7 +5,6 @@
 #include "core/math/vector2i.h"
 #include "grid.h"
 #include "preludes.h"
-#include <bit>
 
 // Api for working with cells within a single chunk (center)
 // which may affect nearby chunks.
@@ -402,12 +401,12 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 		active_rows = chunk_api.center()->active_rows;
 		u32 active_columns = chunk_api.center()->active_columns;
 
-		y_top = std::countr_zero(active_rows) - 1;
-		y_bot = 31 - std::countl_zero(active_rows);
+		y_top = countr_zero(active_rows) - 1;
+		y_bot = 31 - countl_zero(active_rows);
 		TEST_ASSERT(y_top < y_bot, "y_top is >= than y_top");
 
-		i32 x_start_base = std::countr_zero(active_columns);
-		i32 x_end_base = 32 - std::countl_zero(active_columns);
+		i32 x_start_base = countr_zero(active_columns);
+		i32 x_end_base = 32 - countl_zero(active_columns);
 		// Alternate iteration between left and right.
 		// Reduces visible chunk border artifacts.
 		if ((Grid::get_tick() & 1) == 0) {

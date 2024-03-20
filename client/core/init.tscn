@@ -9,19 +9,18 @@ func _ready() -> void:
 	# Root viewport only display `Visible` items.
 	get_parent().set_canvas_cull_mask(1)
 	
-	if PixitaleTests.assert_enabled():
-		PixitaleTests.run_tests()
+	PixitaleTests.run_tests()
 	
 	for arg in OS.get_cmdline_args():
 		if arg.begins_with(\"--determinism-test\"):
-			_determinism_test(absi(arg.to_int()))
+			print(_determinism_test(absi(arg.to_int())))
 			get_tree().quit()
 			return
 	
 	get_parent().call_deferred(&\"add_child\", main_menu.instantiate())
 	queue_free()
 
-func _determinism_test(num: int) -> void:
+func _determinism_test(num: int) -> int:
 	print(\"Starting determinism test with \", num)
 	
 	Grid.set_seed(num)
@@ -47,7 +46,7 @@ func _determinism_test(num: int) -> void:
 	var sum := 0
 	while iter.next():
 		sum += iter.get_material_idx()
-	print(sum)
+	return sum
 "
 
 [node name="Init" type="Node"]
