@@ -7,13 +7,12 @@ static func _entry() -> void:
 	_SET_PAUSED = GridApi.add_grid_edit_method(Callable(Core, &"_set_paused"))
 	_SET_CELL_MATERIAL_RECT = GridApi.add_grid_edit_method(Callable(Core, &"_set_cell_material_rect"))
 	_SET_COLOR_RECT = GridApi.add_grid_edit_method(Callable(Core, &"_set_color_rect"))
-	
-	print("core added")
+	_SET_CELL_MATERIAL_FILL = GridApi.add_grid_edit_method(Callable(Core, &"_set_cell_material_fill"))
 
 ## Called before mod is removed.
 ## Any change made by _entry that could be permanent should be undone here.
 static func _exit() -> void:
-	print("core removed")
+	pass
 
 # Static methods which can safely modify Grid.
 # Methods are networked and called on remote peers.
@@ -53,4 +52,15 @@ static func set_color_rect(color: int, rect: Rect2i) -> void:
 	if GridApi.is_server:
 		GridApi._next_edits.push_back([color, rect, _SET_COLOR_RECT])
 
+static func _set_cell_material_fill(cell_material_idx: int, start: Vector2i) -> void:
+	var filter := Grid.get_cell_material_idx(start)
+	var iter := Grid.iter_fill(start, filter)
+	iter.fill_remaining(cell_material_idx)
+	#while iter.next():
+		#print(iter.coord())
+		#iter.set_material_idx(cell_material_idx)
+static var _SET_CELL_MATERIAL_FILL := 0
+static func set_cell_material_fill(cell_material_idx: int, start: Vector2i) -> void:
+	if GridApi.is_server:
+		GridApi._next_edits.push_back([cell_material_idx, start, _SET_CELL_MATERIAL_FILL])
 

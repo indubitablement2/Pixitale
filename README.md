@@ -17,13 +17,10 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 
 #### Build
 - [ ] Update github workflow for all targets.
-- [ ] Upload editor builds to release.
+- [x] Upload editor builds to release.
 - [x] Add automatic determinism test.
 
-#### Commands
-- [ ] Rename grid edits to commands.
-- [ ] Separate step chunk from other commands.
-- [ ] Apply commands on step thread. Need to change iter to RefCounted.
+#### Edits
 - [ ] (server) Skip step if previous step did not finish. Slow down simulation instead of whole game.
 - [ ] (client) Immediately try to start next step if commands are available instead of waiting for next frame.
 

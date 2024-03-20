@@ -532,7 +532,7 @@ void Grid::set_cell_material_idx(ChunkLocalCoord coord, u32 material_idx) {
 	chunk->set_cell(coord.local_coord, material_idx);
 
 	// Activate neighboring cells.
-	IterChunk chunk_iter = IterChunk(coord - Vector2i(1, 1), coord + Vector2i(1, 1));
+	IterChunk chunk_iter = IterChunk(coord - Vector2i(1, 1), coord + Vector2i(2, 2));
 	while (chunk_iter.next()) {
 		chunk = get_chunk(chunk_iter.chunk_coord);
 		if (chunk == nullptr) {

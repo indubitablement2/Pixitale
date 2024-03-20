@@ -1,4 +1,5 @@
 extends Node
+
 ## Gdscript friendly api over Grid.
 
 # Editing Grid safely:
@@ -11,7 +12,7 @@ extends Node
 # regarless of Grid.tick.
 #
 # When doing other deterministic edits, use rand methods from Grid
-# which change each step, but will be the same for all peers.
+# which will be the same for all peers.
 
 var is_server := true
 

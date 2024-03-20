@@ -9,4 +9,4 @@ runs:
   steps:
     - name: Test determinism
       shell: sh
-      run: ./godot/bin/${{ inputs.bin }} --headless --path ./client --quit-after 1000 --determinism-test=1000
+      run: ./godot/bin/${{ inputs.bin }} --headless --path ./client --quit-after 1000 --determinism-test=6000

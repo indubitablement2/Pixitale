@@ -287,7 +287,7 @@ bool GridFillIter::next() {
 	ERR_FAIL_COND_V_MSG(seen_id != current_seen_id, false, "Creating a new GridFillIter invalidate the previous one");
 
 	while (!next_queue.empty()) {
-		Vector2i seen_coord = next_queue.back();
+		Vector2i seen_coord = next_queue.front();
 		next_queue.pop();
 
 		current = ChunkLocalCoord(seen_coord - Vector2i(256, 256) + start);
@@ -309,7 +309,7 @@ bool GridFillIter::next() {
 			Vector2i(1, 0),
 			Vector2i(0, 1),
 		};
-		for (u32 i = 0; i < 4; i++) {
+		for (i32 i = 0; i < 4; i++) {
 			Vector2i new_seen_coord = seen_coord + neighbors[i];
 			if (new_seen_coord.x < 0 ||
 					new_seen_coord.x >= 512 ||

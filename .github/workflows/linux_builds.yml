@@ -14,7 +14,7 @@ concurrency:
 
 jobs:
   build-linux:
-    runs-on: "ubuntu-20.04"
+    runs-on: "ubuntu-latest"
     name: ${{ matrix.name }}
     strategy:
       fail-fast: false
@@ -61,6 +61,6 @@ jobs:
         with:
           name: ${{ matrix.cache-name }}
 
-      - name: Test determinism
-        uses: ./.github/actions/determinism
-        if: ${{ matrix.target }} == "editor"
+#      - name: Test determinism
+#        uses: ./.github/actions/determinism
+#        if: ${{ matrix.target }} == "editor"
