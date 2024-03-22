@@ -18,9 +18,9 @@ jobs:
   # macos-build:
   #   name: 🍎 macOS
   #   uses: ./.github/workflows/macos_builds.yml
-  # windows-build:
-  #   name: 🏁 Windows
-  #   uses: ./.github/workflows/windows_builds.yml
+  windows-build:
+    name: 🏁 Windows
+    uses: ./.github/workflows/windows_builds.yml
   # web-build:
   #   name: 🌐 Web
   #   uses: ./.github/workflows/web_builds.yml
