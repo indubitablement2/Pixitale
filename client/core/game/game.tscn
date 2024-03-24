@@ -1,4 +1,4 @@
-[gd_scene load_steps=36 format=3 uid="uid://cs41g41rbjtf3"]
+[gd_scene load_steps=38 format=3 uid="uid://cs41g41rbjtf3"]
 
 [ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
@@ -10,6 +10,7 @@
 [ext_resource type="Environment" uid="uid://bwynyoamvipor" path="res://core/game/light_pass_environment.tres" id="7_3kidg"]
 [ext_resource type="PackedScene" uid="uid://5ojtd4d004ve" path="res://core/camera/free_camera.tscn" id="7_7jk4b"]
 [ext_resource type="Texture2D" uid="uid://dcodkd1xxqxik" path="res://core/shader/texture/cell_raw_data/background.tres" id="7_602ny"]
+[ext_resource type="Script" path="res://core/util/visible_enabler.gd" id="8_74bfn"]
 [ext_resource type="Shader" path="res://core/shader/environment_light.gdshader" id="8_l1xnb"]
 [ext_resource type="Material" uid="uid://btwoiop8xxp15" path="res://core/shader/cell_render.material" id="8_onaw1"]
 [ext_resource type="Shader" path="res://core/shader/foreground_glow.gdshader" id="9_etry3"]
@@ -74,10 +75,6 @@ func _process(_delta: float) -> void:
 func _on_item_selected(idx: int) -> void:
 	draw_mat_idx = idx
 
-func _on_visibility_changed() -> void:
-	set_process_input(visible)
-	set_process(visible)
-
 func _on_color_picker_item_selected(idx: int) -> void:
 	color = idx
 
@@ -140,6 +137,14 @@ func _pressed() -> void:
 		&\"highlight_active\",
 		!cell_render_material.get_shader_parameter(&\"highlight_active\"))
 	
+"
+
+[sub_resource type="GDScript" id="GDScript_t44g3"]
+script/source = "extends Label
+
+func _process(_delta: float) -> void:
+	if (Grid.get_tick() % 60 == 0):
+		text = String.humanize_size(Grid.get_grid_memory_usage())
 "
 
 [sub_resource type="GDScript" id="GDScript_kfpdw"]
@@ -212,11 +217,7 @@ viewport_path = NodePath("LightPass")
 [sub_resource type="GDScript" id="GDScript_f8hf2"]
 script/source = "extends Node2D
 
-# Draw the active rect of visible chunks.
-# Deactivate itself when hidden.
-
-func _ready() -> void:
-	set_process(is_visible())
+# Display active rect of chunks.
 
 func _process(_delta: float) -> void:
 	queue_redraw()
@@ -233,9 +234,6 @@ func _draw() -> void:
 					Rect2(Vector2i(x, y) * 32 + r.position, r.size),
 					Color.ALICE_BLUE,
 					false)
-
-func _on_visibility_changed() -> void:
-	set_process(is_visible())
 "
 
 [node name="Game" type="Node"]
@@ -288,6 +286,9 @@ item_list = NodePath("../GUI/MarginContainer/DebugMenu/CellMaterialPicker")
 color_picker = NodePath("../GUI/MarginContainer/DebugMenu/VBoxContainer/ColorPicker")
 brush_size_range = NodePath("../GUI/MarginContainer/DebugMenu/VBoxContainer/CursorSize")
 
+[node name="VisibleEnabler" type="Node" parent="Draw"]
+script = ExtResource("8_74bfn")
+
 [node name="GUI" type="CanvasLayer" parent="."]
 process_mode = 3
 
@@ -303,6 +304,7 @@ theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
 [node name="DebugMenu" type="HBoxContainer" parent="GUI/MarginContainer"]
+visible = false
 layout_mode = 2
 
 [node name="ScrollContainer" type="ScrollContainer" parent="GUI/MarginContainer/DebugMenu"]
@@ -378,6 +380,16 @@ max_columns = 8
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 8
+
+[node name="GridMemoryUsage" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="GUI/MarginContainer/VBoxContainer/GridMemoryUsage"]
+layout_mode = 2
+script = SubResource("GDScript_t44g3")
+
+[node name="VisibleEnabler" type="Node" parent="GUI/MarginContainer/VBoxContainer/GridMemoryUsage/Label"]
+script = ExtResource("8_74bfn")
 
 [node name="HoverCellName" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer"]
 layout_mode = 2
@@ -504,6 +516,9 @@ z_index = 500
 z_as_relative = false
 script = SubResource("GDScript_f8hf2")
 
+[node name="VisibleEnabler" type="Node" parent="GridRender/ActiveRect"]
+script = ExtResource("8_74bfn")
+
 [node name="BlackBarTODO" type="Sprite2D" parent="."]
 visible = false
 modulate = Color(0, 0, 0, 1)
@@ -516,12 +531,10 @@ centered = false
 offset = Vector2(-0.5, 0)
 region_rect = Rect2(-11.855, -6.755, 9.905, 5.69)
 
-[node name="FreeCamera" parent="." instance=ExtResource("7_7jk4b")]
-zoom = Vector2(4, 4)
-
 [node name="GridBody" parent="." instance=ExtResource("14_a3qr0")]
 
-[connection signal="visibility_changed" from="Draw" to="Draw" method="_on_visibility_changed"]
+[node name="FreeCamera" parent="GridBody" instance=ExtResource("7_7jk4b")]
+zoom = Vector2(4, 4)
+
 [connection signal="pressed" from="GUI/MarginContainer/DebugMenu/VBoxContainer/Rect" to="Draw" method="_on_rect_pressed"]
 [connection signal="pressed" from="GUI/MarginContainer/DebugMenu/VBoxContainer/Fill" to="Draw" method="_on_fill_pressed"]
-[connection signal="visibility_changed" from="GridRender/ActiveRect" to="GridRender/ActiveRect" method="_on_visibility_changed"]

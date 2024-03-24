@@ -15,9 +15,12 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 
 ## Todo
 
+#### World Generation
+- [ ] Castle
+
 #### Build
-- [ ] Update github workflow for all targets.
-- [x] Upload editor builds to release.
+- [x] Add github workflow for all targets.
+- [x] Upload editor builds.
 - [x] Add automatic determinism test.
 
 #### Edits
@@ -31,8 +34,9 @@ Everything else (enemies, projectile, etc.) uses the standard authoritative serv
 - [x] Small bug: Cell very rarely go to sleep even around moving liquid. Probably caused by flow changes.
 
 #### Background Cell
-- [ ] Just material and color. No movement or reaction.
-- [ ] Free memory if chunk is empty.
+- [ ] Expose to gdscript (grid & iters)
+- [x] Just material and color. No movement or reaction.
+- [x] Free memory if chunk is empty.
 
 #### Cell Color
 - [x] When creating new cells, add noise (soil, sand, etc)
@@ -70,9 +74,9 @@ Light is applied using multiplicative blending mode.
 #### Npc
 
 #### Home Area
-- Can flag chunks as home. Save what the player built and gets repaired for free.
-- Should repair speed increase with the number of npc?
-- Needs an npc home nearby?
+- [x] Can flag chunks as home. Save what the player built and gets repaired for free.
+- [ ] Should repair speed increase with the number of npc?
+- [ ] Needs an npc home nearby?
 
 #### Drawing
 - [ ] Can save part of grid as blueprint.
@@ -88,5 +92,6 @@ Make it simple to compute stats.
 
 #### Performance
 - [ ] Unload old chunk.
+- [ ] Delete chunks which never changed. Use hash or keep track of all changes.
 - [ ] Use Godot thread pool.
 

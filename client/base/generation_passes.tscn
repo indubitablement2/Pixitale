@@ -1,4 +1,4 @@
-[gd_scene load_steps=5 format=3 uid="uid://dwifqm8gdteve"]
+[gd_scene load_steps=6 format=3 uid="uid://dwifqm8gdteve"]
 
 [sub_resource type="GDScript" id="GDScript_1t5jj"]
 script/source = "extends GenerationPass
@@ -76,6 +76,36 @@ func _generate_chunk(iter: GridChunkIter, data: GenerationData) -> void:
 
 [sub_resource type="FastNoiseLite" id="FastNoiseLite_k8wdx"]
 
+[sub_resource type="GDScript" id="GDScript_cusp1"]
+script/source = "extends GenerationPass
+
+@export var noise : FastNoiseLite
+#
+#func _ready() -> void:
+	#noise.set_seed(Grid.get_seed())
+#
+#func _generate_slice(data: GenerationData) -> void:
+	#var pos := data.chunk_mid()
+	#
+	#data.set_meta(&\"base_chunk\", Rect2i(pos, -5, 10, 10))
+#
+#func _generate_chunk(iter: GridChunkIter, data: GenerationData) -> void:
+	#var rect : Rect2i = data.get_meta(&\"base_chunk\")
+	#if !rect.has_point(iter.chunk_coord()):
+		#return
+	#
+	#var mid := (rect.position + rect.size / 2) * 32
+	#var max_dist := Vector2(rect.size * 32).length() * 0.5
+	#while iter.next():
+		#var dist := (iter.coord() - mid).length() / max_dist
+		#if dist < 0.7:
+			#iter.set_material_idx(Base.LAVA_IDX)
+			##iter.set_color(20)
+		#else:
+			#iter.set_material_idx(Base.ROCK_IDX)
+			#iter.set_color(18)
+"
+
 [node name="BaseGeneration" type="Node"]
 
 [node name="RockPlane" type="Node" parent="."]
@@ -85,3 +115,6 @@ hill_noise = SubResource("FastNoiseLite_2c33j")
 [node name="GenerationPass" type="Node" parent="."]
 script = SubResource("GDScript_celen")
 noise = SubResource("FastNoiseLite_k8wdx")
+
+[node name="Castle" type="Node" parent="."]
+script = SubResource("GDScript_cusp1")

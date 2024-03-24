@@ -8,6 +8,7 @@
 #include "core/math/vector2i.h"
 #include "core/object/object.h"
 #include "core/variant/callable.h"
+#include "core/variant/variant.h"
 #include "grid_iter.h"
 #include "preludes.h"
 #include "rng.hpp"
@@ -28,9 +29,13 @@ private:
 	// Key is lower material_idx | higher material_idx << 16.
 	inline static std::unordered_map<u32, std::vector<CellReaction>> cell_reactions = {};
 
+	// (iter: GridChunkIter, slice_idx: int)
 	inline static Callable generate_chunk_callback = Callable();
+	// (slice_idx: int)
 	inline static Callable generate_slice_callback = Callable();
 	inline static std::unordered_set<i32> generated_slice = {};
+	// (chunk_coord: Vector2i)
+	inline static Callable unload_chunk_callback = Callable();
 
 	inline static i64 tick = 0;
 	inline static u64 seed = 0;
@@ -92,8 +97,9 @@ public: // godot api
 	static bool remove_cell_reaction(u64 reaction_id);
 	static void print_internals();
 
-	static void set_generate_chunk_callback(Callable value);
-	static void set_generate_slice_callback(Callable value);
+	static void set_callbacks(
+			Callable generate_chunk,
+			Callable generate_slice);
 
 	static void clear();
 
@@ -104,8 +110,11 @@ public: // godot api
 	static u64 get_seed();
 
 	static Rect2i get_chunk_active_rect(Vector2i chunk_coord);
+	static i64 get_grid_memory_usage();
 
 	static Ref<Image> get_cell_buffer(Rect2i chunk_rect, bool background);
+
+	static PackedByteArray get_chunk_state(Vector2i chunk_coord);
 
 	static u32 get_cell_data(ChunkLocalCoord coord);
 	static u32 get_cell_material_idx(ChunkLocalCoord coord);

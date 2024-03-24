@@ -25,7 +25,7 @@ noise_darken_max = 8
 can_color = true
 density = 190
 vertical_movement = 3
-horizontal_movement_start_chance = 0.3
+horizontal_movement_start_chance = 0.2
 horizontal_movement_stop_chance = 0.04
 collision_type = 1
 

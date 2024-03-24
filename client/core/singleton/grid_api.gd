@@ -53,8 +53,9 @@ var _delete_node : Node = null
 var _step_thread := Thread.new()
 
 func _ready() -> void:
-	Grid.set_generate_slice_callback(_generate_slice)
-	Grid.set_generate_chunk_callback(_generate_chunk)
+	Grid.set_callbacks(
+		_generate_chunk,
+		_generate_slice)
 
 func _exit_tree() -> void:
 	unload_mods()

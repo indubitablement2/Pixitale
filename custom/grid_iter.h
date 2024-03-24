@@ -128,6 +128,13 @@ public:
 	Vector2i coord();
 };
 
-// todo: bitmap iter, circle iter, explosion iter, rect line, circle line
+// todo:
+// // - bitmap
+// - circle
+// - circle contour
+// // - explosion
+// - dijkstra
+// - rect line
+// - circle line
 
 #endif

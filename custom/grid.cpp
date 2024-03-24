@@ -27,9 +27,9 @@
 
 inline static BS::thread_pool tp = BS::thread_pool();
 
-inline static std::vector<std::vector<std::pair<Callable *, Vector2i>>> thread_vectors = {};
 inline static std::atomic_int32_t next_thread_idx = 0;
 thread_local u32 thread_idx = MAX_U32;
+inline static std::vector<std::vector<std::pair<Callable *, Vector2i>>> thread_vectors = {};
 
 u32 reations_key(const u32 m1, const u32 m2, bool &swap) {
 	if (m1 <= m2) {
@@ -74,12 +74,8 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("set_generate_chunk_callback", "value"),
-			&Grid::set_generate_chunk_callback);
-	ClassDB::bind_static_method(
-			"Grid",
-			D_METHOD("set_generate_slice_callback", "value"),
-			&Grid::set_generate_slice_callback);
+			D_METHOD("set_callbacks", "generate_chunk", "generate_slice"),
+			&Grid::set_callbacks);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -108,6 +104,10 @@ void Grid::_bind_methods() {
 			"Grid",
 			D_METHOD("get_chunk_active_rect", "chunk_coord"),
 			&Grid::get_chunk_active_rect);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("get_grid_memory_usage"),
+			&Grid::get_grid_memory_usage);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -248,7 +248,6 @@ void Grid::generate_chunk(Vector2i chunk_coord) {
 	iter->prepare(chunk_coord);
 
 	i32 slice_idx = get_slice_idx(chunk_coord.x);
-	// TEST_ASSERT(generated_slice.contains(slice_idx), "slice should be generated");
 
 	generate_chunk_callback.call(iter, slice_idx);
 	iter->chunk->activate_all(true);
@@ -406,12 +405,11 @@ void Grid::print_internals() {
 	}
 }
 
-void Grid::set_generate_chunk_callback(Callable value) {
-	generate_chunk_callback = value;
-}
-
-void Grid::set_generate_slice_callback(Callable value) {
-	generate_slice_callback = value;
+void Grid::set_callbacks(
+		Callable generate_chunk,
+		Callable generate_slice) {
+	generate_chunk_callback = generate_chunk;
+	generate_slice_callback = generate_slice;
 }
 
 void Grid::clear() {
@@ -452,6 +450,14 @@ Rect2i Grid::get_chunk_active_rect(Vector2i chunk_coord) {
 	} else {
 		return chunk->active_rect();
 	}
+}
+
+i64 Grid::get_grid_memory_usage() {
+	i64 mem = 0;
+	for (auto &pair : chunks) {
+		mem += pair.second->get_memory_usage();
+	}
+	return mem;
 }
 
 Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, bool background) {
@@ -498,6 +504,10 @@ Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, bool background) {
 			false,
 			Image::FORMAT_RF,
 			image_data);
+}
+
+PackedByteArray Grid::get_chunk_state(Vector2i chunk_coord) {
+	return PackedByteArray(); // todo
 }
 
 u32 Grid::get_cell_data(ChunkLocalCoord coord) {
@@ -639,6 +649,7 @@ void Grid::step_prepare() {
 			auto added = chunks.emplace(chunk_id(chunk_iter.coord), nullptr);
 			if (added.second) {
 				added.first->second = new Chunk();
+				added.first->second->chunk_coord = chunk_iter.coord;
 			}
 		}
 
@@ -661,13 +672,15 @@ void Grid::step() {
 
 		// Generate slice if not already generated.
 		for (auto &pair : pass) {
-			i32 slice_idx = get_slice_idx(pair.first);
+			for (i32 offset = -1; offset < 2; offset++) {
+				i32 slice_idx = get_slice_idx(pair.first + offset);
 
-			if (generated_slice.insert(slice_idx).second) {
-				Rng prev_rng = temporal_rng;
-				temporal_rng = get_static_rng(Vector2i(slice_idx, 0));
-				generate_slice_callback.call(slice_idx);
-				temporal_rng = prev_rng;
+				if (generated_slice.insert(slice_idx).second) {
+					Rng prev_rng = temporal_rng;
+					temporal_rng = get_static_rng(Vector2i(slice_idx, 0));
+					generate_slice_callback.call(slice_idx);
+					temporal_rng = prev_rng;
+				}
 			}
 		}
 
@@ -694,6 +707,7 @@ void Grid::step() {
 		tp.wait_for_tasks();
 	}
 
+	// Reactions callback.
 	auto &first_vec = thread_vectors[0];
 	for (u32 i = 1; i < thread_vectors.size(); i++) {
 		auto &vec = thread_vectors[i];
@@ -707,6 +721,30 @@ void Grid::step() {
 		callable->call(coord);
 	}
 	first_vec.clear();
+
+	if (tick % 1024 == 0) {
+		// i64 unload_threshold = tick - 120 - MAX(3600 - i64(chunks.size()), 0);
+
+		for (auto it = chunks.begin(); it != chunks.end();) {
+			Chunk &chunk = *it->second;
+
+			// Delete empty background.
+			if (chunk.num_background_cell == 0) {
+				delete[] chunk.background;
+				chunk.background = nullptr;
+			}
+
+			it++;
+
+			// if (chunk.last_step_tick < unload_threshold) {
+			// 	unload_chunk_callback.call(chunk.chunk_coord);
+			// 	delete it->second;
+			// 	it = chunks.erase(it);
+			// } else {
+			// 	++it;
+			// }
+		}
+	}
 }
 
 bool Grid::randb() {

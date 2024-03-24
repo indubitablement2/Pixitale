@@ -118,6 +118,16 @@ inline Vector2i mod_neg(Vector2i numerator, i32 denominator) {
 			mod_neg(numerator.y, denominator));
 }
 
+inline u64 hash_djb2_64(const u64 *data, i32 size) {
+	u64 hash = 5381;
+
+	for (i32 i = 0; i < size; i++) {
+		hash = ((hash << 5) + hash) ^ data[i];
+	}
+
+	return hash;
+}
+
 struct Iter2D {
 	Vector2i _start;
 	Vector2i _end;

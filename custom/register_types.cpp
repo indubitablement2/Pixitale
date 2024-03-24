@@ -4,6 +4,7 @@
 #include "grid_body.h"
 #include "grid_iter.h"
 #include "image_packer.h"
+#include "rect_query.h"
 #include "tests.h"
 
 void initialize_custom_module(ModuleInitializationLevel p_level) {
@@ -21,6 +22,7 @@ void initialize_custom_module(ModuleInitializationLevel p_level) {
 	ClassDB::register_class<GridFillIter>();
 
 	ClassDB::register_class<GridBody>();
+	ClassDB::register_class<RectQuery>();
 }
 
 void uninitialize_custom_module(ModuleInitializationLevel p_level) {
