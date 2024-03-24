@@ -37,4 +37,6 @@ func _init() -> void:
 func _process(_delta: float) -> void:
 	tick += 1
 	
-	Core.queue_step_chunks(GridRender.raw_cell_rect_chunk)
+	var step_start := Vector2i(((GridRender.view.position - Vector2(64.0, 64.0)) / 32.0).floor())
+	var step_end := Vector2i(((GridRender.view.end + Vector2(64.0, 64.0)) / 32.0).ceil())
+	Core.queue_step_chunks(Rect2i(step_start, step_end - step_start))

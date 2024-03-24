@@ -112,7 +112,7 @@ public: // godot api
 	static Rect2i get_chunk_active_rect(Vector2i chunk_coord);
 	static i64 get_grid_memory_usage();
 
-	static Ref<Image> get_cell_buffer(Rect2i chunk_rect, bool background);
+	static Ref<Image> get_cell_buffer(Rect2i rect, bool background, bool clean);
 
 	static PackedByteArray get_chunk_state(Vector2i chunk_coord);
 

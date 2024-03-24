@@ -111,6 +111,14 @@ inline u32 color(const u32 cell) {
 	return (cell & Masks::MASK_COLOR) >> Shifts::SHIFT_COLOR;
 }
 
+inline void clean(u32 &cell) {
+	cell &= Masks::MASK_MATERIAL | Masks::MASK_DARKEN | Masks::MASK_COLOR;
+}
+
+inline void clean_background(u32 &cell) {
+	cell &= Masks::MASK_MATERIAL | Masks::MASK_DARKEN | Masks::MASK_COLOR;
+}
+
 static_assert(
 		Masks::MASK_MATERIAL +
 				Masks::MASK_MOVEMENT +

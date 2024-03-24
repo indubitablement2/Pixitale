@@ -20,7 +20,6 @@
 #include "rng.hpp"
 #include <algorithm>
 #include <atomic>
-#include <cstring>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -111,7 +110,7 @@ void Grid::_bind_methods() {
 
 	ClassDB::bind_static_method(
 			"Grid",
-			D_METHOD("get_cell_buffer", "chunk_rect", "background"),
+			D_METHOD("get_cell_buffer", "rect", "background", "clean"),
 			&Grid::get_cell_buffer);
 
 	ClassDB::bind_static_method(
@@ -460,21 +459,16 @@ i64 Grid::get_grid_memory_usage() {
 	return mem;
 }
 
-Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, bool background) {
-	Vector2i image_size = chunk_rect.size * 32;
-
+Ref<Image> Grid::get_cell_buffer(Rect2i rect, bool background, bool clean) {
 	// Tried not creating a new buffer each time, but it was not noticeably faster.
 	auto image_data = Vector<u8>();
-	image_data.resize(image_size.x * 4 * image_size.y);
-	auto image_buffer = reinterpret_cast<u32 *>(image_data.ptrw());
+	image_data.resize(rect.size.x * 4 * rect.size.y);
+	u32 *image_buffer = reinterpret_cast<u32 *>(image_data.ptrw());
 
 	// This is where 99% of the time is spent.
-	Iter2D chunk_iter = Iter2D(chunk_rect.size);
+	IterChunk chunk_iter = IterChunk(rect);
 	while (chunk_iter.next()) {
-		Vector2i chunk_coord = chunk_rect.position + chunk_iter.coord;
-		Vector2i image_offset = chunk_iter.coord * 32;
-
-		Chunk *chunk = get_chunk(chunk_coord);
+		Chunk *chunk = get_chunk(chunk_iter.chunk_coord);
 		u32 *cells;
 		if (chunk == nullptr) {
 			cells = nullptr;
@@ -484,23 +478,32 @@ Ref<Image> Grid::get_cell_buffer(Rect2i chunk_rect, bool background) {
 			cells = &chunk->cells[0];
 		}
 
+		Vector2i image_offset = chunk_iter.chunk_coord * 32 - rect.position;
+		Iter2D local_iter = chunk_iter.local_iter();
 		if (cells == nullptr) {
-			for (i32 y = 0; y < 32; y++) {
-				u32 *img_ptr = image_buffer + image_offset.x + (image_offset.y + y) * image_size.x;
-				std::memset(img_ptr, 0, 32 * sizeof(u32));
+			while (local_iter.next()) {
+				u32 *img_ptr = image_buffer + image_offset.x + local_iter.coord.x + (image_offset.y + local_iter.coord.y) * rect.size.x;
+				*img_ptr = 0;
 			}
 		} else {
-			for (i32 y = 0; y < 32; y++) {
-				u32 *img_ptr = image_buffer + image_offset.x + (image_offset.y + y) * image_size.x;
-				u32 *cell_ptr = cells + y * 32;
-				std::memcpy(img_ptr, cell_ptr, 32 * sizeof(u32));
+			while (local_iter.next()) {
+				u32 *img_ptr = image_buffer + image_offset.x + local_iter.coord.x + (image_offset.y + local_iter.coord.y) * rect.size.x;
+				u32 cell = cells[local_iter.coord.x + local_iter.coord.y * 32];
+				if (clean) {
+					if (background) {
+						Cell::clean_background(cell);
+					} else {
+						Cell::clean(cell);
+					}
+				}
+				*img_ptr = cell;
 			}
 		}
 	}
 
 	return Image::create_from_data(
-			image_size.x,
-			image_size.y,
+			rect.size.x,
+			rect.size.y,
 			false,
 			Image::FORMAT_RF,
 			image_data);

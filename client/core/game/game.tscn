@@ -217,21 +217,23 @@ viewport_path = NodePath("LightPass")
 [sub_resource type="GDScript" id="GDScript_f8hf2"]
 script/source = "extends Node2D
 
-# Display active rect of chunks.
-
 func _process(_delta: float) -> void:
 	queue_redraw()
 
 func _draw() -> void:
-	var p := GridRender.raw_cell_rect.position / 32
-	var s := GridRender.raw_cell_rect.size / 32
+	var start := Vector2i((GridRender.view.position / 32.0).floor())
+	var end := Vector2i((GridRender.view.end / 32.0).ceil())
+	var size := end - start
 	
-	for y in s.y:
-		for x in s.x:
-			var r := Grid.get_chunk_active_rect(p + Vector2i(x, y))
-			if r.has_area():
+	for y in size.y:
+		for x in size.x:
+			var chunk_coord := start + Vector2i(x, y)
+			var local_rect := Grid.get_chunk_active_rect(chunk_coord)
+			if local_rect.has_area():
 				draw_rect(
-					Rect2(Vector2i(x, y) * 32 + r.position, r.size),
+					Rect2(
+						local_rect.position + chunk_coord * 32,
+						local_rect.size),
 					Color.ALICE_BLUE,
 					false)
 "
@@ -277,7 +279,7 @@ canvas_item_default_texture_filter = 0
 canvas_cull_mask = 4293918722
 render_target_update_mode = 4
 
-[node name="Draw" type="Node2D" parent="." node_paths=PackedStringArray("item_list", "color_picker", "brush_size_range")]
+[node name="DebugDraw" type="Node2D" parent="." node_paths=PackedStringArray("item_list", "color_picker", "brush_size_range")]
 process_mode = 3
 z_index = 300
 z_as_relative = false
@@ -286,7 +288,7 @@ item_list = NodePath("../GUI/MarginContainer/DebugMenu/CellMaterialPicker")
 color_picker = NodePath("../GUI/MarginContainer/DebugMenu/VBoxContainer/ColorPicker")
 brush_size_range = NodePath("../GUI/MarginContainer/DebugMenu/VBoxContainer/CursorSize")
 
-[node name="VisibleEnabler" type="Node" parent="Draw"]
+[node name="VisibleEnabler" type="Node" parent="DebugDraw"]
 script = ExtResource("8_74bfn")
 
 [node name="GUI" type="CanvasLayer" parent="."]
@@ -338,7 +340,7 @@ layout_mode = 2
 layout_mode = 2
 text = "Active Rect"
 script = SubResource("GDScript_xdcdo")
-active_rect_node = NodePath("../../../../../../../GridRender/ActiveRect")
+active_rect_node = NodePath("../../../../../../../DrawActiveRect")
 
 [node name="ActiveCell" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering"]
 layout_mode = 2
@@ -508,15 +510,15 @@ material = SubResource("CanvasItemMaterial_f00lt")
 texture = SubResource("ViewportTexture_5p4mp")
 centered = false
 
-[node name="ActiveRect" type="Node2D" parent="GridRender"]
+[node name="DrawActiveRect" type="Node2D" parent="."]
+process_mode = 3
 process_priority = 10
 editor_description = "Display active rect of chunks."
-visible = false
 z_index = 500
 z_as_relative = false
 script = SubResource("GDScript_f8hf2")
 
-[node name="VisibleEnabler" type="Node" parent="GridRender/ActiveRect"]
+[node name="VisibleEnabler" type="Node" parent="DrawActiveRect"]
 script = ExtResource("8_74bfn")
 
 [node name="BlackBarTODO" type="Sprite2D" parent="."]
@@ -536,5 +538,5 @@ region_rect = Rect2(-11.855, -6.755, 9.905, 5.69)
 [node name="FreeCamera" parent="GridBody" instance=ExtResource("7_7jk4b")]
 zoom = Vector2(4, 4)
 
-[connection signal="pressed" from="GUI/MarginContainer/DebugMenu/VBoxContainer/Rect" to="Draw" method="_on_rect_pressed"]
-[connection signal="pressed" from="GUI/MarginContainer/DebugMenu/VBoxContainer/Fill" to="Draw" method="_on_fill_pressed"]
+[connection signal="pressed" from="GUI/MarginContainer/DebugMenu/VBoxContainer/Rect" to="DebugDraw" method="_on_rect_pressed"]
+[connection signal="pressed" from="GUI/MarginContainer/DebugMenu/VBoxContainer/Fill" to="DebugDraw" method="_on_fill_pressed"]

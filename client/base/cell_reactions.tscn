@@ -16,9 +16,8 @@ script/source = "extends CellReaction
 script = SubResource("GDScript_pd1m6")
 in1_tag = &"Lava"
 in2_tag = &"Water"
-out1_name = &"Lava"
-out2_name = &"Lava"
-probability = 0.01
+out1_name = &"Rock"
+out2_name = &"Rock"
 
 [node name="SmokeDissipate" type="Node" parent="."]
 script = ExtResource("1_pm404")

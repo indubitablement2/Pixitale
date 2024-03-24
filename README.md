@@ -79,7 +79,7 @@ Light is applied using multiplicative blending mode.
 - [ ] Needs an npc home nearby?
 
 #### Drawing
-- [ ] Can save part of grid as blueprint.
+- [x] Can save part of grid as blueprint.
 - [ ] Can paste blueprint to grid.
 
 #### Stats
