@@ -2,6 +2,7 @@
 
 #include "cell.hpp"
 #include "cell_material.hpp"
+#include "core/error/error_macros.h"
 #include "core/math/rect2.h"
 #include "core/math/vector2.h"
 #include "core/math/vector2i.h"
@@ -9,6 +10,7 @@
 #include "core/typedefs.h"
 #include "grid.h"
 #include "preludes.h"
+#include "scene/2d/node_2d.h"
 
 const f32 SMALL_VALUE = 0.04f;
 
@@ -472,15 +474,19 @@ void GridBody::move_and_slide() {
 	is_on_left_wall = false;
 	is_on_right_wall = false;
 
-	Vector2 previous_position = get_position();
-	previous_position.y += step_offset;
+	Node2D *p = Object::cast_to<Node2D>(get_parent());
+	ERR_FAIL_NULL_MSG(p, "GridBody must be a child of a Node2D.");
 
 	if (!collision_enabled) {
+		f32 dif = step_offset;
 		step_offset *= step_smoothing;
-		previous_position.y -= step_offset;
-		set_position(previous_position + velocity * get_process_delta_time());
+		dif -= step_offset;
+		p->translate(velocity * get_process_delta_time() + Vector2(0.0f, dif));
 		return;
 	}
+
+	Vector2 previous_position = get_global_position();
+	previous_position.y += step_offset;
 
 	GridBodyApi api = GridBodyApi(
 			previous_position,
@@ -597,7 +603,8 @@ void GridBody::move_and_slide() {
 
 		api2.clamp_down();
 		bool success = false;
-		for (i32 i = 0; i < max_step_height * (num_vertical_steps + 1); i++) {
+		// * (num_vertical_steps / 2 + 1)
+		for (i32 i = 0; i < max_step_height * (num_vertical_steps / 2 + 1); i++) {
 			if (api2.step_down()) {
 				success = true;
 				break;
@@ -614,7 +621,11 @@ void GridBody::move_and_slide() {
 
 	step_offset *= step_smoothing;
 
-	set_position(Vector2(api.true_pos.x, api.true_pos.y - step_offset));
+	Vector2 new_position = api.true_pos;
+	new_position.y -= step_offset;
+	p->translate(new_position - get_global_position());
+
+	// p->set_position(Vector2(api.true_pos.x, api.true_pos.y - step_offset));
 
 	api.del();
 }

@@ -1,4 +1,4 @@
-[gd_scene load_steps=38 format=3 uid="uid://cs41g41rbjtf3"]
+[gd_scene load_steps=39 format=3 uid="uid://cs41g41rbjtf3"]
 
 [ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
@@ -11,12 +11,14 @@
 [ext_resource type="PackedScene" uid="uid://5ojtd4d004ve" path="res://core/camera/free_camera.tscn" id="7_7jk4b"]
 [ext_resource type="Texture2D" uid="uid://dcodkd1xxqxik" path="res://core/shader/texture/cell_raw_data/background.tres" id="7_602ny"]
 [ext_resource type="Script" path="res://core/util/visible_enabler.gd" id="8_74bfn"]
+[ext_resource type="PackedScene" uid="uid://dcfoh665gcpdx" path="res://core/game/inventory/inventory_slot.tscn" id="8_amaqr"]
 [ext_resource type="Shader" path="res://core/shader/environment_light.gdshader" id="8_l1xnb"]
 [ext_resource type="Material" uid="uid://btwoiop8xxp15" path="res://core/shader/cell_render.material" id="8_onaw1"]
 [ext_resource type="Shader" path="res://core/shader/foreground_glow.gdshader" id="9_etry3"]
+[ext_resource type="Script" path="res://core/util/show_button.gd" id="9_o2nrr"]
 [ext_resource type="Texture2D" uid="uid://t50h32apl4gq" path="res://core/shader/texture/cell_materials_data/glow.tres" id="11_rdegm"]
 [ext_resource type="Texture2D" uid="uid://cohkmmuriclai" path="res://base/texture/bg/bg_lac_1.png" id="12_wrkjg"]
-[ext_resource type="PackedScene" uid="uid://b7fwx4nr02qhh" path="res://DELETE.tscn" id="14_a3qr0"]
+[ext_resource type="PackedScene" uid="uid://b7fwx4nr02qhh" path="res://core/game/character/player/player.tscn" id="18_mtbrh"]
 
 [sub_resource type="World3D" id="World3D_28ayb"]
 environment = ExtResource("7_3kidg")
@@ -117,34 +119,13 @@ func _pressed() -> void:
 	Core.set_paused(false)
 "
 
-[sub_resource type="GDScript" id="GDScript_xdcdo"]
-script/source = "extends Button
-
-@export var active_rect_node : Node2D
-
-func _pressed() -> void:
-	active_rect_node.set_visible(!active_rect_node.is_visible())
-"
-
 [sub_resource type="GDScript" id="GDScript_nlogk"]
 script/source = "extends Button
 
 @export var cell_render_material : ShaderMaterial
 
-
-func _pressed() -> void:
-	cell_render_material.set_shader_parameter(
-		&\"highlight_active\",
-		!cell_render_material.get_shader_parameter(&\"highlight_active\"))
-	
-"
-
-[sub_resource type="GDScript" id="GDScript_t44g3"]
-script/source = "extends Label
-
-func _process(_delta: float) -> void:
-	if (Grid.get_tick() % 60 == 0):
-		text = String.humanize_size(Grid.get_grid_memory_usage())
+func _toggled(toggled_on: bool) -> void:
+	cell_render_material.set_shader_parameter(&\"highlight_active\", toggled_on)
 "
 
 [sub_resource type="GDScript" id="GDScript_kfpdw"]
@@ -153,6 +134,14 @@ script/source = "extends Label
 
 func _process(_delta: float) -> void:
 	text = GridApi.cell_materials[Grid.get_cell_material_idx(Global.mouse_coord)].display_name
+"
+
+[sub_resource type="GDScript" id="GDScript_t44g3"]
+script/source = "extends Label
+
+func _process(_delta: float) -> void:
+	if (Grid.get_tick() % 60 == 0):
+		text = String.humanize_size(Grid.get_grid_memory_usage())
 "
 
 [sub_resource type="GDScript" id="GDScript_qfjca"]
@@ -305,6 +294,130 @@ theme_override_constants/margin_top = 16
 theme_override_constants/margin_right = 16
 theme_override_constants/margin_bottom = 16
 
+[node name="HBoxContainer" type="HBoxContainer" parent="GUI/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 32
+alignment = 2
+
+[node name="VBoxContainer2" type="VBoxContainer" parent="GUI/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 32
+
+[node name="Inventory" type="GridContainer" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2"]
+layout_mode = 2
+size_flags_horizontal = 3
+columns = 9
+
+[node name="0" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="1" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="2" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="3" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="4" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="5" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="6" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="7" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="8" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="9" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="10" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="11" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="12" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Inventory" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="Chest" type="GridContainer" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2"]
+visible = false
+layout_mode = 2
+columns = 9
+
+[node name="0" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="1" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="2" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="3" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="4" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="5" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="6" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="7" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="8" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="9" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="10" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="11" parent="GUI/MarginContainer/HBoxContainer/VBoxContainer2/Chest" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="Hotbar" type="VBoxContainer" parent="GUI/MarginContainer/HBoxContainer"]
+layout_mode = 2
+
+[node name="0" parent="GUI/MarginContainer/HBoxContainer/Hotbar" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="1" parent="GUI/MarginContainer/HBoxContainer/Hotbar" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="2" parent="GUI/MarginContainer/HBoxContainer/Hotbar" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="3" parent="GUI/MarginContainer/HBoxContainer/Hotbar" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="4" parent="GUI/MarginContainer/HBoxContainer/Hotbar" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="5" parent="GUI/MarginContainer/HBoxContainer/Hotbar" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="6" parent="GUI/MarginContainer/HBoxContainer/Hotbar" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="7" parent="GUI/MarginContainer/HBoxContainer/Hotbar" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
+[node name="8" parent="GUI/MarginContainer/HBoxContainer/Hotbar" instance=ExtResource("8_amaqr")]
+layout_mode = 2
+
 [node name="DebugMenu" type="HBoxContainer" parent="GUI/MarginContainer"]
 visible = false
 layout_mode = 2
@@ -333,20 +446,55 @@ size_flags_vertical = 0
 text = "Step"
 script = SubResource("GDScript_e0md8")
 
+[node name="HSeparator" type="HSeparator" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer"]
+layout_mode = 2
+
 [node name="Rendering" type="VBoxContainer" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="ActiveRect" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering" node_paths=PackedStringArray("active_rect_node")]
+[node name="ActiveRect" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering" node_paths=PackedStringArray("target")]
 layout_mode = 2
 text = "Active Rect"
-script = SubResource("GDScript_xdcdo")
-active_rect_node = NodePath("../../../../../../../DrawActiveRect")
+script = ExtResource("9_o2nrr")
+target = NodePath("../../../../../../../DrawActiveRect")
 
 [node name="ActiveCell" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering"]
 layout_mode = 2
+toggle_mode = true
 text = "Active Cell"
 script = SubResource("GDScript_nlogk")
 cell_render_material = ExtResource("8_onaw1")
+
+[node name="GameTick" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering" node_paths=PackedStringArray("target")]
+layout_mode = 2
+toggle_mode = true
+text = "Game Tick"
+script = ExtResource("9_o2nrr")
+target = NodePath("../../../../../QuickDisplay/GameTick")
+
+[node name="GridTick" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering" node_paths=PackedStringArray("target")]
+layout_mode = 2
+text = "Grid Tick"
+script = ExtResource("9_o2nrr")
+target = NodePath("../../../../../QuickDisplay/GridTick")
+
+[node name="GridMemory" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering" node_paths=PackedStringArray("target")]
+layout_mode = 2
+text = "Grid Memory"
+script = ExtResource("9_o2nrr")
+target = NodePath("../../../../../QuickDisplay/GridMemoryUsage")
+
+[node name="CellName" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering" node_paths=PackedStringArray("target")]
+layout_mode = 2
+text = "Cell Name"
+script = ExtResource("9_o2nrr")
+target = NodePath("../../../../../QuickDisplay/HoverCellName")
+
+[node name="MouseCoord" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering" node_paths=PackedStringArray("target")]
+layout_mode = 2
+text = "Mouse Coord"
+script = ExtResource("9_o2nrr")
+target = NodePath("../../../../../QuickDisplay/MouseCoord")
 
 [node name="CellMaterialPicker" type="ItemList" parent="GUI/MarginContainer/DebugMenu"]
 custom_minimum_size = Vector2(90, 0)
@@ -378,65 +526,79 @@ allow_search = false
 auto_height = true
 max_columns = 8
 
-[node name="VBoxContainer" type="VBoxContainer" parent="GUI/MarginContainer"]
+[node name="QuickDisplay" type="VBoxContainer" parent="GUI/MarginContainer"]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 8
 
-[node name="GridMemoryUsage" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer"]
+[node name="HoverCellName" type="HBoxContainer" parent="GUI/MarginContainer/QuickDisplay"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="GUI/MarginContainer/VBoxContainer/GridMemoryUsage"]
-layout_mode = 2
-script = SubResource("GDScript_t44g3")
-
-[node name="VisibleEnabler" type="Node" parent="GUI/MarginContainer/VBoxContainer/GridMemoryUsage/Label"]
-script = ExtResource("8_74bfn")
-
-[node name="HoverCellName" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer"]
-layout_mode = 2
-
-[node name="Label" type="Label" parent="GUI/MarginContainer/VBoxContainer/HoverCellName"]
+[node name="Label" type="Label" parent="GUI/MarginContainer/QuickDisplay/HoverCellName"]
 layout_mode = 2
 size_flags_horizontal = 0
 size_flags_vertical = 0
 text = "Water"
 script = SubResource("GDScript_kfpdw")
 
-[node name="MouseCoord" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer"]
+[node name="VisibleEnabler" type="Node" parent="GUI/MarginContainer/QuickDisplay/HoverCellName/Label"]
+script = ExtResource("8_74bfn")
+
+[node name="GridMemoryUsage" type="HBoxContainer" parent="GUI/MarginContainer/QuickDisplay"]
 layout_mode = 2
 
-[node name="Label" type="Label" parent="GUI/MarginContainer/VBoxContainer/MouseCoord"]
+[node name="Label" type="Label" parent="GUI/MarginContainer/QuickDisplay/GridMemoryUsage"]
+layout_mode = 2
+script = SubResource("GDScript_t44g3")
+
+[node name="VisibleEnabler" type="Node" parent="GUI/MarginContainer/QuickDisplay/GridMemoryUsage/Label"]
+script = ExtResource("8_74bfn")
+
+[node name="MouseCoord" type="HBoxContainer" parent="GUI/MarginContainer/QuickDisplay"]
+layout_mode = 2
+
+[node name="Label" type="Label" parent="GUI/MarginContainer/QuickDisplay/MouseCoord"]
 layout_mode = 2
 text = "Coord:"
 
-[node name="Label2" type="Label" parent="GUI/MarginContainer/VBoxContainer/MouseCoord"]
+[node name="Label2" type="Label" parent="GUI/MarginContainer/QuickDisplay/MouseCoord"]
 layout_mode = 2
 script = SubResource("GDScript_qfjca")
 
-[node name="GameTick" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer"]
+[node name="VisibleEnabler" type="Node" parent="GUI/MarginContainer/QuickDisplay/MouseCoord/Label2"]
+script = ExtResource("8_74bfn")
+
+[node name="GameTick" type="HBoxContainer" parent="GUI/MarginContainer/QuickDisplay"]
+visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="GUI/MarginContainer/VBoxContainer/GameTick"]
+[node name="Label" type="Label" parent="GUI/MarginContainer/QuickDisplay/GameTick"]
 layout_mode = 2
 text = "Game Tick:"
 
-[node name="Label2" type="Label" parent="GUI/MarginContainer/VBoxContainer/GameTick"]
+[node name="Label2" type="Label" parent="GUI/MarginContainer/QuickDisplay/GameTick"]
 layout_mode = 2
 script = SubResource("GDScript_r6x6c")
 
-[node name="GridTick" type="HBoxContainer" parent="GUI/MarginContainer/VBoxContainer"]
+[node name="VisibleEnabler" type="Node" parent="GUI/MarginContainer/QuickDisplay/GameTick/Label2"]
+script = ExtResource("8_74bfn")
+
+[node name="GridTick" type="HBoxContainer" parent="GUI/MarginContainer/QuickDisplay"]
+visible = false
 layout_mode = 2
 
-[node name="Label" type="Label" parent="GUI/MarginContainer/VBoxContainer/GridTick"]
+[node name="Label" type="Label" parent="GUI/MarginContainer/QuickDisplay/GridTick"]
 layout_mode = 2
 text = "Grid Tick:"
 
-[node name="Label2" type="Label" parent="GUI/MarginContainer/VBoxContainer/GridTick"]
+[node name="Label2" type="Label" parent="GUI/MarginContainer/QuickDisplay/GridTick"]
 layout_mode = 2
 script = SubResource("GDScript_6sk05")
 
-[node name="DebugMenu" type="Button" parent="GUI/MarginContainer/VBoxContainer" node_paths=PackedStringArray("debug_menu")]
+[node name="VisibleEnabler" type="Node" parent="GUI/MarginContainer/QuickDisplay/GridTick/Label2"]
+script = ExtResource("8_74bfn")
+
+[node name="DebugMenu" type="Button" parent="GUI/MarginContainer/QuickDisplay" node_paths=PackedStringArray("debug_menu")]
 layout_mode = 2
 size_flags_horizontal = 0
 text = "Debug Menu"
@@ -452,6 +614,7 @@ centered = false
 
 [node name="GridRender" type="Node2D" parent="." node_paths=PackedStringArray("background_light_modulate_viewport", "foreground_light_modulate_viewport", "light_pass_viewport")]
 process_mode = 3
+visible = false
 visibility_layer = 3
 script = ExtResource("1_3cgdd")
 background_light_modulate_viewport = NodePath("../BackgroundLightModulate")
@@ -512,8 +675,9 @@ centered = false
 
 [node name="DrawActiveRect" type="Node2D" parent="."]
 process_mode = 3
-process_priority = 10
+process_priority = 12
 editor_description = "Display active rect of chunks."
+visible = false
 z_index = 500
 z_as_relative = false
 script = SubResource("GDScript_f8hf2")
@@ -533,7 +697,7 @@ centered = false
 offset = Vector2(-0.5, 0)
 region_rect = Rect2(-11.855, -6.755, 9.905, 5.69)
 
-[node name="GridBody" parent="." instance=ExtResource("14_a3qr0")]
+[node name="GridBody" parent="." instance=ExtResource("18_mtbrh")]
 
 [node name="FreeCamera" parent="GridBody" instance=ExtResource("7_7jk4b")]
 zoom = Vector2(4, 4)

@@ -1,0 +1,180 @@
+[gd_scene load_steps=14 format=3 uid="uid://b7fwx4nr02qhh"]
+
+[ext_resource type="Script" path="res://core/game/character/player/player.gd" id="1_bblx8"]
+[ext_resource type="Texture2D" uid="uid://cy0ehgqosnlj8" path="res://torso.png" id="2_ep3oc"]
+[ext_resource type="Texture2D" uid="uid://c1vam3un3fytm" path="res://base/item/arm_1.png" id="3_ntkch"]
+[ext_resource type="Texture2D" uid="uid://bjeh588ftcd2t" path="res://base/item/sword_1.png" id="4_hjaf3"]
+[ext_resource type="Texture2D" uid="uid://bcsqvkkaf8uy5" path="res://base/item/head_1.png" id="5_nxqcr"]
+
+[sub_resource type="SceneReplicationConfig" id="SceneReplicationConfig_svs8e"]
+properties/0/path = NodePath(".:position")
+properties/0/spawn = true
+properties/0/replication_mode = 1
+properties/1/path = NodePath("Body:animation")
+properties/1/spawn = true
+properties/1/replication_mode = 2
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_10hu3"]
+atlas = ExtResource("2_ep3oc")
+region = Rect2(11, 0, 11, 11)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_76vi5"]
+atlas = ExtResource("2_ep3oc")
+region = Rect2(0, 0, 11, 11)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_ioq8y"]
+atlas = ExtResource("2_ep3oc")
+region = Rect2(11, 0, 11, 11)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_l1jyh"]
+atlas = ExtResource("2_ep3oc")
+region = Rect2(22, 0, 11, 11)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_83dbf"]
+atlas = ExtResource("2_ep3oc")
+region = Rect2(33, 0, 11, 11)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_yk2lk"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_10hu3")
+}],
+"loop": true,
+"name": &"Air",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_76vi5")
+}],
+"loop": true,
+"name": &"Idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_ioq8y")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_l1jyh")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_83dbf")
+}],
+"loop": true,
+"name": &"Run",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_uj082"]
+size = Vector2(7, 15)
+
+[node name="Player" type="Node2D" node_paths=PackedStringArray("body", "arm_back", "hand_back", "arm_front", "hand_front", "grid_body")]
+script = ExtResource("1_bblx8")
+body = NodePath("Body")
+arm_back = NodePath("Body/ArmBack")
+hand_back = NodePath("Body/ArmBack/HandBack")
+arm_front = NodePath("Body/ArmFront")
+hand_front = NodePath("Body/ArmFront/HandFront")
+grid_body = NodePath("GridBody")
+
+[node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
+replication_config = SubResource("SceneReplicationConfig_svs8e")
+
+[node name="GridBody" type="GridBody" parent="."]
+half_size = Vector2(3.5, 7.5)
+
+[node name="Label" type="Label" parent="."]
+visible = false
+z_index = 100
+z_as_relative = false
+anchors_preset = 13
+anchor_left = 0.5
+anchor_right = 0.5
+anchor_bottom = 1.0
+offset_left = -5.0
+offset_top = -130.0
+offset_right = 5.0
+offset_bottom = -29.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 0
+size_flags_vertical = 0
+text = "a
+b
+c
+d"
+horizontal_alignment = 1
+
+[node name="Velocity" type="Label" parent="."]
+visible = false
+z_index = 100
+z_as_relative = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -24.0
+offset_top = -34.0
+offset_right = 26.0
+offset_bottom = -11.0
+grow_horizontal = 2
+grow_vertical = 2
+text = "(0, 0)"
+horizontal_alignment = 1
+
+[node name="Body" type="AnimatedSprite2D" parent="."]
+position = Vector2(0, 2)
+sprite_frames = SubResource("SpriteFrames_yk2lk")
+animation = &"Air"
+autoplay = "Idle"
+
+[node name="ArmBack" type="Sprite2D" parent="Body"]
+show_behind_parent = true
+position = Vector2(1.78, -5)
+rotation = -0.698132
+texture = ExtResource("3_ntkch")
+offset = Vector2(0, 3)
+
+[node name="HandBack" type="Node2D" parent="Body/ArmBack"]
+position = Vector2(0, 5)
+
+[node name="Sword2" type="Sprite2D" parent="Body/ArmBack/HandBack"]
+show_behind_parent = true
+rotation = 0.785398
+texture = ExtResource("4_hjaf3")
+offset = Vector2(3.5, -3.5)
+flip_h = true
+
+[node name="Head" type="Sprite2D" parent="Body"]
+show_behind_parent = true
+position = Vector2(0.5, -6.5)
+texture = ExtResource("5_nxqcr")
+
+[node name="ArmFront" type="Sprite2D" parent="Body"]
+position = Vector2(-1, -5)
+rotation = 0.349066
+texture = ExtResource("3_ntkch")
+offset = Vector2(0, 3)
+
+[node name="HandFront" type="Node2D" parent="Body/ArmFront"]
+position = Vector2(0, 5)
+
+[node name="Sword2" type="Sprite2D" parent="Body/ArmFront/HandFront"]
+visible = false
+show_behind_parent = true
+rotation = 0.619592
+texture = ExtResource("4_hjaf3")
+offset = Vector2(3.5, -3.5)
+flip_h = true
+
+[node name="Area2D" type="Area2D" parent="."]
+visible = false
+collision_layer = 2
+collision_mask = 0
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+shape = SubResource("RectangleShape2D_uj082")

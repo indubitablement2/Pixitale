@@ -1,0 +1,13 @@
+[gd_scene load_steps=2 format=3 uid="uid://dcfoh665gcpdx"]
+
+[ext_resource type="Texture2D" uid="uid://sfw2jmnykwlj" path="res://core/texture/ui/round_square_2.png" id="1_2uw2o"]
+
+[node name="InventorySlot" type="TextureRect"]
+modulate = Color(3.36915e-07, 2.64719e-07, 0.342694, 0.266667)
+custom_minimum_size = Vector2(60, 60)
+offset_right = 32.0
+offset_bottom = 32.0
+size_flags_horizontal = 0
+size_flags_vertical = 0
+texture = ExtResource("1_2uw2o")
+expand_mode = 1

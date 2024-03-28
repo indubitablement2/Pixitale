@@ -1,28 +1,18 @@
 extends Resource
 class_name Blueprint
 
-@export var material_idx: PackedByteArray
-@export var color_idx: PackedByteArray
-@export var background_material_idx: PackedByteArray
-@export var background_color_idx: PackedByteArray
-@export var size: Vector2i
+@export var foreground: Image
+@export var background: Image = null
 
-static func take(rect: Rect2i, background: bool) -> Blueprint:
-	var data : Array[int] = []
-	data.resize(rect.get_area())
-	var xl := false
-	
-	var iter := Grid.iter_rect(rect)
-	var i := 0
-	while iter.next():
-		var mat_idx := iter.get_material_idx()
-		xl = xl || (mat_idx > 255)
-		data[i] = mat_idx
-	
-	if background:
-		pass
-	
+static func take(rect: Rect2i, take_background: bool) -> Blueprint:
 	var bp := Blueprint.new()
-	
+	bp.foreground = Grid.get_cell_buffer(rect, false, true)
+	if take_background:
+		bp.background = Grid.get_cell_buffer(rect, true, true)
 	return bp
 
+func get_material_idx(local_coord: Vector2i) -> int:
+	return Grid.color_to_material_idx(foreground.get_pixelv(local_coord))
+
+func get_color_idx(local_coord: Vector2i) -> int:
+	return Grid.color_to_color_idx(foreground.get_pixelv(local_coord))

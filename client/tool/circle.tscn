@@ -1,0 +1,73 @@
+[gd_scene load_steps=2 format=3 uid="uid://wngcmujqcqhc"]
+
+[sub_resource type="GDScript" id="GDScript_5ht36"]
+script/source = "extends Sprite2D
+
+## Precompute circles.
+
+@export var radius := 5 #224
+
+func _ready() -> void:
+	var img := Image.create(radius, radius, false, Image.FORMAT_RGBA8)
+	img.fill(Color.WHITE)
+	
+	# coord (Vector2i) : radius (int)
+	var out := {}
+	
+	var center := Vector2(radius, radius) - Vector2(0.5, 0.5)
+	for i in range(radius, 0, -1):
+		var col := Color(
+			float(i % 3) / 2.0,
+			float(i % 5) / 4.0,
+			float(i % 9) / 8.0)
+		for y in img.get_width():
+			for x in img.get_height():
+				if Vector2(0.5, 0.5).distance_to(Vector2(x, y) + Vector2(0.5, 0.5)) < float(i) - 0.1:
+					img.set_pixel(x, y, col)
+					
+					out[Vector2i(x, y)] = i
+	
+	texture = ImageTexture.create_from_image(img)
+	
+	var arrs : Array[Array] = []
+	for i in radius + 1:
+		arrs.push_back([])
+	for coord in out.keys():
+		arrs[out[coord]].push_back(coord)
+	for i in arrs.size():
+		arrs[i].sort_custom(_sort)
+	
+	# 1..radius
+	var circle_range_end : Array[int] = []
+	var circle_coord : Array[Vector2i] = []
+	var current := 0
+	for radius_idx in arrs.size():
+		for coords in arrs[radius_idx]:
+			circle_coord.push_back(coords)
+			current += 1
+		circle_range_end.push_back(current)
+	
+	var s := \"{\"
+	for coord in circle_coord:
+		s += \"Vector2i(\"
+		s += str(coord.x)
+		s += \", \"
+		s += str(coord.y)
+		s += \"), \"
+	s += \"};\"
+	print(s)
+	DisplayServer.clipboard_set_primary(s)
+
+
+
+func _sort(a: Vector2i, b: Vector2i) -> bool:
+	if (a.y == b.y):
+		return a.x < b.x
+	else:
+		return a.y < b.y
+"
+
+[node name="Spiral" type="Sprite2D"]
+scale = Vector2(10, 10)
+centered = false
+script = SubResource("GDScript_5ht36")

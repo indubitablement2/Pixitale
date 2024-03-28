@@ -4,6 +4,7 @@
 #include "cell_material.hpp"
 #include "chunk.h"
 #include "core/io/image.h"
+#include "core/math/color.h"
 #include "core/math/rect2i.h"
 #include "core/math/vector2i.h"
 #include "core/object/object.h"
@@ -145,6 +146,9 @@ public: // godot api
 	static f32 randf();
 	static f32 randf_range(f32 min, f32 max);
 	static i32 randi_range(i32 min, i32 max);
+
+	static u32 color_to_material_idx(Color color);
+	static u32 color_to_color_idx(Color color);
 
 	static i64 _div_floor(i64 numerator, i64 denominator);
 	static Vector2i _div_floor_v(Vector2i numerator, Vector2i denominator);

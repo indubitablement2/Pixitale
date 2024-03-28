@@ -13,7 +13,7 @@ Using gdscript's `randb` and friends instead of analogous methods exposed on `Gr
 Trigonometric methods on float (sin, cos, tan) and anything which relies on them. +, -, *, /, sqrt and all of int are Ok.
 Everything else (enemies, projectile, etc.) uses the standard authoritative server approach to networking.
 
-## Todo
+## TODO
 
 #### World Generation
 - [ ] Castle
@@ -93,5 +93,6 @@ Make it simple to compute stats.
 #### Performance
 - [ ] Unload old chunk.
 - [ ] Delete chunks which never changed. Use hash or keep track of all changes.
-- [ ] Use Godot thread pool.
+- [ ] Use Godot thread pool or modify current thread pool to work on all platform.
+- [ ] GridBody can sleep if intersecting chunks were not updated and velocity is zero.
 

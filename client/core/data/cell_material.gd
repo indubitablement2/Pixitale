@@ -95,8 +95,10 @@ func set_light_modulate(value: Color) -> void:
 #@export var biome_id := &""
 
 @export var collision_type := Grid.CELL_COLLISION_NONE
-## Less than 1 is slippery, more than 1 is sticky.
-#@export_range(0.0, 2.0, 0.01, "or_greater") var friction := 1.0
+## Affect character ground friction when moving on this cell.
+## >1 is more slippery, <1 is more sticky.
+## Can be changed while in-game.
+@export_range(0.0, 2.0, 0.01, "or_greater") var friction_multiplier := 1.0
 ##@export_range(0.0, 0.9, 0.01) var bounciness := 0.0
 
 var idx := -1

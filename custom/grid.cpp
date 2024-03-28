@@ -20,6 +20,7 @@
 #include "rng.hpp"
 #include <algorithm>
 #include <atomic>
+#include <cstring>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -185,6 +186,15 @@ void Grid::_bind_methods() {
 			"Grid",
 			D_METHOD("randi_range", "min", "max"),
 			&Grid::randi_range);
+
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("color_to_material_idx", "color"),
+			&Grid::color_to_material_idx);
+	ClassDB::bind_static_method(
+			"Grid",
+			D_METHOD("color_to_color_idx", "color"),
+			&Grid::color_to_color_idx);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -768,6 +778,20 @@ f32 Grid::randf_range(f32 min, f32 max) {
 
 i32 Grid::randi_range(i32 min, i32 max) {
 	return temporal_rng.gen_range_i32(min, max);
+}
+
+u32 Grid::color_to_material_idx(Color color) {
+	f32 f = color.r;
+	u32 u;
+	std::memcpy(&u, &f, sizeof(u));
+	return Cell::material_idx(u);
+}
+
+u32 Grid::color_to_color_idx(Color color) {
+	f32 f = color.r;
+	u32 u;
+	std::memcpy(&u, &f, sizeof(u));
+	return Cell::color(u);
 }
 
 i64 Grid::_div_floor(i64 numerator, i64 denominator) {

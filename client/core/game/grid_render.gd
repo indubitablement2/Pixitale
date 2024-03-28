@@ -31,6 +31,7 @@ static var _last_raw_cell_size := Vector2i()
 
 func _init() -> void:
 	node = self
+	show() # Hidden on the editor, because it's just a black box there.
 
 func _ready() -> void:
 	light_pass_viewport.set_world_2d(get_world_2d())
