@@ -9,8 +9,8 @@
 #include "preludes.h"
 #include "rng.hpp"
 
-class GridChunkIter : public Object {
-	GDCLASS(GridChunkIter, Object);
+class GridChunkIter : public RefCounted {
+	GDCLASS(GridChunkIter, RefCounted);
 
 protected:
 	static void _bind_methods();
@@ -44,6 +44,8 @@ public:
 	f32 randf();
 	f32 randf_range(f32 min, f32 max);
 	i32 randi_range(i32 min, i32 max);
+
+	// void activate_all();
 };
 
 class GridRectIter : public RefCounted {

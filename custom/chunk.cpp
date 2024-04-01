@@ -1,6 +1,7 @@
 #include "chunk.h"
 #include "cell.hpp"
 #include "cell_material.hpp"
+#include "core/error/error_macros.h"
 #include "core/math/vector2.h"
 #include "core/math/vector2i.h"
 #include "grid.h"
@@ -355,19 +356,9 @@ void Chunk::step_chunk(Vector2i chunk_coord) {
 			Vector2i other_chunk_coord = chunk_coord + Vector2i(x, y);
 			Chunk *chunk_ptr = Grid::get_chunk(other_chunk_coord);
 
-			TEST_ASSERT(chunk_ptr != nullptr, "step chunk got nullptr");
-
-			// Chunk generation
-			if (chunk_ptr->last_step_tick < 0) {
-				chunk_ptr->last_step_tick = 0;
-
-				// Clear cells.
-				for (i32 i = 0; i < 32 * 32; i++) {
-					chunk_ptr->cells[i] = 0;
-				}
-
-				Grid::generate_chunk(other_chunk_coord);
-			}
+			ERR_FAIL_NULL_MSG(
+					chunk_ptr,
+					"step_chunk needs it and its neighbors to exist");
 
 			chunk_api.chunks[(x + 1) + (y + 1) * 3] = chunk_ptr;
 		}

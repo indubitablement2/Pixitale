@@ -40,7 +40,7 @@ var cell_reactions := {}
 ## - their scene node order
 var generation_passes : Array[GenerationPass] = []
 ## slice_idx(int) : GenerationData
-var _generation_data : Dictionary = {}
+var _generation_data := {}
 
 var _edit_callables : Array[Callable] = []
 ## tick(int) : Array of Array(args..., callback idx)
@@ -50,12 +50,15 @@ var _next_edits := []
 
 var _delete_node : Node = null
 
+## chunks to be updated next step.
+var queue_step_chunk_rect : Array[Rect2i] = []
 var _step_thread := Thread.new()
-
-func _ready() -> void:
-	Grid.set_callbacks(
-		_generate_chunk,
-		_generate_slice)
+var _current_step_chunk_rect : Array[Rect2i] = []
+## {chunk_coord(Vector2i) : to_be_generated(bool)}
+var _chunk_to_generate := {}
+## passe([column([x(int), ys([int])])])
+var _passes : Array[Array] = [[], [], []]
+var _current_pass_idx := 0
 
 func _exit_tree() -> void:
 	unload_mods()
@@ -83,9 +86,9 @@ func _process(_delta: float) -> void:
 				_edit_callables[args.pop_back()].callv(args)
 			
 			# During prepare, grid can't be read/write, so we block.
-			Grid.step_prepare()
+			_step_prepare()
 			# Can read, but not write to Grid now.
-			_step_thread.start(_step, Thread.PRIORITY_NORMAL)
+			_step_thread.start(_step, Thread.PRIORITY_HIGH)
 
 func find_cell_material(cell_material_name: StringName) -> CellMaterial:
 	return cell_material_names[cell_material_name]
@@ -256,13 +259,99 @@ func unload_mods() -> void:
 	_edit_callables = []
 	_queued_edits = {}
 	_next_edits = []
+	
+	queue_step_chunk_rect = []
 
 @rpc("authority", "call_remote", "reliable", 1)
 func _edit_peer(tick: int, bytes: PackedByteArray) -> void:
 	_queued_edits[tick] = bytes_to_var(bytes)
 
+func _step_prepare() -> void:
+	Grid.set_tick(Grid.get_tick() + 1)
+	
+	for p in _passes:
+		p.clear()
+	
+	_chunk_to_generate.clear()
+	
+	_current_step_chunk_rect.clear()
+	var tmp := _current_step_chunk_rect
+	_current_step_chunk_rect = queue_step_chunk_rect
+	queue_step_chunk_rect = tmp
+	
+	# {x(int) : ys(Array[int])}
+	var columns := {}
+	
+	for rect in _current_step_chunk_rect:
+		# Create new chunks.
+		for y_offset in rect.size.y + 2:
+			for x_offset in rect.size.x + 2:
+				var chunk_coord := Vector2i(
+					rect.position.x - 1 + x_offset,
+					rect.position.y - 1 + y_offset)
+				if Grid.try_create_chunk(chunk_coord):
+					_chunk_to_generate[chunk_coord] = true
+		
+		# Add chunk to passes.
+		for y_offset in rect.size.y:
+			for x_offset in rect.size.x:
+				var chunk_coord := Vector2i(
+					rect.position.x + x_offset,
+					rect.position.y + y_offset)
+				var pass_idx := Grid.mod_neg(chunk_coord.x, 3)
+				if columns.has(chunk_coord.x):
+					columns[chunk_coord.x].push_back(chunk_coord.y)
+				else:
+					var ys : Array[int] = [chunk_coord.y]
+					columns[chunk_coord.x] = ys
+					_passes[pass_idx].push_back([chunk_coord.x, ys])
+
 func _step() -> void:
-	Grid.step()
+	Grid.pre_step()
+	
+	# Create new GenerationData.
+	for rect in _current_step_chunk_rect:
+		var slice_start := GenerationData.compute_slice_idx(rect.position.x - 10)
+		var slice_end := GenerationData.compute_slice_idx(rect.position.x + rect.size.x + 10)
+		for slice_idx_offset in slice_end + 1:
+			var slice_idx := slice_start + slice_idx_offset
+			if !_generation_data.has(slice_idx):
+				_generate_slice(slice_idx)
+	
+	for i in 3:
+		_current_pass_idx = i
+		
+		var group_id := WorkerThreadPool.add_group_task(
+			_step_column,
+			_passes[i].size())
+		WorkerThreadPool.wait_for_group_task_completion(group_id)
+	
+	Grid.post_step()
+
+func _step_column(column_idx: int) -> void:
+	var x : int = _passes[_current_pass_idx][column_idx][0]
+	var ys : Array[int] = _passes[_current_pass_idx][column_idx][1]
+	
+	ys.sort()
+	ys.reverse()
+	
+	var y := Global.INT_MAX
+	for maybe_y : int in ys:
+		if y == maybe_y:
+			continue
+		y = maybe_y
+		_step_chunk(Vector2i(x, y))
+
+func _step_chunk(chunk_coord : Vector2i) -> void:
+	# Generate new chunks.
+	for y in 3:
+		for x in 3:
+			var other_chunk_coord := chunk_coord - Vector2i.ONE + Vector2i(x, y)
+			if _chunk_to_generate.get(other_chunk_coord, false):
+				_generate_chunk(other_chunk_coord)
+				_chunk_to_generate[other_chunk_coord] = false
+	
+	Grid.step_chunk(chunk_coord)
 
 func _generate_slice(slice_idx: int) -> void:
 	var data := GenerationData.new(slice_idx)
@@ -270,8 +359,10 @@ func _generate_slice(slice_idx: int) -> void:
 		gen_pass._generate_slice(data)
 	_generation_data[slice_idx] = data
 
-func _generate_chunk(iter: GridChunkIter, slice_idx: int) -> void:
-	var data : GenerationData = _generation_data[slice_idx]
+func _generate_chunk(chunk_coord: Vector2i) -> void:
+	var iter := Grid.iter_chunk(chunk_coord)
+	var data : GenerationData = _generation_data[GenerationData.compute_slice_idx(chunk_coord.x)]
+	iter.fill_remaining(0)
 	for gen_pass in generation_passes:
-		gen_pass._generate_chunk(iter, data)
 		iter.reset_iter()
+		gen_pass._generate_chunk(iter, data)

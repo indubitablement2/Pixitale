@@ -8,11 +8,10 @@
 #include "preludes.h"
 
 // Coord is relative to first cell (top left).
-class alignas(64) Chunk {
+class Chunk {
 public:
 	Vector2i chunk_coord;
 
-	// -1 used to indicate that the chunk hasn't been generated.
 	i64 last_step_tick = -1;
 
 	u32 active_rows = MAX_U32;
@@ -24,6 +23,8 @@ public:
 	u32 *cells_save = nullptr;
 
 	u32 cells[32 * 32];
+
+	u32 _padding[4];
 
 	inline i64 get_memory_usage() {
 		i64 mem = sizeof(Chunk);
@@ -149,7 +150,6 @@ public:
 	}
 
 	// Needs chunk and its 8 neighbors to exist in Grid::chunks,
-	// They will be generated if needed.
 	static void step_chunk(Vector2i chunk_coord);
 
 	~Chunk() {

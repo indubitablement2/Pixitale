@@ -34,6 +34,8 @@ void GridChunkIter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("randf"), &GridChunkIter::randf);
 	ClassDB::bind_method(D_METHOD("randf_range", "min", "max"), &GridChunkIter::randf_range);
 	ClassDB::bind_method(D_METHOD("randi_range", "min", "max"), &GridChunkIter::randi_range);
+
+	// ClassDB::bind_method(D_METHOD("activate_all"), &GridChunkIter::activate_all);
 }
 
 void GridChunkIter::prepare(Vector2i p_chunk_coord) {
@@ -126,6 +128,10 @@ f32 GridChunkIter::randf_range(f32 min, f32 max) {
 i32 GridChunkIter::randi_range(i32 min, i32 max) {
 	return rng.gen_range_i32(min, max);
 }
+
+// void GridChunkIter::activate_all() {
+// 	chunk->activate_all(true);
+// }
 
 void GridRectIter::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("next"), &GridRectIter::next);

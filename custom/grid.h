@@ -45,11 +45,12 @@ private:
 
 	inline static std::vector<Rect2i> queue_step_chunk_rects = {};
 
-	// 3 passes of columns
-	// x : ys (ys may be duplicated and aren't sorted)
-	inline static std::unordered_map<i32, std::vector<i32>> passes[3] = { {}, {}, {} };
-
 public:
+	// 3 passes of columns
+	// x : ys (y may be duplicated and aren't sorted)
+	inline static std::vector<std::pair<i32, std::vector<i32>>> passes[3] = { {}, {}, {} };
+	inline static i32 current_pass_idx = 0;
+
 	inline static Rng temporal_rng = Rng(0);
 
 	inline static std::vector<CellMaterial> cell_materials = {};
@@ -57,7 +58,7 @@ public:
 	// Any chunk last stepped before this will need to be force stepped.
 	inline static i64 last_modified_tick = 0;
 
-	// Current bitmask of updated cells.
+	// Current bitmask for updated cells.
 	inline static u32 cell_updated_bitmask = 0;
 
 	static std::vector<std::pair<Callable *, Vector2i>> &get_reaction_callback_vector();
@@ -129,17 +130,19 @@ public: // godot api
 	static void set_cell_material_idx_v(Vector2i coord, u32 material_idx);
 	static void set_cell_color_v(Vector2i coord, u32 color);
 
+	static Ref<GridChunkIter> iter_chunk(Vector2i chunk_coord);
 	static Ref<GridRectIter> iter_rect(Rect2i rect);
 	static Ref<GridLineIter> iter_line(Vector2i start, Vector2i end);
 	static Ref<GridFillIter> iter_fill(Vector2i start, u32 material_idx);
 
 	static TypedArray<Vector2i> get_line(Vector2i start, Vector2i end);
 
-	static void force_step();
-	static void queue_step_chunks(Rect2i chunk_rect);
-	// Part of step which can't be done async.
-	static void step_prepare();
-	static void step();
+	static bool chunk_exists(Vector2i chunk_coord);
+
+	static bool try_create_chunk(Vector2i chunk_coord);
+	static void step_chunk(Vector2i chunk_coord);
+	static void pre_step();
+	static void post_step();
 
 	static bool randb();
 	static bool randb_probability(f32 probability);

@@ -20,7 +20,7 @@ static func _exit() -> void:
 # (as long as methods are deterministic themself).
 # Implementation:
 static func _queue_step_chunks(chunk_rect: Rect2i) -> void:
-	Grid.queue_step_chunks(chunk_rect)
+	GridApi.queue_step_chunk_rect.push_back(chunk_rect)
 # Boilerplate:
 static var _QUEUE_STEP_CHUNKS := 0
 static func queue_step_chunks(chunk_rect: Rect2i) -> void:

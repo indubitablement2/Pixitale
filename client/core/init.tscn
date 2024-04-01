@@ -11,42 +11,42 @@ func _ready() -> void:
 	
 	PixitaleTests.run_tests()
 	
-	for arg in OS.get_cmdline_args():
-		if arg.begins_with(\"--determinism-test\"):
-			print(_determinism_test(absi(arg.to_int())))
-			get_tree().quit()
-			return
+	#for arg in OS.get_cmdline_args():
+		#if arg.begins_with(\"--determinism-test\"):
+			#print(_determinism_test(absi(arg.to_int())))
+			#get_tree().quit()
+			#return
 	
 	get_parent().call_deferred(&\"add_child\", main_menu.instantiate())
 	queue_free()
 
-func _determinism_test(num: int) -> int:
-	print(\"Starting determinism test with \", num)
-	
-	Grid.set_seed(num)
-	GridApi.load_mods()
-	
-	var chunk_rect := Rect2i().grow(32)
-	var rect := Rect2i().grow(32 * 32)
-	
-	for i in num:
-		for ii in 1000:
-			Grid.set_cell_material_idx(
-				Vector2i(
-					Grid.randi_range(rect.position.x, rect.end.x),
-					Grid.randi_range(rect.position.y, rect.end.y)),
-				Grid.randi_range(0, GridApi.cell_materials.size())
-			)
-		
-		Grid.queue_step_chunks(chunk_rect)
-		Grid.step_prepare()
-		Grid.step()
-	
-	var iter := Grid.iter_rect(rect)
-	var sum := 0
-	while iter.next():
-		sum += iter.get_material_idx()
-	return sum
+#func _determinism_test(num: int) -> int:
+	#print(\"Starting determinism test with \", num)
+	#
+	#Grid.set_seed(num)
+	#GridApi.load_mods()
+	#
+	#var chunk_rect := Rect2i().grow(32)
+	#var rect := Rect2i().grow(32 * 32)
+	#
+	#for i in num:
+		#for ii in 1000:
+			#Grid.set_cell_material_idx(
+				#Vector2i(
+					#Grid.randi_range(rect.position.x, rect.end.x),
+					#Grid.randi_range(rect.position.y, rect.end.y)),
+				#Grid.randi_range(0, GridApi.cell_materials.size())
+			#)
+		#
+		#Grid.queue_step_chunks(chunk_rect)
+		#Grid.step_prepare()
+		#Grid.step()
+	#
+	#var iter := Grid.iter_rect(rect)
+	#var sum := 0
+	#while iter.next():
+		#sum += iter.get_material_idx()
+	#return sum
 "
 
 [node name="Init" type="Node"]
