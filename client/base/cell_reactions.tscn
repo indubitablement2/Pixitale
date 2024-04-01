@@ -5,9 +5,9 @@
 [sub_resource type="GDScript" id="GDScript_pd1m6"]
 script/source = "extends CellReaction
 
-
-#func callback(coord: Vector2i) -> void:
-	#print(coord)
+func callback(coord: Vector2i) -> void:
+	var iter = Grid.iter_rect(Rect2i(coord, Vector2i.ZERO).grow(5))
+	iter.fill_remaining(Base.SMOKE_IDX)
 "
 
 [node name="BaseCellReaction" type="Node"]
@@ -15,9 +15,9 @@ script/source = "extends CellReaction
 [node name="Node" type="Node" parent="."]
 script = SubResource("GDScript_pd1m6")
 in1_tag = &"Lava"
-in2_tag = &"Water"
-out1_name = &"Rock"
-out2_name = &"Rock"
+in2_tag = &"Sand"
+out1_name = &"Lava"
+out2_name = &"Sand"
 
 [node name="SmokeDissipate" type="Node" parent="."]
 script = ExtResource("1_pm404")

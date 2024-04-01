@@ -63,16 +63,16 @@ struct GridBodyApi {
 		right = pos.x + half_size.x - origin.x;
 	}
 
-	inline GridBodyApi(const GridBodyApi &other) :
-			true_pos(other.true_pos),
-			wish_move(other.wish_move),
-			top(other.top),
-			bot(other.bot),
-			left(other.left),
-			right(other.right),
-			chunks_size(other.chunks_size),
-			chunks(other.chunks) {
-	}
+	// inline GridBodyApi(const GridBodyApi &other) :
+	// 		true_pos(other.true_pos),
+	// 		wish_move(other.wish_move),
+	// 		top(other.top),
+	// 		bot(other.bot),
+	// 		left(other.left),
+	// 		right(other.right),
+	// 		chunks_size(other.chunks_size),
+	// 		chunks(other.chunks) {
+	// }
 
 	inline void del() {
 		delete[] chunks;

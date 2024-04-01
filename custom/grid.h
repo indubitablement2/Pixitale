@@ -14,7 +14,6 @@
 #include "preludes.h"
 #include "rng.hpp"
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -30,27 +29,12 @@ private:
 	// Key is lower material_idx | higher material_idx << 16.
 	inline static std::unordered_map<u32, std::vector<CellReaction>> cell_reactions = {};
 
-	// (iter: GridChunkIter, slice_idx: int)
-	inline static Callable generate_chunk_callback = Callable();
-	// (slice_idx: int)
-	inline static Callable generate_slice_callback = Callable();
-	inline static std::unordered_set<i32> generated_slice = {};
-	// (chunk_coord: Vector2i)
-	inline static Callable unload_chunk_callback = Callable();
-
 	inline static i64 tick = 0;
 	inline static u64 seed = 0;
 
 	inline static std::unordered_map<u64, Chunk *> chunks = {};
 
-	inline static std::vector<Rect2i> queue_step_chunk_rects = {};
-
 public:
-	// 3 passes of columns
-	// x : ys (y may be duplicated and aren't sorted)
-	inline static std::vector<std::pair<i32, std::vector<i32>>> passes[3] = { {}, {}, {} };
-	inline static i32 current_pass_idx = 0;
-
 	inline static Rng temporal_rng = Rng(0);
 
 	inline static std::vector<CellMaterial> cell_materials = {};
@@ -70,8 +54,6 @@ public:
 			u32 m1,
 			u32 m2,
 			bool &swap);
-
-	static void generate_chunk(Vector2i chunk_coord);
 
 	// Return default if not found.
 	static const CellMaterial &get_cell_material(u32 material_idx);
@@ -98,10 +80,6 @@ public: // godot api
 			Callable callback);
 	static bool remove_cell_reaction(u64 reaction_id);
 	static void print_internals();
-
-	static void set_callbacks(
-			Callable generate_chunk,
-			Callable generate_slice);
 
 	static void clear();
 

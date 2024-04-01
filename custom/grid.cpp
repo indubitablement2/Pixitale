@@ -3,6 +3,7 @@
 #include "cell.hpp"
 #include "cell_material.hpp"
 #include "chunk.h"
+#include "core/core_bind.h"
 #include "core/error/error_macros.h"
 #include "core/io/image.h"
 #include "core/math/rect2i.h"
@@ -10,6 +11,7 @@
 #include "core/object/class_db.h"
 #include "core/object/ref_counted.h"
 #include "core/os/memory.h"
+#include "core/os/mutex.h"
 #include "core/string/print_string.h"
 #include "core/templates/vector.h"
 #include "core/variant/array.h"
@@ -18,15 +20,13 @@
 #include "preludes.h"
 #include "rng.hpp"
 #include <algorithm>
-#include <atomic>
 #include <cstring>
 #include <unordered_map>
 #include <utility>
 #include <vector>
 
-inline static std::atomic_int32_t next_thread_idx = 0;
-thread_local u32 thread_idx = MAX_U32;
-inline static std::vector<std::pair<Callable *, Vector2i>> thread_vectors[256] = {};
+inline static std::unordered_map<Thread::ID, std::vector<std::pair<Callable *, Vector2i>>> thread_vectors = {};
+inline static Mutex thread_vectors_mutex = Mutex();
 
 u32 reations_key(const u32 m1, const u32 m2, bool &swap) {
 	if (m1 <= m2) {
@@ -68,11 +68,6 @@ void Grid::_bind_methods() {
 			"Grid",
 			D_METHOD("print_internals"),
 			&Grid::print_internals);
-
-	ClassDB::bind_static_method(
-			"Grid",
-			D_METHOD("set_callbacks", "generate_chunk", "generate_slice"),
-			&Grid::set_callbacks);
 
 	ClassDB::bind_static_method(
 			"Grid",
@@ -227,13 +222,13 @@ void Grid::_bind_methods() {
 }
 
 std::vector<std::pair<Callable *, Vector2i>> &Grid::get_reaction_callback_vector() {
-	// if (thread_idx == MAX_U32) {
-	// 	thread_idx = next_thread_idx.fetch_add(1, std::memory_order_relaxed);
-	// }
+	Thread::ID id = Thread::get_caller_id();
 
-	// TEST_ASSERT(thread_idx < 256, "thread vector bug");
+	thread_vectors_mutex.lock();
+	auto &vec = thread_vectors[id];
+	thread_vectors_mutex.unlock();
 
-	return thread_vectors[0];
+	return vec;
 }
 
 void Grid::reactions_between(
@@ -255,18 +250,6 @@ void Grid::reactions_between(
 		start = nullptr;
 		end = nullptr;
 	}
-}
-
-void Grid::generate_chunk(Vector2i chunk_coord) {
-	auto iter = memnew(GridChunkIter);
-	iter->prepare(chunk_coord);
-
-	i32 slice_idx = get_slice_idx(chunk_coord.x);
-
-	generate_chunk_callback.call(iter, slice_idx);
-	iter->chunk->activate_all(true);
-
-	memdelete(iter);
 }
 
 const CellMaterial &Grid::get_cell_material(u32 material_idx) {
@@ -419,16 +402,7 @@ void Grid::print_internals() {
 	}
 }
 
-void Grid::set_callbacks(
-		Callable generate_chunk,
-		Callable generate_slice) {
-	generate_chunk_callback = generate_chunk;
-	generate_slice_callback = generate_slice;
-}
-
 void Grid::clear() {
-	queue_step_chunk_rects = {};
-
 	for (auto &[chunk_id, chunk] : chunks) {
 		delete chunk;
 	}
@@ -436,8 +410,6 @@ void Grid::clear() {
 
 	tick = 0;
 	seed = 0;
-
-	generated_slice = {};
 }
 
 void Grid::set_tick(i64 value) {
@@ -653,126 +625,6 @@ TypedArray<Vector2i> Grid::get_line(Vector2i start, Vector2i end) {
 	return line;
 }
 
-// void Grid::step_prepare() {
-// 	set_tick(tick + 1);
-
-// 	cell_updated_bitmask = (u32(tick % 3) + 1u) << Cell::Shifts::SHIFT_UPDATED;
-
-// 	for (i32 i = 0; i < 3; i++) {
-// 		passes[i].clear();
-// 	}
-
-// 	for (auto chunk_rect : queue_step_chunk_rects) {
-// 		// Add to-be-generated chunks.
-// 		Iter2D chunk_iter = Iter2D(chunk_rect.grow(1));
-// 		while (chunk_iter.next()) {
-// 			auto added = chunks.emplace(chunk_id(chunk_iter.coord), nullptr);
-// 			if (added.second) {
-// 				added.first->second = new Chunk();
-// 				added.first->second->chunk_coord = chunk_iter.coord;
-// 			}
-// 		}
-
-// 		chunk_iter = Iter2D(chunk_rect);
-// 		while (chunk_iter.next()) {
-// 			i32 pass_idx = mod_neg(chunk_iter.coord.x, 3);
-// 			passes[pass_idx][chunk_iter.coord.x].push_back(chunk_iter.coord.y);
-// 		}
-// 	}
-// 	queue_step_chunk_rects.clear();
-// }
-
-// void _step(void *userdata, u32 idx) {
-// 	i32 x = Grid::passes[Grid::current_pass_idx][idx].first;
-// 	std::vector<i32> &ys = Grid::passes[Grid::current_pass_idx][idx].second;
-
-// 	std::sort(ys.begin(), ys.end());
-
-// 	i32 y = MAX_I32;
-
-// 	// Iterate from bottom to top.
-// 	for (auto it = ys.rbegin(); it != ys.rend(); it++) {
-// 		if (y == *it) {
-// 			// Avoid duplicate chunk.
-// 			continue;
-// 		}
-// 		y = *it;
-
-// 		Chunk::step_chunk(Vector2i(x, y));
-// 	}
-// }
-
-// void Grid::step() {
-// 	WorkerThreadPool *tp = WorkerThreadPool::get_singleton();
-
-// 	if (thread_vectors.size() != tp->get_thread_count()) {
-// 		thread_vectors.resize(tp->get_thread_count());
-// 	}
-
-// 	// // Generate slice if not already generated.
-// 	// for (auto &pair : pass) {
-// 	// 	for (i32 offset = -1; offset < 2; offset++) {
-// 	// 		i32 slice_idx = get_slice_idx(pair.first + offset);
-
-// 	// 		if (generated_slice.insert(slice_idx).second) {
-// 	// 			Rng prev_rng = temporal_rng;
-// 	// 			temporal_rng = get_static_rng(Vector2i(slice_idx, 0));
-// 	// 			generate_slice_callback.call(slice_idx);
-// 	// 			temporal_rng = prev_rng;
-// 	// 		}
-// 	// 	}
-// 	// }
-
-// 	for (i32 i = 0; i < 3; i++) {
-// 		current_pass_idx = i;
-
-// 		WorkerThreadPool::GroupID group_id = tp->add_native_group_task(
-// 				&_step,
-// 				nullptr,
-// 				passes[i].size());
-// 		tp->wait_for_group_task_completion(group_id);
-// 	}
-
-// 	// Reactions callback.
-// 	auto &first_vec = thread_vectors[0];
-// 	for (u32 i = 1; i < thread_vectors.size(); i++) {
-// 		auto &vec = thread_vectors[i];
-// 		first_vec.insert(first_vec.end(), vec.begin(), vec.end());
-// 		vec.clear();
-// 	}
-// 	std::sort(first_vec.begin(), first_vec.end(), [](auto &a, auto &b) {
-// 		return a.second < b.second;
-// 	});
-// 	for (auto &[callable, coord] : first_vec) {
-// 		callable->call(coord);
-// 	}
-// 	first_vec.clear();
-
-// 	if (tick % 1024 == 0) {
-// 		// i64 unload_threshold = tick - 120 - MAX(3600 - i64(chunks.size()), 0);
-
-// 		for (auto it = chunks.begin(); it != chunks.end();) {
-// 			Chunk &chunk = *it->second;
-
-// 			// Delete empty background.
-// 			if (chunk.num_background_cell == 0) {
-// 				delete[] chunk.background;
-// 				chunk.background = nullptr;
-// 			}
-
-// 			it++;
-
-// 			// if (chunk.last_step_tick < unload_threshold) {
-// 			// 	unload_chunk_callback.call(chunk.chunk_coord);
-// 			// 	delete it->second;
-// 			// 	it = chunks.erase(it);
-// 			// } else {
-// 			// 	++it;
-// 			// }
-// 		}
-// 	}
-// }
-
 bool Grid::chunk_exists(Vector2i chunk_coord) {
 	return get_chunk(chunk_coord) != nullptr;
 }
@@ -795,19 +647,23 @@ void Grid::pre_step() {}
 
 void Grid::post_step() {
 	// Reactions callback.
-	auto &first_vec = thread_vectors[0];
-	for (i32 i = 1; i < next_thread_idx.load(); i++) {
-		auto &vec = thread_vectors[i];
-		first_vec.insert(first_vec.end(), vec.begin(), vec.end());
-		vec.clear();
+	std::vector<std::pair<Callable *, Vector2i>> vec = {};
+	u64 reserve_size = 0;
+	for (auto &[id, v] : thread_vectors) {
+		reserve_size += v.size();
 	}
-	std::sort(first_vec.begin(), first_vec.end(), [](auto &a, auto &b) {
+	// print_line(reserve_size);
+	vec.reserve(reserve_size);
+	for (auto &[id, v] : thread_vectors) {
+		vec.insert(vec.end(), v.begin(), v.end());
+	}
+	thread_vectors.clear();
+	std::sort(vec.begin(), vec.end(), [](auto &a, auto &b) {
 		return a.second < b.second;
 	});
-	for (auto &[callable, coord] : first_vec) {
+	for (auto &[callable, coord] : vec) {
 		callable->call(coord);
 	}
-	first_vec.clear();
 
 	if (tick % 1024 == 0) {
 		// i64 unload_threshold = tick - 120 - MAX(3600 - i64(chunks.size()), 0);

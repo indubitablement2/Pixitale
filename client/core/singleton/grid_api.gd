@@ -226,6 +226,8 @@ func load_mods() -> void:
 		if entry.entry_script:
 			if entry.entry_script.has_method(&"_entry"):
 				entry.entry_script._entry()
+	
+	#Grid.print_internals()
 
 func unload_mods() -> void:
 	if _step_thread.is_started():
@@ -354,10 +356,16 @@ func _step_chunk(chunk_coord : Vector2i) -> void:
 	Grid.step_chunk(chunk_coord)
 
 func _generate_slice(slice_idx: int) -> void:
+	# set_tick reset Grid's rng.
+	var tick := Grid.get_tick()
+	Grid.set_tick(0)
+	
 	var data := GenerationData.new(slice_idx)
 	for gen_pass in generation_passes:
 		gen_pass._generate_slice(data)
 	_generation_data[slice_idx] = data
+	
+	Grid.set_tick(tick)
 
 func _generate_chunk(chunk_coord: Vector2i) -> void:
 	var iter := Grid.iter_chunk(chunk_coord)

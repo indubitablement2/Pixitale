@@ -1,0 +1,37 @@
+[gd_scene load_steps=2 format=3 uid="uid://bdi4lx1rc4vor"]
+
+[sub_resource type="GDScript" id="GDScript_eir1c"]
+script/source = "@tool
+extends Node
+
+@export_file(\"*.tscn\") var cell_materials
+
+@export var print_me := false : set = set_print_me
+
+func set_print_me(value: bool) -> void:
+	if !value:
+		return
+	
+	var node : Node = load(cell_materials).instantiate()
+	
+	print(\"\\n\\n# --- static CellMaterial ---\\n\")
+	
+	for c : CellMaterial in node.get_children():
+		var name_upper := c.name.to_snake_case().to_upper()
+		print(\"static var \", name_upper, \" : CellMaterial\")
+		print(\"static var \", name_upper, \"_IDX := 0\")
+	
+	print(\"\\nstatic func _init_static_materials() -> void:\")
+	
+	for c : CellMaterial in node.get_children():
+		var name_upper := c.name.to_snake_case().to_upper()
+		print(\"\\t\", name_upper, \" = GridApi.find_cell_material(&\\\"\", c.name, \"\\\")\")
+		print(\"\\t\", name_upper, \"_IDX = \", name_upper, \".idx\")
+	
+	node.queue_free()
+"
+
+[node name="CodeGenCellStatic" type="Node"]
+script = SubResource("GDScript_eir1c")
+cell_materials = "res://base/cell_materials.tscn"
+print_me = null
