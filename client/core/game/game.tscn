@@ -700,7 +700,7 @@ region_rect = Rect2(-11.855, -6.755, 9.905, 5.69)
 [node name="GridBody" parent="." instance=ExtResource("18_mtbrh")]
 
 [node name="FreeCamera" parent="GridBody" instance=ExtResource("7_7jk4b")]
-zoom = Vector2(4, 4)
+zoom = Vector2(3, 3)
 
 [connection signal="pressed" from="GUI/MarginContainer/DebugMenu/VBoxContainer/Rect" to="DebugDraw" method="_on_rect_pressed"]
 [connection signal="pressed" from="GUI/MarginContainer/DebugMenu/VBoxContainer/Fill" to="DebugDraw" method="_on_fill_pressed"]
