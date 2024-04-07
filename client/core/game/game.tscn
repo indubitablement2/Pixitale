@@ -1,4 +1,4 @@
-[gd_scene load_steps=39 format=3 uid="uid://cs41g41rbjtf3"]
+[gd_scene load_steps=40 format=3 uid="uid://cs41g41rbjtf3"]
 
 [ext_resource type="Script" path="res://core/game/grid_render.gd" id="1_3cgdd"]
 [ext_resource type="Script" path="res://core/game/game.gd" id="1_bg66v"]
@@ -134,6 +134,13 @@ script/source = "extends Label
 
 func _process(_delta: float) -> void:
 	text = GridApi.cell_materials[Grid.get_cell_material_idx(Global.mouse_coord)].display_name
+"
+
+[sub_resource type="GDScript" id="GDScript_5ysqv"]
+script/source = "extends Label
+
+func _process(_delta: float) -> void:
+	text = str(Engine.get_frames_per_second())
 "
 
 [sub_resource type="GDScript" id="GDScript_t44g3"]
@@ -419,7 +426,6 @@ layout_mode = 2
 layout_mode = 2
 
 [node name="DebugMenu" type="HBoxContainer" parent="GUI/MarginContainer"]
-visible = false
 layout_mode = 2
 
 [node name="ScrollContainer" type="ScrollContainer" parent="GUI/MarginContainer/DebugMenu"]
@@ -464,6 +470,12 @@ toggle_mode = true
 text = "Active Cell"
 script = SubResource("GDScript_nlogk")
 cell_render_material = ExtResource("8_onaw1")
+
+[node name="Fps" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering" node_paths=PackedStringArray("target")]
+layout_mode = 2
+text = "FPS"
+script = ExtResource("9_o2nrr")
+target = NodePath("../../../../../QuickDisplay/Fps")
 
 [node name="GameTick" type="Button" parent="GUI/MarginContainer/DebugMenu/ScrollContainer/VBoxContainer/Rendering" node_paths=PackedStringArray("target")]
 layout_mode = 2
@@ -544,14 +556,18 @@ script = SubResource("GDScript_kfpdw")
 [node name="VisibleEnabler" type="Node" parent="GUI/MarginContainer/QuickDisplay/HoverCellName/Label"]
 script = ExtResource("8_74bfn")
 
-[node name="GridMemoryUsage" type="HBoxContainer" parent="GUI/MarginContainer/QuickDisplay"]
+[node name="Fps" type="Label" parent="GUI/MarginContainer/QuickDisplay"]
 layout_mode = 2
+script = SubResource("GDScript_5ysqv")
 
-[node name="Label" type="Label" parent="GUI/MarginContainer/QuickDisplay/GridMemoryUsage"]
+[node name="VisibleEnabler" type="Node" parent="GUI/MarginContainer/QuickDisplay/Fps"]
+script = ExtResource("8_74bfn")
+
+[node name="GridMemoryUsage" type="Label" parent="GUI/MarginContainer/QuickDisplay"]
 layout_mode = 2
 script = SubResource("GDScript_t44g3")
 
-[node name="VisibleEnabler" type="Node" parent="GUI/MarginContainer/QuickDisplay/GridMemoryUsage/Label"]
+[node name="VisibleEnabler" type="Node" parent="GUI/MarginContainer/QuickDisplay/GridMemoryUsage"]
 script = ExtResource("8_74bfn")
 
 [node name="MouseCoord" type="HBoxContainer" parent="GUI/MarginContainer/QuickDisplay"]
