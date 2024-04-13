@@ -4,7 +4,6 @@
 [ext_resource type="Texture2D" uid="uid://oh0j50mb040b" path="res://core/game/character/player/body_2.png" id="2_wl0h4"]
 [ext_resource type="AnimationNodeStateMachine" uid="uid://q4ev06njwoee" path="res://core/game/character/player/animation.tres" id="2_yao5e"]
 [ext_resource type="Texture2D" uid="uid://c1vam3un3fytm" path="res://core/game/character/player/arm_1.png" id="3_krev4"]
-[ext_resource type="Texture2D" uid="uid://bjeh588ftcd2t" path="res://base/item/sword_1.png" id="4_hjaf3"]
 [ext_resource type="Texture2D" uid="uid://lrdascqr6gyl" path="res://core/game/character/player/head_2.png" id="5_a8wsj"]
 [ext_resource type="Texture2D" uid="uid://cfn1t0e2xi866" path="res://core/game/character/player/hair_2.png" id="6_0ci1k"]
 
@@ -284,7 +283,10 @@ _data = {
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_uj082"]
 size = Vector2(7, 15)
 
-[node name="Player" type="Node2D" node_paths=PackedStringArray("root_body", "arm_back", "hand_back", "arm_front", "animation_player", "animation_tree", "grid_body")]
+[sub_resource type="CircleShape2D" id="CircleShape2D_p2vvr"]
+radius = 64.0
+
+[node name="Player" type="Node2D" node_paths=PackedStringArray("root_body", "arm_back", "hand_back", "arm_front", "animation_player", "animation_tree", "grid_body", "item_attractor")]
 script = ExtResource("1_bblx8")
 root_body = NodePath("BodyRoot")
 arm_back = NodePath("BodyRoot/Body/ArmBack")
@@ -293,6 +295,7 @@ arm_front = NodePath("BodyRoot/Body/ArmFront")
 animation_player = NodePath("AnimationPlayer")
 animation_tree = NodePath("AnimationTree")
 grid_body = NodePath("GridBody")
+item_attractor = NodePath("ItemAttractor")
 
 [node name="MultiplayerSynchronizer" type="MultiplayerSynchronizer" parent="."]
 replication_config = SubResource("SceneReplicationConfig_svs8e")
@@ -333,13 +336,6 @@ offset = Vector2(0, 3)
 [node name="HandBack" type="Node2D" parent="BodyRoot/Body/ArmBack"]
 position = Vector2(0, 5)
 
-[node name="Sword2" type="Sprite2D" parent="BodyRoot/Body/ArmBack/HandBack"]
-show_behind_parent = true
-rotation = 0.785398
-texture = ExtResource("4_hjaf3")
-offset = Vector2(3.5, -3.5)
-flip_h = true
-
 [node name="Head" type="Sprite2D" parent="BodyRoot/Body"]
 show_behind_parent = true
 position = Vector2(0.5, -6)
@@ -354,11 +350,19 @@ position = Vector2(0, -3)
 texture = ExtResource("3_krev4")
 offset = Vector2(0, 3)
 
-[node name="Area2D" type="Area2D" parent="."]
-visible = false
+[node name="HitBox" type="Area2D" parent="."]
 collision_layer = 2
 collision_mask = 0
 monitoring = false
 
-[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D"]
+[node name="CollisionShape2D" type="CollisionShape2D" parent="HitBox"]
 shape = SubResource("RectangleShape2D_uj082")
+
+[node name="ItemAttractor" type="Area2D" parent="."]
+collision_layer = 16
+collision_mask = 0
+input_pickable = false
+monitoring = false
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="ItemAttractor"]
+shape = SubResource("CircleShape2D_p2vvr")

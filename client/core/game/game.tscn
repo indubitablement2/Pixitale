@@ -234,8 +234,9 @@ func _draw() -> void:
 					false)
 "
 
-[node name="Game" type="Node"]
+[node name="Game" type="Node" node_paths=PackedStringArray("root_items")]
 script = ExtResource("1_bg66v")
+root_items = NodePath("RootItems")
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="."]
 environment = ExtResource("2_3hhhn")
@@ -277,6 +278,7 @@ render_target_update_mode = 4
 
 [node name="DebugDraw" type="Node2D" parent="." node_paths=PackedStringArray("item_list", "color_picker", "brush_size_range")]
 process_mode = 3
+visible = false
 z_index = 300
 z_as_relative = false
 script = SubResource("GDScript_x0xfk")
@@ -688,6 +690,8 @@ z_as_relative = false
 material = SubResource("CanvasItemMaterial_f00lt")
 texture = SubResource("ViewportTexture_5p4mp")
 centered = false
+
+[node name="RootItems" type="Node2D" parent="."]
 
 [node name="DrawActiveRect" type="Node2D" parent="."]
 process_mode = 3
